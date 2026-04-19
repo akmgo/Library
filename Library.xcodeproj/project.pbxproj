@@ -6,8 +6,230 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C5FD82542F90C4560003A500 /* 娱乐至死.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824D2F90C4560003A500 /* 娱乐至死.jpg */; };
+		C5FD82552F90C4560003A500 /* 茶花女.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82282F90C4560003A500 /* 茶花女.jpg */; };
+		C5FD82562F90C4560003A500 /* 共产党宣言.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822F2F90C4560003A500 /* 共产党宣言.jpg */; };
+		C5FD82572F90C4560003A500 /* 君主论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82352F90C4560003A500 /* 君主论.jpg */; };
+		C5FD82582F90C4560003A500 /* 贫穷的本质.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823F2F90C4560003A500 /* 贫穷的本质.jpg */; };
+		C5FD82592F90C4560003A500 /* 二十四史.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822D2F90C4560003A500 /* 二十四史.jpg */; };
+		C5FD825A2F90C4560003A500 /* 奥德赛.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82262F90C4560003A500 /* 奥德赛.jpg */; };
+		C5FD825B2F90C4560003A500 /* 罪与罚.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82512F90C4560003A500 /* 罪与罚.jpg */; };
+		C5FD825C2F90C4560003A500 /* 撒哈拉的故事.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82432F90C4560003A500 /* 撒哈拉的故事.jpg */; };
+		C5FD825D2F90C4560003A500 /* 文明的冲突.webp in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82472F90C4560003A500 /* 文明的冲突.webp */; };
+		C5FD825E2F90C4560003A500 /* 人类简史：从动物到上帝.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82402F90C4560003A500 /* 人类简史：从动物到上帝.jpg */; };
+		C5FD825F2F90C4560003A500 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82522F90C4560003A500 /* Assets.xcassets */; };
+		C5FD82602F90C4560003A500 /* 呐喊.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823B2F90C4560003A500 /* 呐喊.jpg */; };
+		C5FD82612F90C4560003A500 /* 局外人.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82342F90C4560003A500 /* 局外人.jpg */; };
+		C5FD82622F90C4560003A500 /* 万历十五年.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82462F90C4560003A500 /* 万历十五年.jpg */; };
+		C5FD82632F90C4560003A500 /* 江城.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82332F90C4560003A500 /* 江城.jpg */; };
+		C5FD82642F90C4560003A500 /* 你当像鸟飞往你的山.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823C2F90C4560003A500 /* 你当像鸟飞往你的山.jpg */; };
+		C5FD82652F90C4560003A500 /* 如何阅读一本书.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82422F90C4560003A500 /* 如何阅读一本书.jpg */; };
+		C5FD82662F90C4560003A500 /* 朝花夕拾.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822A2F90C4560003A500 /* 朝花夕拾.jpg */; };
+		C5FD82672F90C4560003A500 /* 明朝那些事儿.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823A2F90C4560003A500 /* 明朝那些事儿.jpg */; };
+		C5FD82682F90C4560003A500 /* 霍乱时期的爱情.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82322F90C4560003A500 /* 霍乱时期的爱情.jpg */; };
+		C5FD82692F90C4560003A500 /* 忏悔录.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82292F90C4560003A500 /* 忏悔录.jpg */; };
+		C5FD826A2F90C4560003A500 /* 乌合之众.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82482F90C4560003A500 /* 乌合之众.jpg */; };
+		C5FD826B2F90C4560003A500 /* 资本论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82502F90C4560003A500 /* 资本论.jpg */; };
+		C5FD826C2F90C4560003A500 /* 法律的悖论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822E2F90C4560003A500 /* 法律的悖论.jpg */; };
+		C5FD826D2F90C4560003A500 /* 杀死一只知更鸟.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82452F90C4560003A500 /* 杀死一只知更鸟.jpg */; };
+		C5FD826E2F90C4560003A500 /* 月亮与六便士.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824E2F90C4560003A500 /* 月亮与六便士.jpg */; };
+		C5FD826F2F90C4560003A500 /* 三体.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82442F90C4560003A500 /* 三体.jpg */; };
+		C5FD82702F90C4560003A500 /* 百年孤独.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82272F90C4560003A500 /* 百年孤独.jpg */; };
+		C5FD82712F90C4560003A500 /* 一个人的朝圣.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824A2F90C4560003A500 /* 一个人的朝圣.jpg */; };
+		C5FD82722F90C4560003A500 /* 活着.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82312F90C4560003A500 /* 活着.jpg */; };
+		C5FD82732F90C4560003A500 /* 人性的弱点.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82412F90C4560003A500 /* 人性的弱点.jpg */; };
+		C5FD82742F90C4560003A500 /* 美的历程.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82392F90C4560003A500 /* 美的历程.jpg */; };
+		C5FD82752F90C4560003A500 /* 悉达多.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82492F90C4560003A500 /* 悉达多.jpg */; };
+		C5FD82762F90C4560003A500 /* 追风筝的人.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824F2F90C4560003A500 /* 追风筝的人.jpg */; };
+		C5FD82772F90C4560003A500 /* 沉默的大多数.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822B2F90C4560003A500 /* 沉默的大多数.jpg */; };
+		C5FD82782F90C4560003A500 /* 论美国的民主.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82372F90C4560003A500 /* 论美国的民主.jpg */; };
+		C5FD82792F90C4560003A500 /* 毛泽东选集.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82382F90C4560003A500 /* 毛泽东选集.jpg */; };
+		C5FD827A2F90C4560003A500 /* 艺术的故事.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824C2F90C4560003A500 /* 艺术的故事.jpg */; };
+		C5FD827B2F90C4560003A500 /* 理想国.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82362F90C4560003A500 /* 理想国.jpg */; };
+		C5FD827C2F90C4560003A500 /* 挪威的森林.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823D2F90C4560003A500 /* 挪威的森林.jpg */; };
+		C5FD827D2F90C4560003A500 /* 第一性原理.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822C2F90C4560003A500 /* 第一性原理.jpg */; };
+		C5FD827E2F90C4560003A500 /* 国富论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82302F90C4560003A500 /* 国富论.jpg */; };
+		C5FD827F2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824B2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg */; };
+		C5FD82802F90C4560003A500 /* 飘.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823E2F90C4560003A500 /* 飘.jpg */; };
+		C5FD82822F90C47D0003A500 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82812F90C47D0003A500 /* DataModels.swift */; };
+		C5FD82842F90C4830003A500 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82832F90C4830003A500 /* PreviewData.swift */; };
+		C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
+		C5FD828D2F90C4BB0003A500 /* AppleBooksDBUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82852F90C4BB0003A500 /* AppleBooksDBUtils.swift */; };
+		C5FD828E2F90C4BB0003A500 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828B2F90C4BB0003A500 /* SyncEngine.swift */; };
+		C5FD828F2F90C4BB0003A500 /* ImportDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82892F90C4BB0003A500 /* ImportDTO.swift */; };
+		C5FD82902F90C4BB0003A500 /* DataExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82872F90C4BB0003A500 /* DataExportService.swift */; };
+		C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */; };
+		C5FD82922F90C4BB0003A500 /* AppleBooksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82862F90C4BB0003A500 /* AppleBooksImporter.swift */; };
+		C5FD829C2F90C5210003A500 /* ArchiveGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD829B2F90C5210003A500 /* ArchiveGalleryView.swift */; };
+		C5FD829E2F90C5280003A500 /* CarouselWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD829D2F90C5280003A500 /* CarouselWidget.swift */; };
+		C5FD82A12F90C5310003A500 /* MonthlyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD829F2F90C5310003A500 /* MonthlyRecordView.swift */; };
+		C5FD82A22F90C5310003A500 /* YearlyTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A02F90C5310003A500 /* YearlyTimelineView.swift */; };
+		C5FD82A42F90C53A0003A500 /* InspirationWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A32F90C53A0003A500 /* InspirationWallView.swift */; };
+		C5FD82A62F90C5450003A500 /* FluidLibraryHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A52F90C5450003A500 /* FluidLibraryHomeView.swift */; };
+		C5FD82AA2F90C5640003A500 /* BookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */; };
+		C5FD82AB2F90C5640003A500 /* AddContentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A82F90C5640003A500 /* AddContentSheet.swift */; };
+		C5FD82B02F90C59F0003A500 /* MobileCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */; };
+		C5FD82B12F90C59F0003A500 /* MobileGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */; };
+		C5FD82B22F90C59F0003A500 /* MobileHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AE2F90C59F0003A500 /* MobileHomeView.swift */; };
+		C5FD82B32F90C59F0003A500 /* MobileInspirationWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AF2F90C59F0003A500 /* MobileInspirationWallView.swift */; };
+		C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B42F90C5A70003A500 /* MobileContentView.swift */; };
+		C5FD82B72F90C5AD0003A500 /* MobileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B62F90C5AD0003A500 /* MobileSettingsView.swift */; };
+		C5FD82BA2F90C5B70003A500 /* MobileYearlyTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */; };
+		C5FD82BB2F90C5B70003A500 /* MobileMonthlyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B82F90C5B70003A500 /* MobileMonthlyRecordView.swift */; };
+		C5FD82BF2F90C5CB0003A500 /* MobileBookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */; };
+		C5FD82C02F90C5CB0003A500 /* MobileAddExcerptSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */; };
+		C5FD82C22F90C5D40003A500 /* MobileBookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C12F90C5D40003A500 /* MobileBookDetailView.swift */; };
+		C5FD82CB2F90C6150003A500 /* DataPanelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C62F90C6150003A500 /* DataPanelSettingsView.swift */; };
+		C5FD82CC2F90C6150003A500 /* SettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C92F90C6150003A500 /* SettingsComponents.swift */; };
+		C5FD82CD2F90C6150003A500 /* DeleteSelectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */; };
+		C5FD82CE2F90C6150003A500 /* DailyProgressRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C52F90C6150003A500 /* DailyProgressRingView.swift */; };
+		C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */; };
+		C5FD82D02F90C6150003A500 /* AchievementWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C42F90C6150003A500 /* AchievementWallView.swift */; };
+		C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82CA2F90C6150003A500 /* SettingsView.swift */; };
+		C5FD82D32F90C8D80003A500 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82D22F90C8D80003A500 /* BookDetailView.swift */; };
+		C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82D42F90C9370003A500 /* ContentView.swift */; };
+		C5FD82DD2F90CC1D0003A500 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */; };
+		C5FD82DF2F90CC1D0003A500 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */; };
+		C5FD82EA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C5FD82FA2F90CD1F0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
+		C5FD82FB2F90CD290003A500 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82832F90C4830003A500 /* PreviewData.swift */; };
+		C5FD82FC2F90CD2E0003A500 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82812F90C47D0003A500 /* DataModels.swift */; };
+		C5FD830F2F92890E0003A500 /* ReadingTimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */; };
+		C5FD83102F92890E0003A500 /* ReadingTimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */; };
+		C5FD83162F9342350003A500 /* MobileManualLogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83152F9342350003A500 /* MobileManualLogSheet.swift */; };
+		C5FD831F2F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */; };
+		C5FD83202F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */; };
+		C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */; };
+		C5FD83272F934C250003A500 /* AmbientGlowBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */; };
+		C5FD83282F934C250003A500 /* LocalCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83242F934C250003A500 /* LocalCoverView.swift */; };
+		C5FD83292F934C250003A500 /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83222F934C250003A500 /* Background.swift */; };
+		C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83232F934C250003A500 /* ConfettiView.swift */; };
+		C5FD83492F93D8A40003A500 /* LiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */; };
+		C5FD834A2F93D8A40003A500 /* LiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C5FD82E82F90CC1D0003A500 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C5FD82032F90C3530003A500 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C5FD82D92F90CC1D0003A500;
+			remoteInfo = LibraryWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C5FD82EF2F90CC1D0003A500 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C5FD82EA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		C5FD820B2F90C3530003A500 /* Library.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Library.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C5FD82262F90C4560003A500 /* 奥德赛.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "奥德赛.jpg"; sourceTree = "<group>"; };
+		C5FD82272F90C4560003A500 /* 百年孤独.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "百年孤独.jpg"; sourceTree = "<group>"; };
+		C5FD82282F90C4560003A500 /* 茶花女.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "茶花女.jpg"; sourceTree = "<group>"; };
+		C5FD82292F90C4560003A500 /* 忏悔录.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "忏悔录.jpg"; sourceTree = "<group>"; };
+		C5FD822A2F90C4560003A500 /* 朝花夕拾.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "朝花夕拾.jpg"; sourceTree = "<group>"; };
+		C5FD822B2F90C4560003A500 /* 沉默的大多数.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "沉默的大多数.jpg"; sourceTree = "<group>"; };
+		C5FD822C2F90C4560003A500 /* 第一性原理.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "第一性原理.jpg"; sourceTree = "<group>"; };
+		C5FD822D2F90C4560003A500 /* 二十四史.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "二十四史.jpg"; sourceTree = "<group>"; };
+		C5FD822E2F90C4560003A500 /* 法律的悖论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "法律的悖论.jpg"; sourceTree = "<group>"; };
+		C5FD822F2F90C4560003A500 /* 共产党宣言.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "共产党宣言.jpg"; sourceTree = "<group>"; };
+		C5FD82302F90C4560003A500 /* 国富论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "国富论.jpg"; sourceTree = "<group>"; };
+		C5FD82312F90C4560003A500 /* 活着.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "活着.jpg"; sourceTree = "<group>"; };
+		C5FD82322F90C4560003A500 /* 霍乱时期的爱情.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "霍乱时期的爱情.jpg"; sourceTree = "<group>"; };
+		C5FD82332F90C4560003A500 /* 江城.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "江城.jpg"; sourceTree = "<group>"; };
+		C5FD82342F90C4560003A500 /* 局外人.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "局外人.jpg"; sourceTree = "<group>"; };
+		C5FD82352F90C4560003A500 /* 君主论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "君主论.jpg"; sourceTree = "<group>"; };
+		C5FD82362F90C4560003A500 /* 理想国.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "理想国.jpg"; sourceTree = "<group>"; };
+		C5FD82372F90C4560003A500 /* 论美国的民主.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "论美国的民主.jpg"; sourceTree = "<group>"; };
+		C5FD82382F90C4560003A500 /* 毛泽东选集.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "毛泽东选集.jpg"; sourceTree = "<group>"; };
+		C5FD82392F90C4560003A500 /* 美的历程.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "美的历程.jpg"; sourceTree = "<group>"; };
+		C5FD823A2F90C4560003A500 /* 明朝那些事儿.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "明朝那些事儿.jpg"; sourceTree = "<group>"; };
+		C5FD823B2F90C4560003A500 /* 呐喊.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "呐喊.jpg"; sourceTree = "<group>"; };
+		C5FD823C2F90C4560003A500 /* 你当像鸟飞往你的山.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "你当像鸟飞往你的山.jpg"; sourceTree = "<group>"; };
+		C5FD823D2F90C4560003A500 /* 挪威的森林.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "挪威的森林.jpg"; sourceTree = "<group>"; };
+		C5FD823E2F90C4560003A500 /* 飘.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "飘.jpg"; sourceTree = "<group>"; };
+		C5FD823F2F90C4560003A500 /* 贫穷的本质.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "贫穷的本质.jpg"; sourceTree = "<group>"; };
+		C5FD82402F90C4560003A500 /* 人类简史：从动物到上帝.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "人类简史：从动物到上帝.jpg"; sourceTree = "<group>"; };
+		C5FD82412F90C4560003A500 /* 人性的弱点.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "人性的弱点.jpg"; sourceTree = "<group>"; };
+		C5FD82422F90C4560003A500 /* 如何阅读一本书.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "如何阅读一本书.jpg"; sourceTree = "<group>"; };
+		C5FD82432F90C4560003A500 /* 撒哈拉的故事.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "撒哈拉的故事.jpg"; sourceTree = "<group>"; };
+		C5FD82442F90C4560003A500 /* 三体.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "三体.jpg"; sourceTree = "<group>"; };
+		C5FD82452F90C4560003A500 /* 杀死一只知更鸟.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "杀死一只知更鸟.jpg"; sourceTree = "<group>"; };
+		C5FD82462F90C4560003A500 /* 万历十五年.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "万历十五年.jpg"; sourceTree = "<group>"; };
+		C5FD82472F90C4560003A500 /* 文明的冲突.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = "文明的冲突.webp"; sourceTree = "<group>"; };
+		C5FD82482F90C4560003A500 /* 乌合之众.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "乌合之众.jpg"; sourceTree = "<group>"; };
+		C5FD82492F90C4560003A500 /* 悉达多.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "悉达多.jpg"; sourceTree = "<group>"; };
+		C5FD824A2F90C4560003A500 /* 一个人的朝圣.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "一个人的朝圣.jpg"; sourceTree = "<group>"; };
+		C5FD824B2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "一个人的朝圣2：奎妮的情歌.jpg"; sourceTree = "<group>"; };
+		C5FD824C2F90C4560003A500 /* 艺术的故事.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "艺术的故事.jpg"; sourceTree = "<group>"; };
+		C5FD824D2F90C4560003A500 /* 娱乐至死.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "娱乐至死.jpg"; sourceTree = "<group>"; };
+		C5FD824E2F90C4560003A500 /* 月亮与六便士.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "月亮与六便士.jpg"; sourceTree = "<group>"; };
+		C5FD824F2F90C4560003A500 /* 追风筝的人.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "追风筝的人.jpg"; sourceTree = "<group>"; };
+		C5FD82502F90C4560003A500 /* 资本论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "资本论.jpg"; sourceTree = "<group>"; };
+		C5FD82512F90C4560003A500 /* 罪与罚.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "罪与罚.jpg"; sourceTree = "<group>"; };
+		C5FD82522F90C4560003A500 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C5FD82812F90C47D0003A500 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
+		C5FD82832F90C4830003A500 /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
+		C5FD82852F90C4BB0003A500 /* AppleBooksDBUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBooksDBUtils.swift; sourceTree = "<group>"; };
+		C5FD82862F90C4BB0003A500 /* AppleBooksImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBooksImporter.swift; sourceTree = "<group>"; };
+		C5FD82872F90C4BB0003A500 /* DataExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportService.swift; sourceTree = "<group>"; };
+		C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
+		C5FD82892F90C4BB0003A500 /* ImportDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDTO.swift; sourceTree = "<group>"; };
+		C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDatabase.swift; sourceTree = "<group>"; };
+		C5FD828B2F90C4BB0003A500 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		C5FD829B2F90C5210003A500 /* ArchiveGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveGalleryView.swift; sourceTree = "<group>"; };
+		C5FD829D2F90C5280003A500 /* CarouselWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselWidget.swift; sourceTree = "<group>"; };
+		C5FD829F2F90C5310003A500 /* MonthlyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyRecordView.swift; sourceTree = "<group>"; };
+		C5FD82A02F90C5310003A500 /* YearlyTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearlyTimelineView.swift; sourceTree = "<group>"; };
+		C5FD82A32F90C53A0003A500 /* InspirationWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallView.swift; sourceTree = "<group>"; };
+		C5FD82A52F90C5450003A500 /* FluidLibraryHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluidLibraryHomeView.swift; sourceTree = "<group>"; };
+		C5FD82A82F90C5640003A500 /* AddContentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContentSheet.swift; sourceTree = "<group>"; };
+		C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookEditorSheet.swift; sourceTree = "<group>"; };
+		C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileCarouselView.swift; sourceTree = "<group>"; };
+		C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileGalleryView.swift; sourceTree = "<group>"; };
+		C5FD82AE2F90C59F0003A500 /* MobileHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHomeView.swift; sourceTree = "<group>"; };
+		C5FD82AF2F90C59F0003A500 /* MobileInspirationWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInspirationWallView.swift; sourceTree = "<group>"; };
+		C5FD82B42F90C5A70003A500 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
+		C5FD82B62F90C5AD0003A500 /* MobileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSettingsView.swift; sourceTree = "<group>"; };
+		C5FD82B82F90C5B70003A500 /* MobileMonthlyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileMonthlyRecordView.swift; sourceTree = "<group>"; };
+		C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileYearlyTimelineView.swift; sourceTree = "<group>"; };
+		C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileAddExcerptSheet.swift; sourceTree = "<group>"; };
+		C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookEditorSheet.swift; sourceTree = "<group>"; };
+		C5FD82C12F90C5D40003A500 /* MobileBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookDetailView.swift; sourceTree = "<group>"; };
+		C5FD82C42F90C6150003A500 /* AchievementWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementWallView.swift; sourceTree = "<group>"; };
+		C5FD82C52F90C6150003A500 /* DailyProgressRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyProgressRingView.swift; sourceTree = "<group>"; };
+		C5FD82C62F90C6150003A500 /* DataPanelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelSettingsView.swift; sourceTree = "<group>"; };
+		C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteSelectionSheet.swift; sourceTree = "<group>"; };
+		C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		C5FD82C92F90C6150003A500 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
+		C5FD82CA2F90C6150003A500 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C5FD82D22F90C8D80003A500 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
+		C5FD82D42F90C9370003A500 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LibraryWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
+		C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
+		C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibraryWidgetsExtension.entitlements; sourceTree = "<group>"; };
+		C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimerManager.swift; sourceTree = "<group>"; };
+		C5FD83152F9342350003A500 /* MobileManualLogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileManualLogSheet.swift; sourceTree = "<group>"; };
+		C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimerAttributes.swift; sourceTree = "<group>"; };
+		C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientGlowBackground.swift; sourceTree = "<group>"; };
+		C5FD83222F934C250003A500 /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
+		C5FD83232F934C250003A500 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
+		C5FD83242F934C250003A500 /* LocalCoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCoverView.swift; sourceTree = "<group>"; };
+		C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWidgetGroupBoxStyle.swift; sourceTree = "<group>"; };
+		C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityIntent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -15,6 +237,20 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+			);
+			target = C5FD820A2F90C3530003A500 /* Library */;
+		};
+		C5FD82EE2F90CC1D0003A500 /* Exceptions for "LibraryWidgets" folder in "LibraryWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
+		};
+		C5FD83042F91385D0003A500 /* Exceptions for "LibraryWidgets" folder in "Library" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				MomentumWidget.swift,
 			);
 			target = C5FD820A2F90C3530003A500 /* Library */;
 		};
@@ -29,6 +265,15 @@
 			path = Library;
 			sourceTree = "<group>";
 		};
+		C5FD82E02F90CC1D0003A500 /* LibraryWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C5FD83042F91385D0003A500 /* Exceptions for "LibraryWidgets" folder in "Library" target */,
+				C5FD82EE2F90CC1D0003A500 /* Exceptions for "LibraryWidgets" folder in "LibraryWidgetsExtension" target */,
+			);
+			path = LibraryWidgets;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,13 +284,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C5FD82D72F90CC1D0003A500 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5FD82DF2F90CC1D0003A500 /* SwiftUI.framework in Frameworks */,
+				C5FD82DD2F90CC1D0003A500 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		C5FD82022F90C3530003A500 = {
 			isa = PBXGroup;
 			children = (
+				C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */,
+				C5FD82242F90C3DA0003A500 /* ios */,
+				C5FD82232F90C3C60003A500 /* macOs */,
+				C5FD821E2F90C3730003A500 /* Shared */,
 				C5FD820D2F90C3530003A500 /* Library */,
+				C5FD82E02F90CC1D0003A500 /* LibraryWidgets */,
+				C5FD82DB2F90CC1D0003A500 /* Frameworks */,
 				C5FD820C2F90C3530003A500 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,8 +314,186 @@
 			isa = PBXGroup;
 			children = (
 				C5FD820B2F90C3530003A500 /* Library.app */,
+				C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C5FD821E2F90C3730003A500 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD831D2F934BD20003A500 /* CommonUI */,
+				C5FD821F2F90C3820003A500 /* Models */,
+				C5FD82202F90C3990003A500 /* Database */,
+				C5FD82532F90C4560003A500 /* Resources */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		C5FD821F2F90C3820003A500 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82812F90C47D0003A500 /* DataModels.swift */,
+				C5FD82832F90C4830003A500 /* PreviewData.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C5FD82202F90C3990003A500 /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82852F90C4BB0003A500 /* AppleBooksDBUtils.swift */,
+				C5FD82862F90C4BB0003A500 /* AppleBooksImporter.swift */,
+				C5FD82872F90C4BB0003A500 /* DataExportService.swift */,
+				C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */,
+				C5FD82892F90C4BB0003A500 /* ImportDTO.swift */,
+				C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */,
+				C5FD828B2F90C4BB0003A500 /* SyncEngine.swift */,
+				C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */,
+			);
+			path = Database;
+			sourceTree = "<group>";
+		};
+		C5FD82232F90C3C60003A500 /* macOs */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82C32F90C6000003A500 /* Settings */,
+				C5FD82A72F90C5570003A500 /* Sheets */,
+				C5FD829B2F90C5210003A500 /* ArchiveGalleryView.swift */,
+				C5FD829D2F90C5280003A500 /* CarouselWidget.swift */,
+				C5FD829F2F90C5310003A500 /* MonthlyRecordView.swift */,
+				C5FD82A02F90C5310003A500 /* YearlyTimelineView.swift */,
+				C5FD82A32F90C53A0003A500 /* InspirationWallView.swift */,
+				C5FD82A52F90C5450003A500 /* FluidLibraryHomeView.swift */,
+				C5FD82D22F90C8D80003A500 /* BookDetailView.swift */,
+				C5FD82D42F90C9370003A500 /* ContentView.swift */,
+			);
+			path = macOs;
+			sourceTree = "<group>";
+		};
+		C5FD82242F90C3DA0003A500 /* ios */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82BC2F90C5C10003A500 /* sheets */,
+				C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */,
+				C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */,
+				C5FD82AE2F90C59F0003A500 /* MobileHomeView.swift */,
+				C5FD82AF2F90C59F0003A500 /* MobileInspirationWallView.swift */,
+				C5FD82B42F90C5A70003A500 /* MobileContentView.swift */,
+				C5FD82B62F90C5AD0003A500 /* MobileSettingsView.swift */,
+				C5FD82B82F90C5B70003A500 /* MobileMonthlyRecordView.swift */,
+				C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */,
+				C5FD82C12F90C5D40003A500 /* MobileBookDetailView.swift */,
+			);
+			path = ios;
+			sourceTree = "<group>";
+		};
+		C5FD82532F90C4560003A500 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82262F90C4560003A500 /* 奥德赛.jpg */,
+				C5FD82272F90C4560003A500 /* 百年孤独.jpg */,
+				C5FD82282F90C4560003A500 /* 茶花女.jpg */,
+				C5FD82292F90C4560003A500 /* 忏悔录.jpg */,
+				C5FD822A2F90C4560003A500 /* 朝花夕拾.jpg */,
+				C5FD822B2F90C4560003A500 /* 沉默的大多数.jpg */,
+				C5FD822C2F90C4560003A500 /* 第一性原理.jpg */,
+				C5FD822D2F90C4560003A500 /* 二十四史.jpg */,
+				C5FD822E2F90C4560003A500 /* 法律的悖论.jpg */,
+				C5FD822F2F90C4560003A500 /* 共产党宣言.jpg */,
+				C5FD82302F90C4560003A500 /* 国富论.jpg */,
+				C5FD82312F90C4560003A500 /* 活着.jpg */,
+				C5FD82322F90C4560003A500 /* 霍乱时期的爱情.jpg */,
+				C5FD82332F90C4560003A500 /* 江城.jpg */,
+				C5FD82342F90C4560003A500 /* 局外人.jpg */,
+				C5FD82352F90C4560003A500 /* 君主论.jpg */,
+				C5FD82362F90C4560003A500 /* 理想国.jpg */,
+				C5FD82372F90C4560003A500 /* 论美国的民主.jpg */,
+				C5FD82382F90C4560003A500 /* 毛泽东选集.jpg */,
+				C5FD82392F90C4560003A500 /* 美的历程.jpg */,
+				C5FD823A2F90C4560003A500 /* 明朝那些事儿.jpg */,
+				C5FD823B2F90C4560003A500 /* 呐喊.jpg */,
+				C5FD823C2F90C4560003A500 /* 你当像鸟飞往你的山.jpg */,
+				C5FD823D2F90C4560003A500 /* 挪威的森林.jpg */,
+				C5FD823E2F90C4560003A500 /* 飘.jpg */,
+				C5FD823F2F90C4560003A500 /* 贫穷的本质.jpg */,
+				C5FD82402F90C4560003A500 /* 人类简史：从动物到上帝.jpg */,
+				C5FD82412F90C4560003A500 /* 人性的弱点.jpg */,
+				C5FD82422F90C4560003A500 /* 如何阅读一本书.jpg */,
+				C5FD82432F90C4560003A500 /* 撒哈拉的故事.jpg */,
+				C5FD82442F90C4560003A500 /* 三体.jpg */,
+				C5FD82452F90C4560003A500 /* 杀死一只知更鸟.jpg */,
+				C5FD82462F90C4560003A500 /* 万历十五年.jpg */,
+				C5FD82472F90C4560003A500 /* 文明的冲突.webp */,
+				C5FD82482F90C4560003A500 /* 乌合之众.jpg */,
+				C5FD82492F90C4560003A500 /* 悉达多.jpg */,
+				C5FD824A2F90C4560003A500 /* 一个人的朝圣.jpg */,
+				C5FD824B2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg */,
+				C5FD824C2F90C4560003A500 /* 艺术的故事.jpg */,
+				C5FD824D2F90C4560003A500 /* 娱乐至死.jpg */,
+				C5FD824E2F90C4560003A500 /* 月亮与六便士.jpg */,
+				C5FD824F2F90C4560003A500 /* 追风筝的人.jpg */,
+				C5FD82502F90C4560003A500 /* 资本论.jpg */,
+				C5FD82512F90C4560003A500 /* 罪与罚.jpg */,
+				C5FD82522F90C4560003A500 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C5FD82A72F90C5570003A500 /* Sheets */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82A82F90C5640003A500 /* AddContentSheet.swift */,
+				C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */,
+			);
+			path = Sheets;
+			sourceTree = "<group>";
+		};
+		C5FD82BC2F90C5C10003A500 /* sheets */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */,
+				C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */,
+				C5FD83152F9342350003A500 /* MobileManualLogSheet.swift */,
+			);
+			path = sheets;
+			sourceTree = "<group>";
+		};
+		C5FD82C32F90C6000003A500 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82C42F90C6150003A500 /* AchievementWallView.swift */,
+				C5FD82C52F90C6150003A500 /* DailyProgressRingView.swift */,
+				C5FD82C62F90C6150003A500 /* DataPanelSettingsView.swift */,
+				C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */,
+				C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */,
+				C5FD82C92F90C6150003A500 /* SettingsComponents.swift */,
+				C5FD82CA2F90C6150003A500 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		C5FD82DB2F90CC1D0003A500 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */,
+				C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C5FD831D2F934BD20003A500 /* CommonUI */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */,
+				C5FD83222F934C250003A500 /* Background.swift */,
+				C5FD83232F934C250003A500 /* ConfettiView.swift */,
+				C5FD83242F934C250003A500 /* LocalCoverView.swift */,
+				C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */,
+				C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */,
+				C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */,
+			);
+			path = CommonUI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -68,10 +506,12 @@
 				C5FD82072F90C3530003A500 /* Sources */,
 				C5FD82082F90C3530003A500 /* Frameworks */,
 				C5FD82092F90C3530003A500 /* Resources */,
+				C5FD82EF2F90CC1D0003A500 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C5FD82E92F90CC1D0003A500 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C5FD820D2F90C3530003A500 /* Library */,
@@ -82,6 +522,28 @@
 			productName = Library;
 			productReference = C5FD820B2F90C3530003A500 /* Library.app */;
 			productType = "com.apple.product-type.application";
+		};
+		C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C5FD82EB2F90CC1D0003A500 /* Build configuration list for PBXNativeTarget "LibraryWidgetsExtension" */;
+			buildPhases = (
+				C5FD82D62F90CC1D0003A500 /* Sources */,
+				C5FD82D72F90CC1D0003A500 /* Frameworks */,
+				C5FD82D82F90CC1D0003A500 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C5FD82E02F90CC1D0003A500 /* LibraryWidgets */,
+			);
+			name = LibraryWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = LibraryWidgetsExtension;
+			productReference = C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -94,6 +556,9 @@
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					C5FD820A2F90C3530003A500 = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					C5FD82D92F90CC1D0003A500 = {
 						CreatedOnToolsVersion = 26.4;
 					};
 				};
@@ -113,12 +578,65 @@
 			projectRoot = "";
 			targets = (
 				C5FD820A2F90C3530003A500 /* Library */,
+				C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C5FD82092F90C3530003A500 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5FD82542F90C4560003A500 /* 娱乐至死.jpg in Resources */,
+				C5FD82552F90C4560003A500 /* 茶花女.jpg in Resources */,
+				C5FD82562F90C4560003A500 /* 共产党宣言.jpg in Resources */,
+				C5FD82572F90C4560003A500 /* 君主论.jpg in Resources */,
+				C5FD82582F90C4560003A500 /* 贫穷的本质.jpg in Resources */,
+				C5FD82592F90C4560003A500 /* 二十四史.jpg in Resources */,
+				C5FD825A2F90C4560003A500 /* 奥德赛.jpg in Resources */,
+				C5FD825B2F90C4560003A500 /* 罪与罚.jpg in Resources */,
+				C5FD825C2F90C4560003A500 /* 撒哈拉的故事.jpg in Resources */,
+				C5FD825D2F90C4560003A500 /* 文明的冲突.webp in Resources */,
+				C5FD825E2F90C4560003A500 /* 人类简史：从动物到上帝.jpg in Resources */,
+				C5FD825F2F90C4560003A500 /* Assets.xcassets in Resources */,
+				C5FD82602F90C4560003A500 /* 呐喊.jpg in Resources */,
+				C5FD82612F90C4560003A500 /* 局外人.jpg in Resources */,
+				C5FD82622F90C4560003A500 /* 万历十五年.jpg in Resources */,
+				C5FD82632F90C4560003A500 /* 江城.jpg in Resources */,
+				C5FD82642F90C4560003A500 /* 你当像鸟飞往你的山.jpg in Resources */,
+				C5FD82652F90C4560003A500 /* 如何阅读一本书.jpg in Resources */,
+				C5FD82662F90C4560003A500 /* 朝花夕拾.jpg in Resources */,
+				C5FD82672F90C4560003A500 /* 明朝那些事儿.jpg in Resources */,
+				C5FD82682F90C4560003A500 /* 霍乱时期的爱情.jpg in Resources */,
+				C5FD82692F90C4560003A500 /* 忏悔录.jpg in Resources */,
+				C5FD826A2F90C4560003A500 /* 乌合之众.jpg in Resources */,
+				C5FD826B2F90C4560003A500 /* 资本论.jpg in Resources */,
+				C5FD826C2F90C4560003A500 /* 法律的悖论.jpg in Resources */,
+				C5FD826D2F90C4560003A500 /* 杀死一只知更鸟.jpg in Resources */,
+				C5FD826E2F90C4560003A500 /* 月亮与六便士.jpg in Resources */,
+				C5FD826F2F90C4560003A500 /* 三体.jpg in Resources */,
+				C5FD82702F90C4560003A500 /* 百年孤独.jpg in Resources */,
+				C5FD82712F90C4560003A500 /* 一个人的朝圣.jpg in Resources */,
+				C5FD82722F90C4560003A500 /* 活着.jpg in Resources */,
+				C5FD82732F90C4560003A500 /* 人性的弱点.jpg in Resources */,
+				C5FD82742F90C4560003A500 /* 美的历程.jpg in Resources */,
+				C5FD82752F90C4560003A500 /* 悉达多.jpg in Resources */,
+				C5FD82762F90C4560003A500 /* 追风筝的人.jpg in Resources */,
+				C5FD82772F90C4560003A500 /* 沉默的大多数.jpg in Resources */,
+				C5FD82782F90C4560003A500 /* 论美国的民主.jpg in Resources */,
+				C5FD82792F90C4560003A500 /* 毛泽东选集.jpg in Resources */,
+				C5FD827A2F90C4560003A500 /* 艺术的故事.jpg in Resources */,
+				C5FD827B2F90C4560003A500 /* 理想国.jpg in Resources */,
+				C5FD827C2F90C4560003A500 /* 挪威的森林.jpg in Resources */,
+				C5FD827D2F90C4560003A500 /* 第一性原理.jpg in Resources */,
+				C5FD827E2F90C4560003A500 /* 国富论.jpg in Resources */,
+				C5FD827F2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg in Resources */,
+				C5FD82802F90C4560003A500 /* 飘.jpg in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5FD82D82F90CC1D0003A500 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -132,10 +650,77 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5FD83162F9342350003A500 /* MobileManualLogSheet.swift in Sources */,
+				C5FD82842F90C4830003A500 /* PreviewData.swift in Sources */,
+				C5FD82A12F90C5310003A500 /* MonthlyRecordView.swift in Sources */,
+				C5FD82A62F90C5450003A500 /* FluidLibraryHomeView.swift in Sources */,
+				C5FD82CB2F90C6150003A500 /* DataPanelSettingsView.swift in Sources */,
+				C5FD82CC2F90C6150003A500 /* SettingsComponents.swift in Sources */,
+				C5FD82CD2F90C6150003A500 /* DeleteSelectionSheet.swift in Sources */,
+				C5FD82CE2F90C6150003A500 /* DailyProgressRingView.swift in Sources */,
+				C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */,
+				C5FD82D02F90C6150003A500 /* AchievementWallView.swift in Sources */,
+				C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */,
+				C5FD82A22F90C5310003A500 /* YearlyTimelineView.swift in Sources */,
+				C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */,
+				C5FD83272F934C250003A500 /* AmbientGlowBackground.swift in Sources */,
+				C5FD83282F934C250003A500 /* LocalCoverView.swift in Sources */,
+				C5FD83292F934C250003A500 /* Background.swift in Sources */,
+				C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */,
+				C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */,
+				C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */,
+				C5FD828D2F90C4BB0003A500 /* AppleBooksDBUtils.swift in Sources */,
+				C5FD82BF2F90C5CB0003A500 /* MobileBookEditorSheet.swift in Sources */,
+				C5FD82C02F90C5CB0003A500 /* MobileAddExcerptSheet.swift in Sources */,
+				C5FD830F2F92890E0003A500 /* ReadingTimerManager.swift in Sources */,
+				C5FD828E2F90C4BB0003A500 /* SyncEngine.swift in Sources */,
+				C5FD828F2F90C4BB0003A500 /* ImportDTO.swift in Sources */,
+				C5FD82B72F90C5AD0003A500 /* MobileSettingsView.swift in Sources */,
+				C5FD82902F90C4BB0003A500 /* DataExportService.swift in Sources */,
+				C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */,
+				C5FD829E2F90C5280003A500 /* CarouselWidget.swift in Sources */,
+				C5FD83492F93D8A40003A500 /* LiveActivityIntent.swift in Sources */,
+				C5FD82922F90C4BB0003A500 /* AppleBooksImporter.swift in Sources */,
+				C5FD82822F90C47D0003A500 /* DataModels.swift in Sources */,
+				C5FD82C22F90C5D40003A500 /* MobileBookDetailView.swift in Sources */,
+				C5FD82A42F90C53A0003A500 /* InspirationWallView.swift in Sources */,
+				C5FD82AA2F90C5640003A500 /* BookEditorSheet.swift in Sources */,
+				C5FD82AB2F90C5640003A500 /* AddContentSheet.swift in Sources */,
+				C5FD82BA2F90C5B70003A500 /* MobileYearlyTimelineView.swift in Sources */,
+				C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */,
+				C5FD82BB2F90C5B70003A500 /* MobileMonthlyRecordView.swift in Sources */,
+				C5FD831F2F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */,
+				C5FD829C2F90C5210003A500 /* ArchiveGalleryView.swift in Sources */,
+				C5FD82B02F90C59F0003A500 /* MobileCarouselView.swift in Sources */,
+				C5FD82B12F90C59F0003A500 /* MobileGalleryView.swift in Sources */,
+				C5FD82B22F90C59F0003A500 /* MobileHomeView.swift in Sources */,
+				C5FD82B32F90C59F0003A500 /* MobileInspirationWallView.swift in Sources */,
+				C5FD82D32F90C8D80003A500 /* BookDetailView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5FD82D62F90CC1D0003A500 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5FD82FC2F90CD2E0003A500 /* DataModels.swift in Sources */,
+				C5FD834A2F93D8A40003A500 /* LiveActivityIntent.swift in Sources */,
+				C5FD82FA2F90CD1F0003A500 /* SharedDatabase.swift in Sources */,
+				C5FD82FB2F90CD290003A500 /* PreviewData.swift in Sources */,
+				C5FD83202F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */,
+				C5FD83102F92890E0003A500 /* ReadingTimerManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C5FD82E92F90CC1D0003A500 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
+			targetProxy = C5FD82E82F90CC1D0003A500 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		C5FD821A2F90C3530003A500 /* Debug */ = {
@@ -143,15 +728,28 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Library/Library.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L8T28YW2UK;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Library/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -167,7 +765,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = akram.Library;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -188,15 +786,28 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Library/Library.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L8T28YW2UK;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Library/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -212,7 +823,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = akram.Library;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -344,6 +955,94 @@
 			};
 			name = Release;
 		};
+		C5FD82EC2F90CC1D0003A500 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = LibraryWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L8T28YW2UK;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LibraryWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LibraryWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library.LibraryWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Debug;
+		};
+		C5FD82ED2F90CC1D0003A500 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = LibraryWidgetsExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L8T28YW2UK;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LibraryWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LibraryWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library.LibraryWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.4;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -361,6 +1060,15 @@
 			buildConfigurations = (
 				C5FD821A2F90C3530003A500 /* Debug */,
 				C5FD821B2F90C3530003A500 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C5FD82EB2F90CC1D0003A500 /* Build configuration list for PBXNativeTarget "LibraryWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5FD82EC2F90CC1D0003A500 /* Debug */,
+				C5FD82ED2F90CC1D0003A500 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
