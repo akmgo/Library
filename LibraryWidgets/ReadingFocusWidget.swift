@@ -11,6 +11,7 @@ import UIKit
 
 // MARK: - 数据模型
 
+/// 中号阅读横幅组件的专属实体。
 struct ReadingEntry: TimelineEntry {
     let date: Date
     let hasBook: Bool
@@ -22,6 +23,7 @@ struct ReadingEntry: TimelineEntry {
 
 // MARK: - 数据提供者
 
+/// 提供带有详细书名与百分比横条的中号横幅组件数据。
 struct ReadingProvider: TimelineProvider {
     func placeholder(in context: Context) -> ReadingEntry {
         ReadingEntry(date: Date(), hasBook: true, title: "百年孤独", author: "加西亚·马尔克斯", progress: 45.0, coverData: nil)
@@ -72,6 +74,8 @@ struct ReadingProvider: TimelineProvider {
 
 // MARK: - 全新设计的视图层
 
+/// 中尺寸 (`.systemMedium`) 阅读横幅视图。
+/// 布局横向伸展，左侧包含较大的等比封面，右侧包含书本明细与横向水平进度轨。
 struct ReadingWidgetView: View {
     var entry: ReadingProvider.Entry
 
@@ -140,7 +144,7 @@ struct ReadingWidgetView: View {
                                 ZStack(alignment: .leading) {
                                     Capsule().fill(Color.primary.opacity(0.08))
                                     Capsule().fill(Color.blue.gradient)
-                                        .frame(width: max(geo.size.width * (entry.progress / 100.0), 0))
+                                        .frame(width: max(0, geo.size.width * (entry.progress / 100.0)), height: 6)
                                 }
                             }
                             .frame(height: 5) // 极细设计，非常精致
@@ -161,17 +165,11 @@ struct ReadingWidgetView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .containerBackground(for: .widget) {
-            #if os(macOS)
-            Color(nsColor: .windowBackgroundColor)
-            #else
-            Color(uiColor: .systemBackground)
-            #endif
-        }
+        .containerBackground(Color.adaptiveWidgetBackground, for: .widget)
     }
 }
 
-/// 占位封面组件
+/// 缺少真实封面图片数据时的极简线框图占位符。
 private struct FallbackCover: View {
     var body: some View {
         ZStack {
@@ -185,6 +183,7 @@ private struct FallbackCover: View {
 
 // MARK: - 注册组件
 
+/// 中号阅读焦点组件配置。
 struct ReadingFocusWidget: Widget {
     /// ✨ 必须显式声明全局唯一的 kind 属性，这是小组件的“身份证号”
     let kind: String = "ReadingFocusWidget"

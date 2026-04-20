@@ -11,6 +11,7 @@ import UIKit
 
 // MARK: - 数据模型
 
+/// 承载中号数据大盘状态的小组件时间线实体。
 struct DashboardEntry: TimelineEntry {
     let date: Date
     let weekCount: Int
@@ -23,7 +24,7 @@ struct DashboardEntry: TimelineEntry {
 
     let todayMinutes: Int
 
-    // 目标（从 JSON 读取的自定义目标）
+    // 目标（从 SwiftData 读取的自定义目标）
     let dailyGoal: Int
     let weekTarget: Int
     let monthTarget: Int
@@ -32,15 +33,19 @@ struct DashboardEntry: TimelineEntry {
 
 // MARK: - 数据提供者
 
+/// 为中号数据大盘提供时间线数据的核心引擎。
 struct DashboardProvider: TimelineProvider {
+    /// 提供在小组件库中预览时的占位符数据。
     func placeholder(in context: Context) -> DashboardEntry {
         DashboardEntry(date: Date(), weekCount: 3, monthlyDays: 12, yearlyCount: 25, totalFinished: 25, totalBooksInLibrary: 42, todayMinutes: 15, dailyGoal: 30, weekTarget: 7, monthTarget: 30, yearTarget: 50)
     }
 
+    /// 提供小组件添加时的瞬时快照。
     func getSnapshot(in context: Context, completion: @escaping (DashboardEntry) -> ()) {
         Task { @MainActor in completion(fetchRealData()) }
     }
 
+    /// 生成小组件的未来更新时间线（设定为每 30 分钟刷新一次）。
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         Task { @MainActor in
             let entry = fetchRealData()
@@ -49,6 +54,7 @@ struct DashboardProvider: TimelineProvider {
         }
     }
 
+    /// 从共享的 SwiftData 容器中提取全库阅读记录并进行实时数学聚合。
     @MainActor
     private func fetchRealData() -> DashboardEntry {
         let context = SharedDatabase.shared.container.mainContext
@@ -57,8 +63,8 @@ struct DashboardProvider: TimelineProvider {
             let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
             
             // ✨ 核心替换：直接从 SwiftData 中提取最新的 UserConfig，抛弃 JSON！
-                        let configDesc = FetchDescriptor<UserConfig>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
-                        let globalConfig = (try? context.fetch(configDesc))?.first ?? UserConfig() // 查不到就给默认值
+            let configDesc = FetchDescriptor<UserConfig>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
+            let globalConfig = (try? context.fetch(configDesc))?.first ?? UserConfig() // 查不到就给默认值
             
             let calendar = Calendar.current; let today = Date()
             let currentYear = calendar.component(.year, from: today)
@@ -116,6 +122,9 @@ struct DashboardProvider: TimelineProvider {
 
 // MARK: - 主视图 (极致利用原生边距)
 
+/// 中号尺寸 (`.systemMedium`) 的阅读统计看板视图。
+///
+/// 上方并排呈现四个微型环形图表，下方辅以今日进度的线性指示器。
 struct DashboardWidgetEntryView: View {
     var entry: DashboardProvider.Entry
 
@@ -174,6 +183,7 @@ struct DashboardWidgetEntryView: View {
 
 // MARK: - 子组件：微型状态圆环 (尺寸 50)
 
+/// 为看板定制的微型带 Icon 的环形图表构建器。
 private struct WidgetMicroMetric: View {
     let title: String
     let current: Int
@@ -215,6 +225,7 @@ private struct WidgetMicroMetric: View {
 
 // MARK: - 注册组件
 
+/// 中号阅读统计看板组件注册入口。
 struct DesktopDashboardWidget: Widget {
     let kind: String = "DesktopDashboardWidget"
     var body: some WidgetConfiguration {

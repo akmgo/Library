@@ -3,12 +3,22 @@ import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
-// MARK: - 1. 编辑/添置新书弹窗 (Apple 原生规范重构版)
+// MARK: - ✨ 编辑与添置弹窗 (Apple 原生规范重构版)
+
+/// 涵盖“新增图书”与“编辑旧书信息”双重职责的表单弹窗。
+///
+/// **功能与交互：**
+/// 该弹窗严格遵循 macOS 原生的系统表单规范，将视觉重心置于图片区域。
+/// - **智能判别**：根据传入的 `bookToEdit` 是否为 nil，动态决定标题与确认按钮的文字。
+/// - **原生拖拽**：封面区域通过注入 `onDrop` 和 `fileImporter` 支持本地文件的直接拖拽及弹窗选取。
+/// - **防呆机制**：拥有书名查重能力，避免同名书籍的二次录入；并在必填项未填充时，原生置灰（禁用）保存按钮。
 struct BookEditorSheet: View {
     @Query var allBooks: [Book]
     @Environment(\.modelContext) private var modelContext
     
     @Binding var isPresented: Bool
+    
+    /// 要编辑的书籍实体。若为 `nil`，则本组件代表处于“新建”模式。
     var bookToEdit: Book? = nil
     
     @State private var titleInput: String = ""
@@ -86,6 +96,7 @@ struct BookEditorSheet: View {
                         }
                     } catch { /* 静默处理 */ }
                 }
+                // 启用图片类型的拖放支持
                 .onDrop(of: [UTType.image], isTargeted: nil) { providers in
                     if let provider = providers.first {
                         provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
@@ -135,6 +146,7 @@ struct BookEditorSheet: View {
                 Button(isEdit ? "保存修改" : "确认录入") { saveBook() }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
+                    // 防呆机制：当没有内容输入，或者编辑状态下内容无变化时，禁止保存
                     .disabled(isFormEmpty || !hasChanges)
             }
             .padding(16)
@@ -155,6 +167,11 @@ struct BookEditorSheet: View {
     }
     
     // MARK: - 存储逻辑
+    
+    /// 执行表单数据的提取与覆盖。
+    ///
+    /// 如果是新建模式，内部会自动执行基于书名的强排重校验；
+    /// 如果是通过了排重，会实例化 `Book` 插入环境；若是编辑模式，则对旧实例字段执行覆写操作。
     private func saveBook() {
         guard !titleInput.isEmpty, !authorInput.isEmpty else { return }
         let existingTitles = Set(allBooks.compactMap { $0.title })

@@ -1,16 +1,27 @@
 import Foundation
 import SwiftData
 
+/// 掌控全应用持久化存储的全局单例管理器。
+///
+/// **核心职责：**
+/// 1. **容器组装**：集中定义了系统所需的全局 `Schema`，并生成支持 CloudKit 的 `ModelContainer`。
+/// 2. **数据打通**：通过统一定义 `App Group ID`，确保 iOS 主 App 与各种小组件（Widgets、Live Activity）能够访问同一个底层 SQLite 文件。
+/// 3. **故障降级**：如果磁盘访问权限被阻断，具备回落至内存数据库的安全自愈机制。
 @MainActor
 public class SharedDatabase {
+    /// 数据库全局单例。
     public static let shared = SharedDatabase()
     
+    /// 核心数据库上下文容器，提供给整个生命周期使用。
     public let container: ModelContainer
-    // ✨ 统一管理 App Group 的 ID，杜绝到处硬编码
+    
+    /// 统一管理的 App Group 标识符，供小组件和主 App 跨进程共享目录使用。
     public let groupID = "group.com.akram.library"
-    // ✨ 统一对外提供共享的 UserDefaults
+    
+    /// 绑定到共享 App Group 的偏好设置中心，用于多进程间的基础状态同步。
     public let sharedDefaults: UserDefaults
 
+    /// 挂载并初始化全局 SwiftData 引擎。
     private init() {
         // 初始化共享的 UserDefaults
         self.sharedDefaults = UserDefaults(suiteName: "group.com.akram.library") ?? UserDefaults.standard
@@ -19,6 +30,7 @@ public class SharedDatabase {
         let fileManager = FileManager.default
         let targetURL: URL
         
+        // 尝试获取 App Group 共享目录，使 Widgets 能读写同一份文件
         if let groupURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: "group.com.akram.library") {
             let customDBDirectory = groupURL.appendingPathComponent("MyLibraryData", isDirectory: true)
             if !fileManager.fileExists(atPath: customDBDirectory.path) {
@@ -48,10 +60,15 @@ public class SharedDatabase {
             let fallbackConfig = ModelConfiguration(isStoredInMemoryOnly: true)
             container = try! ModelContainer(for: schema, configurations: [fallbackConfig])
         }
-        
     }
 }
 
+/// 执行 iCloud 数据冲突自愈操作：剔除冗余的重复用户配置。
+///
+/// 由于 CloudKit 多端同步的网络延迟，`UserConfig` 表可能会出现并行创建导致的多条脏数据。
+/// 此逻辑通过检索所有配置并按时间降序排列，保留最新的一条，物理销毁其余过期记录。
+///
+/// - Parameter context: 用于执行检索与删除操作的数据库事务上下文。
 @MainActor
 func pruneDuplicateConfigs(context: ModelContext) {
     do {
@@ -66,7 +83,7 @@ func pruneDuplicateConfigs(context: ModelContext) {
             return
         }
         
-        // 3. ✨ 核心杀毒逻辑：只要超过 1 条，就把后面的全部物理删除
+        // 3. 核心杀毒逻辑：只要超过 1 条，就把后面的全部物理删除
         if allConfigs.count > 1 {
             for i in 1..<allConfigs.count {
                 context.delete(allConfigs[i])
@@ -78,5 +95,3 @@ func pruneDuplicateConfigs(context: ModelContext) {
         print("❌ 配置自愈检查失败: \(error)")
     }
 }
-
-

@@ -2,6 +2,16 @@ import SwiftData
 import SwiftUI
 
 // MARK: - ✨ 跨平台公用组件：全息环境氛围光
+
+/// 跨平台的应用底层全息环境氛围光背景。
+///
+/// 该组件根据设备平台（iOS 或 macOS）自动适配最底层的原生系统背景色。
+/// 如果传入了具体的书籍对象，它会提取该书籍的封面，通过极致的毛玻璃模糊、放大和居中处理，
+/// 生成一层与当前阅读内容相呼应的沉浸式动态光晕效果。
+/// 在 macOS 平台上，还会额外叠加一层星空点缀的弥散光效果。
+///
+/// - Parameters:
+///   - book: 当前正在阅读或选中的 ``Book`` 对象。如果为 `nil`，则仅显示纯色系统背景。
 struct AmbientGlowBackground: View {
     let book: Book?
     

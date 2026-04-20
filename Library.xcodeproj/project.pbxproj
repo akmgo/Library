@@ -61,33 +61,21 @@
 		C5FD82902F90C4BB0003A500 /* DataExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82872F90C4BB0003A500 /* DataExportService.swift */; };
 		C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */; };
 		C5FD82922F90C4BB0003A500 /* AppleBooksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82862F90C4BB0003A500 /* AppleBooksImporter.swift */; };
-		C5FD829C2F90C5210003A500 /* ArchiveGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD829B2F90C5210003A500 /* ArchiveGalleryView.swift */; };
-		C5FD829E2F90C5280003A500 /* CarouselWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD829D2F90C5280003A500 /* CarouselWidget.swift */; };
-		C5FD82A12F90C5310003A500 /* MonthlyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD829F2F90C5310003A500 /* MonthlyRecordView.swift */; };
-		C5FD82A22F90C5310003A500 /* YearlyTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A02F90C5310003A500 /* YearlyTimelineView.swift */; };
-		C5FD82A42F90C53A0003A500 /* InspirationWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A32F90C53A0003A500 /* InspirationWallView.swift */; };
-		C5FD82A62F90C5450003A500 /* FluidLibraryHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A52F90C5450003A500 /* FluidLibraryHomeView.swift */; };
 		C5FD82AA2F90C5640003A500 /* BookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */; };
 		C5FD82AB2F90C5640003A500 /* AddContentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A82F90C5640003A500 /* AddContentSheet.swift */; };
 		C5FD82B02F90C59F0003A500 /* MobileCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */; };
 		C5FD82B12F90C59F0003A500 /* MobileGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */; };
-		C5FD82B22F90C59F0003A500 /* MobileHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AE2F90C59F0003A500 /* MobileHomeView.swift */; };
-		C5FD82B32F90C59F0003A500 /* MobileInspirationWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AF2F90C59F0003A500 /* MobileInspirationWallView.swift */; };
 		C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B42F90C5A70003A500 /* MobileContentView.swift */; };
 		C5FD82B72F90C5AD0003A500 /* MobileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B62F90C5AD0003A500 /* MobileSettingsView.swift */; };
 		C5FD82BA2F90C5B70003A500 /* MobileYearlyTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */; };
 		C5FD82BB2F90C5B70003A500 /* MobileMonthlyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B82F90C5B70003A500 /* MobileMonthlyRecordView.swift */; };
 		C5FD82BF2F90C5CB0003A500 /* MobileBookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */; };
 		C5FD82C02F90C5CB0003A500 /* MobileAddExcerptSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */; };
-		C5FD82C22F90C5D40003A500 /* MobileBookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C12F90C5D40003A500 /* MobileBookDetailView.swift */; };
-		C5FD82CB2F90C6150003A500 /* DataPanelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C62F90C6150003A500 /* DataPanelSettingsView.swift */; };
 		C5FD82CC2F90C6150003A500 /* SettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C92F90C6150003A500 /* SettingsComponents.swift */; };
 		C5FD82CD2F90C6150003A500 /* DeleteSelectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */; };
-		C5FD82CE2F90C6150003A500 /* DailyProgressRingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C52F90C6150003A500 /* DailyProgressRingView.swift */; };
 		C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */; };
 		C5FD82D02F90C6150003A500 /* AchievementWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C42F90C6150003A500 /* AchievementWallView.swift */; };
 		C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82CA2F90C6150003A500 /* SettingsView.swift */; };
-		C5FD82D32F90C8D80003A500 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82D22F90C8D80003A500 /* BookDetailView.swift */; };
 		C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82D42F90C9370003A500 /* ContentView.swift */; };
 		C5FD82DD2F90CC1D0003A500 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */; };
 		C5FD82DF2F90CC1D0003A500 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */; };
@@ -107,6 +95,51 @@
 		C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83232F934C250003A500 /* ConfettiView.swift */; };
 		C5FD83492F93D8A40003A500 /* LiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */; };
 		C5FD834A2F93D8A40003A500 /* LiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */; };
+		C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834C2F9513080003A500 /* ReadingHero.swift */; };
+		C5FD83502F9513210003A500 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834F2F9513210003A500 /* FocusTimer.swift */; };
+		C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83522F9513340003A500 /* MomentumChart.swift */; };
+		C5FD83572F95134E0003A500 /* HeatmapRibbon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */; };
+		C5FD83592F95135F0003A500 /* ResonanceWave.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83582F95135F0003A500 /* ResonanceWave.swift */; };
+		C5FD835C2F9513770003A500 /* QueueBookshelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD835B2F9513770003A500 /* QueueBookshelf.swift */; };
+		C5FD83602F9513870003A500 /* KnowledgeSpectrum.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD835E2F9513870003A500 /* KnowledgeSpectrum.swift */; };
+		C5FD83632F9513B80003A500 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83612F9513B80003A500 /* HomeView.swift */; };
+		C5FD83662F95152A0003A500 /* BookCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83652F95152A0003A500 /* BookCard.swift */; };
+		C5FD83682F9515500003A500 /* MiniInventoryBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83672F9515500003A500 /* MiniInventoryBar.swift */; };
+		C5FD836A2F95156D0003A500 /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83692F95156D0003A500 /* GalleryView.swift */; };
+		C5FD836D2F9516410003A500 /* CarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD836C2F9516410003A500 /* CarouselView.swift */; };
+		C5FD836F2F9516590003A500 /* CoverFlowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD836E2F9516590003A500 /* CoverFlowCard.swift */; };
+		C5FD83722F9517010003A500 /* InspirationWallModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83712F9517010003A500 /* InspirationWallModels.swift */; };
+		C5FD83762F9517330003A500 /* InspirationWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83752F9517330003A500 /* InspirationWallView.swift */; };
+		C5FD83782F95174A0003A500 /* InspirationWallCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83772F95174A0003A500 /* InspirationWallCards.swift */; };
+		C5FD837B2F9518440003A500 /* YearlyTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD837A2F9518440003A500 /* YearlyTimelineView.swift */; };
+		C5FD837E2F9518D50003A500 /* MonthlyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD837D2F9518D50003A500 /* MonthlyRecordView.swift */; };
+		C5FD83812F9519930003A500 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83802F9519930003A500 /* BookDetailView.swift */; };
+		C5FD83832F9519B60003A500 /* BookDossier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83822F9519B60003A500 /* BookDossier.swift */; };
+		C5FD83852F9519CE0003A500 /* BookDatePickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83842F9519CE0003A500 /* BookDatePickers.swift */; };
+		C5FD83882F9519EB0003A500 /* BookExcerpts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83872F9519EB0003A500 /* BookExcerpts.swift */; };
+		C5FD838D2F952C1E0003A500 /* DataPanelUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD838C2F952C1E0003A500 /* DataPanelUI.swift */; };
+		C5FD838F2F952C500003A500 /* DataPanelImportLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD838E2F952C500003A500 /* DataPanelImportLogic.swift */; };
+		C5FD83912F952C740003A500 /* DataPanelSystemLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83902F952C740003A500 /* DataPanelSystemLogic.swift */; };
+		C5FD83932F952C9E0003A500 /* DataPanelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83922F952C9E0003A500 /* DataPanelSettingsView.swift */; };
+		C5FD83992F952F7C0003A500 /* MobileHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83982F952F7C0003A500 /* MobileHomeView.swift */; };
+		C5FD839B2F952F930003A500 /* MobileHeroCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD839A2F952F930003A500 /* MobileHeroCards.swift */; };
+		C5FD839D2F952FA50003A500 /* MobileFocusTimerCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD839C2F952FA50003A500 /* MobileFocusTimerCard.swift */; };
+		C5FD839F2F952FC40003A500 /* MobileDataDashboards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD839E2F952FC30003A500 /* MobileDataDashboards.swift */; };
+		C5FD83A12F952FEC0003A500 /* MobileManualLogCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83A02F952FEC0003A500 /* MobileManualLogCard.swift */; };
+		C5FD83A32F952FFE0003A500 /* MobileQueueCarouselCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83A22F952FFE0003A500 /* MobileQueueCarouselCard.swift */; };
+		C5FD83A52F9530090003A500 /* MobileYearlyHeatmapCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83A42F9530090003A500 /* MobileYearlyHeatmapCard.swift */; };
+		C5FD83A72F9530240003A500 /* MobileKnowledgeSpectrumCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83A62F9530240003A500 /* MobileKnowledgeSpectrumCard.swift */; };
+		C5FD83A92F9530530003A500 /* MobileMomentumChartCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83A82F9530530003A500 /* MobileMomentumChartCard.swift */; };
+		C5FD83AC2F95335C0003A500 /* MobileInspirationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83AB2F95335C0003A500 /* MobileInspirationModels.swift */; };
+		C5FD83AE2F95336D0003A500 /* MobileInspirationWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83AD2F95336D0003A500 /* MobileInspirationWallView.swift */; };
+		C5FD83B02F9533810003A500 /* MobileInspirationCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83AF2F9533810003A500 /* MobileInspirationCards.swift */; };
+		C5FD83B32F9534AF0003A500 /* MobileMonthlyRecordComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83B22F9534AF0003A500 /* MobileMonthlyRecordComponents.swift */; };
+		C5FD83B62F9534E20003A500 /* MobileYearlyTimelineCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83B52F9534E20003A500 /* MobileYearlyTimelineCards.swift */; };
+		C5FD83BB2F9535C80003A500 /* MobileBookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83BA2F9535C80003A500 /* MobileBookDetailView.swift */; };
+		C5FD83BD2F9535DD0003A500 /* MobileBookDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83BC2F9535DD0003A500 /* MobileBookDetailComponents.swift */; };
+		C5FD83BF2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83BE2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift */; };
+		C5FD83C12F9536B50003A500 /* MobileArchiveHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83C02F9536B50003A500 /* MobileArchiveHostView.swift */; };
+		C5FD83C32F9536DF0003A500 /* MobileSettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83C22F9536DF0003A500 /* MobileSettingsComponents.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -189,33 +222,21 @@
 		C5FD82892F90C4BB0003A500 /* ImportDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDTO.swift; sourceTree = "<group>"; };
 		C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDatabase.swift; sourceTree = "<group>"; };
 		C5FD828B2F90C4BB0003A500 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
-		C5FD829B2F90C5210003A500 /* ArchiveGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveGalleryView.swift; sourceTree = "<group>"; };
-		C5FD829D2F90C5280003A500 /* CarouselWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselWidget.swift; sourceTree = "<group>"; };
-		C5FD829F2F90C5310003A500 /* MonthlyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyRecordView.swift; sourceTree = "<group>"; };
-		C5FD82A02F90C5310003A500 /* YearlyTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearlyTimelineView.swift; sourceTree = "<group>"; };
-		C5FD82A32F90C53A0003A500 /* InspirationWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallView.swift; sourceTree = "<group>"; };
-		C5FD82A52F90C5450003A500 /* FluidLibraryHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluidLibraryHomeView.swift; sourceTree = "<group>"; };
 		C5FD82A82F90C5640003A500 /* AddContentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContentSheet.swift; sourceTree = "<group>"; };
 		C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookEditorSheet.swift; sourceTree = "<group>"; };
 		C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileCarouselView.swift; sourceTree = "<group>"; };
 		C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileGalleryView.swift; sourceTree = "<group>"; };
-		C5FD82AE2F90C59F0003A500 /* MobileHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHomeView.swift; sourceTree = "<group>"; };
-		C5FD82AF2F90C59F0003A500 /* MobileInspirationWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInspirationWallView.swift; sourceTree = "<group>"; };
 		C5FD82B42F90C5A70003A500 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
 		C5FD82B62F90C5AD0003A500 /* MobileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSettingsView.swift; sourceTree = "<group>"; };
 		C5FD82B82F90C5B70003A500 /* MobileMonthlyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileMonthlyRecordView.swift; sourceTree = "<group>"; };
 		C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileYearlyTimelineView.swift; sourceTree = "<group>"; };
 		C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileAddExcerptSheet.swift; sourceTree = "<group>"; };
 		C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookEditorSheet.swift; sourceTree = "<group>"; };
-		C5FD82C12F90C5D40003A500 /* MobileBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookDetailView.swift; sourceTree = "<group>"; };
 		C5FD82C42F90C6150003A500 /* AchievementWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementWallView.swift; sourceTree = "<group>"; };
-		C5FD82C52F90C6150003A500 /* DailyProgressRingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyProgressRingView.swift; sourceTree = "<group>"; };
-		C5FD82C62F90C6150003A500 /* DataPanelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelSettingsView.swift; sourceTree = "<group>"; };
 		C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteSelectionSheet.swift; sourceTree = "<group>"; };
 		C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		C5FD82C92F90C6150003A500 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
 		C5FD82CA2F90C6150003A500 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		C5FD82D22F90C8D80003A500 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 		C5FD82D42F90C9370003A500 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LibraryWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
@@ -230,6 +251,51 @@
 		C5FD83242F934C250003A500 /* LocalCoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCoverView.swift; sourceTree = "<group>"; };
 		C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWidgetGroupBoxStyle.swift; sourceTree = "<group>"; };
 		C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityIntent.swift; sourceTree = "<group>"; };
+		C5FD834C2F9513080003A500 /* ReadingHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHero.swift; sourceTree = "<group>"; };
+		C5FD834F2F9513210003A500 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
+		C5FD83522F9513340003A500 /* MomentumChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentumChart.swift; sourceTree = "<group>"; };
+		C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatmapRibbon.swift; sourceTree = "<group>"; };
+		C5FD83582F95135F0003A500 /* ResonanceWave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResonanceWave.swift; sourceTree = "<group>"; };
+		C5FD835B2F9513770003A500 /* QueueBookshelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueBookshelf.swift; sourceTree = "<group>"; };
+		C5FD835E2F9513870003A500 /* KnowledgeSpectrum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeSpectrum.swift; sourceTree = "<group>"; };
+		C5FD83612F9513B80003A500 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		C5FD83652F95152A0003A500 /* BookCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCard.swift; sourceTree = "<group>"; };
+		C5FD83672F9515500003A500 /* MiniInventoryBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniInventoryBar.swift; sourceTree = "<group>"; };
+		C5FD83692F95156D0003A500 /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
+		C5FD836C2F9516410003A500 /* CarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselView.swift; sourceTree = "<group>"; };
+		C5FD836E2F9516590003A500 /* CoverFlowCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverFlowCard.swift; sourceTree = "<group>"; };
+		C5FD83712F9517010003A500 /* InspirationWallModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallModels.swift; sourceTree = "<group>"; };
+		C5FD83752F9517330003A500 /* InspirationWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallView.swift; sourceTree = "<group>"; };
+		C5FD83772F95174A0003A500 /* InspirationWallCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallCards.swift; sourceTree = "<group>"; };
+		C5FD837A2F9518440003A500 /* YearlyTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearlyTimelineView.swift; sourceTree = "<group>"; };
+		C5FD837D2F9518D50003A500 /* MonthlyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyRecordView.swift; sourceTree = "<group>"; };
+		C5FD83802F9519930003A500 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
+		C5FD83822F9519B60003A500 /* BookDossier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDossier.swift; sourceTree = "<group>"; };
+		C5FD83842F9519CE0003A500 /* BookDatePickers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDatePickers.swift; sourceTree = "<group>"; };
+		C5FD83872F9519EB0003A500 /* BookExcerpts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookExcerpts.swift; sourceTree = "<group>"; };
+		C5FD838C2F952C1E0003A500 /* DataPanelUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelUI.swift; sourceTree = "<group>"; };
+		C5FD838E2F952C500003A500 /* DataPanelImportLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelImportLogic.swift; sourceTree = "<group>"; };
+		C5FD83902F952C740003A500 /* DataPanelSystemLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelSystemLogic.swift; sourceTree = "<group>"; };
+		C5FD83922F952C9E0003A500 /* DataPanelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelSettingsView.swift; sourceTree = "<group>"; };
+		C5FD83982F952F7C0003A500 /* MobileHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHomeView.swift; sourceTree = "<group>"; };
+		C5FD839A2F952F930003A500 /* MobileHeroCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHeroCards.swift; sourceTree = "<group>"; };
+		C5FD839C2F952FA50003A500 /* MobileFocusTimerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileFocusTimerCard.swift; sourceTree = "<group>"; };
+		C5FD839E2F952FC30003A500 /* MobileDataDashboards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileDataDashboards.swift; sourceTree = "<group>"; };
+		C5FD83A02F952FEC0003A500 /* MobileManualLogCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileManualLogCard.swift; sourceTree = "<group>"; };
+		C5FD83A22F952FFE0003A500 /* MobileQueueCarouselCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileQueueCarouselCard.swift; sourceTree = "<group>"; };
+		C5FD83A42F9530090003A500 /* MobileYearlyHeatmapCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileYearlyHeatmapCard.swift; sourceTree = "<group>"; };
+		C5FD83A62F9530240003A500 /* MobileKnowledgeSpectrumCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileKnowledgeSpectrumCard.swift; sourceTree = "<group>"; };
+		C5FD83A82F9530530003A500 /* MobileMomentumChartCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileMomentumChartCard.swift; sourceTree = "<group>"; };
+		C5FD83AB2F95335C0003A500 /* MobileInspirationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInspirationModels.swift; sourceTree = "<group>"; };
+		C5FD83AD2F95336D0003A500 /* MobileInspirationWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInspirationWallView.swift; sourceTree = "<group>"; };
+		C5FD83AF2F9533810003A500 /* MobileInspirationCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInspirationCards.swift; sourceTree = "<group>"; };
+		C5FD83B22F9534AF0003A500 /* MobileMonthlyRecordComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileMonthlyRecordComponents.swift; sourceTree = "<group>"; };
+		C5FD83B52F9534E20003A500 /* MobileYearlyTimelineCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileYearlyTimelineCards.swift; sourceTree = "<group>"; };
+		C5FD83BA2F9535C80003A500 /* MobileBookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookDetailView.swift; sourceTree = "<group>"; };
+		C5FD83BC2F9535DD0003A500 /* MobileBookDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookDetailComponents.swift; sourceTree = "<group>"; };
+		C5FD83BE2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileExcerptsAndNotesList.swift; sourceTree = "<group>"; };
+		C5FD83C02F9536B50003A500 /* MobileArchiveHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileArchiveHostView.swift; sourceTree = "<group>"; };
+		C5FD83C22F9536DF0003A500 /* MobileSettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSettingsComponents.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -357,15 +423,15 @@
 		C5FD82232F90C3C60003A500 /* macOs */ = {
 			isa = PBXGroup;
 			children = (
+				C5FD837F2F9519850003A500 /* BookDetail */,
+				C5FD837C2F9518C50003A500 /* MonthlyRecord */,
+				C5FD83792F9518340003A500 /* YearlyTimeline */,
+				C5FD83702F9516EF0003A500 /* InspirationWall */,
+				C5FD836B2F95162A0003A500 /* Carousel */,
+				C5FD83642F9515110003A500 /* Gallery */,
+				C5FD834B2F9512FE0003A500 /* Home */,
 				C5FD82C32F90C6000003A500 /* Settings */,
 				C5FD82A72F90C5570003A500 /* Sheets */,
-				C5FD829B2F90C5210003A500 /* ArchiveGalleryView.swift */,
-				C5FD829D2F90C5280003A500 /* CarouselWidget.swift */,
-				C5FD829F2F90C5310003A500 /* MonthlyRecordView.swift */,
-				C5FD82A02F90C5310003A500 /* YearlyTimelineView.swift */,
-				C5FD82A32F90C53A0003A500 /* InspirationWallView.swift */,
-				C5FD82A52F90C5450003A500 /* FluidLibraryHomeView.swift */,
-				C5FD82D22F90C8D80003A500 /* BookDetailView.swift */,
 				C5FD82D42F90C9370003A500 /* ContentView.swift */,
 			);
 			path = macOs;
@@ -374,16 +440,15 @@
 		C5FD82242F90C3DA0003A500 /* ios */ = {
 			isa = PBXGroup;
 			children = (
+				C5FD83C52F95371E0003A500 /* MobileArchiveHost */,
+				C5FD83C42F9536FE0003A500 /* MobileSettings */,
+				C5FD83B92F9535BE0003A500 /* MobileBookDetail */,
+				C5FD83B82F9535160003A500 /* MobileCarousel */,
+				C5FD83B72F9535080003A500 /* MobileGallery */,
+				C5FD83AA2F95334C0003A500 /* MobileInspirationWall */,
+				C5FD83972F952F730003A500 /* MobileHome */,
 				C5FD82BC2F90C5C10003A500 /* sheets */,
-				C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */,
-				C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */,
-				C5FD82AE2F90C59F0003A500 /* MobileHomeView.swift */,
-				C5FD82AF2F90C59F0003A500 /* MobileInspirationWallView.swift */,
 				C5FD82B42F90C5A70003A500 /* MobileContentView.swift */,
-				C5FD82B62F90C5AD0003A500 /* MobileSettingsView.swift */,
-				C5FD82B82F90C5B70003A500 /* MobileMonthlyRecordView.swift */,
-				C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */,
-				C5FD82C12F90C5D40003A500 /* MobileBookDetailView.swift */,
 			);
 			path = ios;
 			sourceTree = "<group>";
@@ -462,11 +527,9 @@
 		C5FD82C32F90C6000003A500 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				C5FD82C42F90C6150003A500 /* AchievementWallView.swift */,
-				C5FD82C52F90C6150003A500 /* DailyProgressRingView.swift */,
-				C5FD82C62F90C6150003A500 /* DataPanelSettingsView.swift */,
-				C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */,
-				C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */,
+				C5FD838B2F9528570003A500 /* DataPanel */,
+				C5FD838A2F9527FB0003A500 /* General */,
+				C5FD83892F9527E80003A500 /* Achievement */,
 				C5FD82C92F90C6150003A500 /* SettingsComponents.swift */,
 				C5FD82CA2F90C6150003A500 /* SettingsView.swift */,
 			);
@@ -494,6 +557,202 @@
 				C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */,
 			);
 			path = CommonUI;
+			sourceTree = "<group>";
+		};
+		C5FD834B2F9512FE0003A500 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD834C2F9513080003A500 /* ReadingHero.swift */,
+				C5FD834F2F9513210003A500 /* FocusTimer.swift */,
+				C5FD83522F9513340003A500 /* MomentumChart.swift */,
+				C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */,
+				C5FD83582F95135F0003A500 /* ResonanceWave.swift */,
+				C5FD835B2F9513770003A500 /* QueueBookshelf.swift */,
+				C5FD835E2F9513870003A500 /* KnowledgeSpectrum.swift */,
+				C5FD83612F9513B80003A500 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		C5FD83642F9515110003A500 /* Gallery */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83652F95152A0003A500 /* BookCard.swift */,
+				C5FD83672F9515500003A500 /* MiniInventoryBar.swift */,
+				C5FD83692F95156D0003A500 /* GalleryView.swift */,
+			);
+			path = Gallery;
+			sourceTree = "<group>";
+		};
+		C5FD836B2F95162A0003A500 /* Carousel */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD836C2F9516410003A500 /* CarouselView.swift */,
+				C5FD836E2F9516590003A500 /* CoverFlowCard.swift */,
+			);
+			path = Carousel;
+			sourceTree = "<group>";
+		};
+		C5FD83702F9516EF0003A500 /* InspirationWall */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83712F9517010003A500 /* InspirationWallModels.swift */,
+				C5FD83752F9517330003A500 /* InspirationWallView.swift */,
+				C5FD83772F95174A0003A500 /* InspirationWallCards.swift */,
+			);
+			path = InspirationWall;
+			sourceTree = "<group>";
+		};
+		C5FD83792F9518340003A500 /* YearlyTimeline */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD837A2F9518440003A500 /* YearlyTimelineView.swift */,
+			);
+			path = YearlyTimeline;
+			sourceTree = "<group>";
+		};
+		C5FD837C2F9518C50003A500 /* MonthlyRecord */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD837D2F9518D50003A500 /* MonthlyRecordView.swift */,
+			);
+			path = MonthlyRecord;
+			sourceTree = "<group>";
+		};
+		C5FD837F2F9519850003A500 /* BookDetail */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83802F9519930003A500 /* BookDetailView.swift */,
+				C5FD83822F9519B60003A500 /* BookDossier.swift */,
+				C5FD83842F9519CE0003A500 /* BookDatePickers.swift */,
+				C5FD83872F9519EB0003A500 /* BookExcerpts.swift */,
+			);
+			path = BookDetail;
+			sourceTree = "<group>";
+		};
+		C5FD83892F9527E80003A500 /* Achievement */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82C42F90C6150003A500 /* AchievementWallView.swift */,
+			);
+			path = Achievement;
+			sourceTree = "<group>";
+		};
+		C5FD838A2F9527FB0003A500 /* General */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */,
+			);
+			path = General;
+			sourceTree = "<group>";
+		};
+		C5FD838B2F9528570003A500 /* DataPanel */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83962F952D7F0003A500 /* Sheets */,
+				C5FD838C2F952C1E0003A500 /* DataPanelUI.swift */,
+				C5FD838E2F952C500003A500 /* DataPanelImportLogic.swift */,
+				C5FD83902F952C740003A500 /* DataPanelSystemLogic.swift */,
+				C5FD83922F952C9E0003A500 /* DataPanelSettingsView.swift */,
+			);
+			path = DataPanel;
+			sourceTree = "<group>";
+		};
+		C5FD83962F952D7F0003A500 /* Sheets */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */,
+			);
+			path = Sheets;
+			sourceTree = "<group>";
+		};
+		C5FD83972F952F730003A500 /* MobileHome */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83982F952F7C0003A500 /* MobileHomeView.swift */,
+				C5FD839A2F952F930003A500 /* MobileHeroCards.swift */,
+				C5FD839C2F952FA50003A500 /* MobileFocusTimerCard.swift */,
+				C5FD839E2F952FC30003A500 /* MobileDataDashboards.swift */,
+				C5FD83A02F952FEC0003A500 /* MobileManualLogCard.swift */,
+				C5FD83A22F952FFE0003A500 /* MobileQueueCarouselCard.swift */,
+				C5FD83A42F9530090003A500 /* MobileYearlyHeatmapCard.swift */,
+				C5FD83A62F9530240003A500 /* MobileKnowledgeSpectrumCard.swift */,
+				C5FD83A82F9530530003A500 /* MobileMomentumChartCard.swift */,
+			);
+			path = MobileHome;
+			sourceTree = "<group>";
+		};
+		C5FD83AA2F95334C0003A500 /* MobileInspirationWall */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83AB2F95335C0003A500 /* MobileInspirationModels.swift */,
+				C5FD83AD2F95336D0003A500 /* MobileInspirationWallView.swift */,
+				C5FD83AF2F9533810003A500 /* MobileInspirationCards.swift */,
+			);
+			path = MobileInspirationWall;
+			sourceTree = "<group>";
+		};
+		C5FD83B12F95347A0003A500 /* MobileMonthlyRecord */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82B82F90C5B70003A500 /* MobileMonthlyRecordView.swift */,
+				C5FD83B22F9534AF0003A500 /* MobileMonthlyRecordComponents.swift */,
+			);
+			path = MobileMonthlyRecord;
+			sourceTree = "<group>";
+		};
+		C5FD83B42F9534C30003A500 /* MobileYearlyTimeline */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */,
+				C5FD83B52F9534E20003A500 /* MobileYearlyTimelineCards.swift */,
+			);
+			path = MobileYearlyTimeline;
+			sourceTree = "<group>";
+		};
+		C5FD83B72F9535080003A500 /* MobileGallery */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */,
+			);
+			path = MobileGallery;
+			sourceTree = "<group>";
+		};
+		C5FD83B82F9535160003A500 /* MobileCarousel */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */,
+			);
+			path = MobileCarousel;
+			sourceTree = "<group>";
+		};
+		C5FD83B92F9535BE0003A500 /* MobileBookDetail */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83BA2F9535C80003A500 /* MobileBookDetailView.swift */,
+				C5FD83BC2F9535DD0003A500 /* MobileBookDetailComponents.swift */,
+				C5FD83BE2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift */,
+			);
+			path = MobileBookDetail;
+			sourceTree = "<group>";
+		};
+		C5FD83C42F9536FE0003A500 /* MobileSettings */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83C22F9536DF0003A500 /* MobileSettingsComponents.swift */,
+				C5FD82B62F90C5AD0003A500 /* MobileSettingsView.swift */,
+			);
+			path = MobileSettings;
+			sourceTree = "<group>";
+		};
+		C5FD83C52F95371E0003A500 /* MobileArchiveHost */ = {
+			isa = PBXGroup;
+			children = (
+				C5FD83C02F9536B50003A500 /* MobileArchiveHostView.swift */,
+				C5FD83B42F9534C30003A500 /* MobileYearlyTimeline */,
+				C5FD83B12F95347A0003A500 /* MobileMonthlyRecord */,
+			);
+			path = MobileArchiveHost;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -650,52 +909,85 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C5FD83C32F9536DF0003A500 /* MobileSettingsComponents.swift in Sources */,
+				C5FD839D2F952FA50003A500 /* MobileFocusTimerCard.swift in Sources */,
+				C5FD83AE2F95336D0003A500 /* MobileInspirationWallView.swift in Sources */,
+				C5FD83BB2F9535C80003A500 /* MobileBookDetailView.swift in Sources */,
+				C5FD83A72F9530240003A500 /* MobileKnowledgeSpectrumCard.swift in Sources */,
 				C5FD83162F9342350003A500 /* MobileManualLogSheet.swift in Sources */,
 				C5FD82842F90C4830003A500 /* PreviewData.swift in Sources */,
-				C5FD82A12F90C5310003A500 /* MonthlyRecordView.swift in Sources */,
-				C5FD82A62F90C5450003A500 /* FluidLibraryHomeView.swift in Sources */,
-				C5FD82CB2F90C6150003A500 /* DataPanelSettingsView.swift in Sources */,
+				C5FD837E2F9518D50003A500 /* MonthlyRecordView.swift in Sources */,
+				C5FD83932F952C9E0003A500 /* DataPanelSettingsView.swift in Sources */,
 				C5FD82CC2F90C6150003A500 /* SettingsComponents.swift in Sources */,
+				C5FD83882F9519EB0003A500 /* BookExcerpts.swift in Sources */,
+				C5FD839B2F952F930003A500 /* MobileHeroCards.swift in Sources */,
 				C5FD82CD2F90C6150003A500 /* DeleteSelectionSheet.swift in Sources */,
-				C5FD82CE2F90C6150003A500 /* DailyProgressRingView.swift in Sources */,
+				C5FD83BD2F9535DD0003A500 /* MobileBookDetailComponents.swift in Sources */,
+				C5FD838F2F952C500003A500 /* DataPanelImportLogic.swift in Sources */,
+				C5FD83A92F9530530003A500 /* MobileMomentumChartCard.swift in Sources */,
+				C5FD83812F9519930003A500 /* BookDetailView.swift in Sources */,
+				C5FD836F2F9516590003A500 /* CoverFlowCard.swift in Sources */,
+				C5FD83BF2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift in Sources */,
+				C5FD83B02F9533810003A500 /* MobileInspirationCards.swift in Sources */,
 				C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */,
 				C5FD82D02F90C6150003A500 /* AchievementWallView.swift in Sources */,
 				C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */,
-				C5FD82A22F90C5310003A500 /* YearlyTimelineView.swift in Sources */,
 				C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */,
 				C5FD83272F934C250003A500 /* AmbientGlowBackground.swift in Sources */,
+				C5FD83762F9517330003A500 /* InspirationWallView.swift in Sources */,
+				C5FD838D2F952C1E0003A500 /* DataPanelUI.swift in Sources */,
+				C5FD83722F9517010003A500 /* InspirationWallModels.swift in Sources */,
 				C5FD83282F934C250003A500 /* LocalCoverView.swift in Sources */,
+				C5FD83852F9519CE0003A500 /* BookDatePickers.swift in Sources */,
 				C5FD83292F934C250003A500 /* Background.swift in Sources */,
 				C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */,
 				C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */,
 				C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */,
 				C5FD828D2F90C4BB0003A500 /* AppleBooksDBUtils.swift in Sources */,
 				C5FD82BF2F90C5CB0003A500 /* MobileBookEditorSheet.swift in Sources */,
+				C5FD83662F95152A0003A500 /* BookCard.swift in Sources */,
 				C5FD82C02F90C5CB0003A500 /* MobileAddExcerptSheet.swift in Sources */,
+				C5FD836A2F95156D0003A500 /* GalleryView.swift in Sources */,
 				C5FD830F2F92890E0003A500 /* ReadingTimerManager.swift in Sources */,
+				C5FD83912F952C740003A500 /* DataPanelSystemLogic.swift in Sources */,
 				C5FD828E2F90C4BB0003A500 /* SyncEngine.swift in Sources */,
+				C5FD83B62F9534E20003A500 /* MobileYearlyTimelineCards.swift in Sources */,
 				C5FD828F2F90C4BB0003A500 /* ImportDTO.swift in Sources */,
+				C5FD839F2F952FC40003A500 /* MobileDataDashboards.swift in Sources */,
 				C5FD82B72F90C5AD0003A500 /* MobileSettingsView.swift in Sources */,
+				C5FD835C2F9513770003A500 /* QueueBookshelf.swift in Sources */,
+				C5FD83682F9515500003A500 /* MiniInventoryBar.swift in Sources */,
+				C5FD836D2F9516410003A500 /* CarouselView.swift in Sources */,
+				C5FD83592F95135F0003A500 /* ResonanceWave.swift in Sources */,
+				C5FD837B2F9518440003A500 /* YearlyTimelineView.swift in Sources */,
+				C5FD83632F9513B80003A500 /* HomeView.swift in Sources */,
 				C5FD82902F90C4BB0003A500 /* DataExportService.swift in Sources */,
 				C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */,
-				C5FD829E2F90C5280003A500 /* CarouselWidget.swift in Sources */,
+				C5FD83B32F9534AF0003A500 /* MobileMonthlyRecordComponents.swift in Sources */,
+				C5FD83AC2F95335C0003A500 /* MobileInspirationModels.swift in Sources */,
+				C5FD83782F95174A0003A500 /* InspirationWallCards.swift in Sources */,
 				C5FD83492F93D8A40003A500 /* LiveActivityIntent.swift in Sources */,
+				C5FD83A52F9530090003A500 /* MobileYearlyHeatmapCard.swift in Sources */,
 				C5FD82922F90C4BB0003A500 /* AppleBooksImporter.swift in Sources */,
 				C5FD82822F90C47D0003A500 /* DataModels.swift in Sources */,
-				C5FD82C22F90C5D40003A500 /* MobileBookDetailView.swift in Sources */,
-				C5FD82A42F90C53A0003A500 /* InspirationWallView.swift in Sources */,
+				C5FD83992F952F7C0003A500 /* MobileHomeView.swift in Sources */,
+				C5FD83572F95134E0003A500 /* HeatmapRibbon.swift in Sources */,
 				C5FD82AA2F90C5640003A500 /* BookEditorSheet.swift in Sources */,
 				C5FD82AB2F90C5640003A500 /* AddContentSheet.swift in Sources */,
+				C5FD83A32F952FFE0003A500 /* MobileQueueCarouselCard.swift in Sources */,
+				C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */,
 				C5FD82BA2F90C5B70003A500 /* MobileYearlyTimelineView.swift in Sources */,
 				C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */,
+				C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */,
 				C5FD82BB2F90C5B70003A500 /* MobileMonthlyRecordView.swift in Sources */,
 				C5FD831F2F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */,
-				C5FD829C2F90C5210003A500 /* ArchiveGalleryView.swift in Sources */,
+				C5FD83502F9513210003A500 /* FocusTimer.swift in Sources */,
+				C5FD83C12F9536B50003A500 /* MobileArchiveHostView.swift in Sources */,
 				C5FD82B02F90C59F0003A500 /* MobileCarouselView.swift in Sources */,
 				C5FD82B12F90C59F0003A500 /* MobileGalleryView.swift in Sources */,
-				C5FD82B22F90C59F0003A500 /* MobileHomeView.swift in Sources */,
-				C5FD82B32F90C59F0003A500 /* MobileInspirationWallView.swift in Sources */,
-				C5FD82D32F90C8D80003A500 /* BookDetailView.swift in Sources */,
+				C5FD83832F9519B60003A500 /* BookDossier.swift in Sources */,
+				C5FD83602F9513870003A500 /* KnowledgeSpectrum.swift in Sources */,
+				C5FD83A12F952FEC0003A500 /* MobileManualLogCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -3,16 +3,29 @@ import AppKit
 import SwiftData
 import SwiftUI
 
-// ✨ 枚举控制弹窗模式
+// MARK: - 枚举与模式
+
+/// 定义应用内“内容弹窗”的业务模式。
+///
+/// 这是一个共享视图的路由开关，用于区分当前呼出的是摘录（使用原生 `TextEditor`）还是思考笔记（使用 `MarkdownEditor`）。
 enum ContentSheetMode {
     case excerpt
     case note
 }
 
+// MARK: - ✨ 内容增添弹窗
+
+/// 统一的文本内容增添弹窗 (Add Content Sheet)。
+///
+/// **交互特性：**
+/// 该视图被设计为模态框 (`.sheet`)。
+/// 提供了极简的无边框输入体验，包含顶部状态指示器和底部的系统原生按钮（支持键盘快捷键绑定，按 `Enter` 保存，按 `Esc` 取消）。
 struct AddContentSheet: View {
     @Environment(\.modelContext) private var modelContext
     
     @Binding var isPresented: Bool
+    
+    /// 承载本次新增内容的宿主书籍。
     let book: Book
     let mode: ContentSheetMode
     
@@ -20,7 +33,7 @@ struct AddContentSheet: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. 原生顶部标题
+            // ================= 1. 原生顶部标题 =================
             HStack(spacing: 12) {
                 Image(systemName: mode == .excerpt ? "quote.opening" : "pencil.line")
                     .font(.system(size: 20))
@@ -36,23 +49,25 @@ struct AddContentSheet: View {
             
             Divider()
             
-            // 2. 核心文本编辑区
+            // ================= 2. 核心文本编辑区 =================
             ZStack(alignment: .topLeading) {
                 // 原生文本背景色
                 Color(nsColor: .textBackgroundColor).ignoresSafeArea()
                 
                 if mode == .excerpt {
+                    // 摘录模式：纯文本
                     TextEditor(text: $contentText)
                         .font(.system(size: 15))
                         .scrollContentBackground(.hidden)
                         .padding(16)
                 } else {
+                    // 笔记模式：Markdown 实时渲染
                     MarkdownEditor(text: $contentText)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 8)
                 }
                 
-                // 占位符
+                // 占位符层
                 if contentText.isEmpty {
                     Text(mode == .excerpt ? "输入那些值得被铭记的内容..." : "敲击 # 输入大标题\n敲击 - 或 1. 记录要点\n\n按下回车即可自然换行...")
                         .font(.system(size: 15))
@@ -67,7 +82,7 @@ struct AddContentSheet: View {
             
             Divider()
             
-            // 3. 底部操作区
+            // ================= 3. 底部操作区 =================
             HStack {
                 Spacer()
                 Button("取消") { isPresented = false }
@@ -86,6 +101,12 @@ struct AddContentSheet: View {
         .frame(width: 540, height: 420)
     }
     
+    // MARK: - 存储逻辑
+    
+    /// 执行持久化落库动作。
+    ///
+    /// 将当前的输入文本包装为 `Excerpt` 或 `Note` 实体，强行插入（关联）到 `book` 对象中，
+    /// 并触发全局数据库的 `save()`，最后降下弹窗。
     private func saveContent() {
         guard !contentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         
@@ -104,7 +125,16 @@ struct AddContentSheet: View {
     }
 }
 
-// MARK: - ⚙️ 极简纯净原生 Markdown 引擎 (去除了对深浅模式的手动判断)
+// MARK: - ⚙️ 极简纯净原生 Markdown 引擎
+
+/// 利用 `NSTextView` 封装的 macOS 专属原生 Markdown 实时高亮编辑器。
+///
+/// **架构特性：**
+/// 该引擎抛弃了复杂的第三方库，通过正则表达式 (`NSRegularExpression`) 和 `NSAttributedString`
+/// 实现所见即所得的极简语法高亮。
+/// - 支持 1~3 级标题（`#`）放大与加粗。
+/// - 支持无序列表（`-`, `*`）和有序列表（`1.`）的首行缩进与圆点高亮。
+/// - 内部使用原生的 `NSColor.textColor`，从而实现**零代码自适应系统的深浅模式切换**。
 struct MarkdownEditor: NSViewRepresentable {
     @Binding var text: String
     

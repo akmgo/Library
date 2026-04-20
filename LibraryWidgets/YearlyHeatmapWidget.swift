@@ -10,15 +10,20 @@ import UIKit
 #endif
 
 // MARK: - 数据模型
+
+/// 热力图数据实体
 struct HeatmapColumnData: Identifiable { let id: Int; let days: [HeatmapDayData] }
 struct HeatmapDayData: Identifiable { let id = UUID(); let intensity: Double; let isFuture: Bool }
 
+/// 中号热力图时间线包裹器。
 struct HeatmapEntry: TimelineEntry {
     let date: Date
     let columns: [HeatmapColumnData]
 }
 
 // MARK: - 数据提供者
+
+/// 计算矩阵式打卡深浅图块的数据引擎。
 struct HeatmapProvider: TimelineProvider {
     func placeholder(in context: Context) -> HeatmapEntry {
         // 占位符展示 22 列随机热力图
@@ -82,6 +87,8 @@ struct HeatmapProvider: TimelineProvider {
 }
 
 // MARK: - 极简纯粹的热力图视图
+
+/// 采用 `GeometryReader` 自动缩放的中号打卡密度图表。
 struct HeatmapWidgetView: View {
     var entry: HeatmapProvider.Entry
 
@@ -119,6 +126,8 @@ struct HeatmapWidgetView: View {
 }
 
 // MARK: - 注册组件
+
+/// 中号热力图组件系统注册配置。
 struct YearlyHeatmapWidget: Widget {
     let kind: String = "YearlyHeatmapWidget"
     

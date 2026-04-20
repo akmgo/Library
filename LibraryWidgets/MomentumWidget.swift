@@ -12,6 +12,7 @@ import UIKit
 
 // MARK: - 新增内部数据结构，方便图表绑定日期
 
+/// 单日阅读数据的结构体，用于 Swift Charts 数据绑定。
 struct DailyReading: Identifiable {
     let date: Date
     let minutes: Double
@@ -22,6 +23,7 @@ struct DailyReading: Identifiable {
 
 // MARK: - 动能数据模型
 
+/// 中号 14 天平滑面积动能图模型。
 struct MomentumEntry: TimelineEntry {
     let date: Date
     let dailyData: [DailyReading] // ✨ 改用带日期的数据组
@@ -33,6 +35,7 @@ struct MomentumEntry: TimelineEntry {
 
 // MARK: - 数据提供者
 
+/// 负责为中号动能折线组件提供长达两周的时间轴数据的提供引擎。
 struct MomentumProvider: TimelineProvider {
     func placeholder(in context: Context) -> MomentumEntry {
         let cal = Calendar.current
@@ -106,6 +109,7 @@ struct MomentumProvider: TimelineProvider {
 
 // MARK: - 极简动能视图
 
+/// 中尺寸 (`.systemMedium`) 包含 `Swift Charts` 面积图的视图。
 struct MomentumWidgetView: View {
     var entry: MomentumProvider.Entry
 
@@ -171,7 +175,7 @@ struct MomentumWidgetView: View {
     }
 }
 
-/// 子组件：紧凑型微数据块
+/// 子组件：紧凑型微数据块，供折线动能图表上方数据摘要使用。
 private struct MomentumStat: View {
     let title: String
     let value: String
@@ -197,6 +201,7 @@ private struct MomentumStat: View {
 
 // MARK: - 注册组件
 
+/// 中号动能趋势折线图小组件注册入口。
 struct MomentumWidget: Widget {
     let kind: String = "MomentumWidget"
     var body: some WidgetConfiguration {

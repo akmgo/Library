@@ -3,6 +3,8 @@ import SwiftUI
 import WidgetKit
 
 // MARK: - 1. 专属数据模型
+
+/// 小号七日动能柱状图实体模型。
 struct MomentumChartEntry: TimelineEntry {
     let date: Date
     let weekDurations: [Double]
@@ -11,6 +13,8 @@ struct MomentumChartEntry: TimelineEntry {
 }
 
 // MARK: - 2. 专属数据引擎 (真实读取 SwiftData)
+
+/// 获取最近 7 天沉浸阅读时长的柱状分布数据。
 struct MomentumChartProvider: TimelineProvider {
     func placeholder(in context: Context) -> MomentumChartEntry { mockEntry() }
     
@@ -69,6 +73,8 @@ struct MomentumChartProvider: TimelineProvider {
 }
 
 // MARK: - 3. UI 视图
+
+/// 小尺寸 (`.systemSmall`) 柱状动能图表视图。
 struct MomentumChartWidgetView: View {
     var entry: MomentumChartEntry
     
@@ -132,6 +138,8 @@ struct MomentumChartWidgetView: View {
 }
 
 // MARK: - 4. 组件注册入口
+
+/// 小号动能趋势小组件注册配置。
 struct MomentumChartWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "MomentumChartWidget", provider: MomentumChartProvider()) { entry in

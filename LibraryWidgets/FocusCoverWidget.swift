@@ -8,6 +8,8 @@ import AppKit
 #endif
 
 // MARK: - ✨ 双端兼容背景色扩展 (写在一处，处处可用)
+
+/// 提供小组件跨平台底层安全背景色的扩展支持。
 extension Color {
     static var adaptiveWidgetBackground: Color {
         #if os(iOS)
@@ -21,6 +23,8 @@ extension Color {
 }
 
 // MARK: - 专属数据模型
+
+/// 小号焦点封面时间线实体。
 struct FocusCoverEntry: TimelineEntry {
     let date: Date
     let bookCoverData: Data?
@@ -28,6 +32,8 @@ struct FocusCoverEntry: TimelineEntry {
 }
 
 // MARK: - 专属数据引擎
+
+/// 获取最近活跃的一本在读书籍供小号组件展示。
 struct FocusCoverProvider: TimelineProvider {
     func placeholder(in context: Context) -> FocusCoverEntry { mockEntry() }
     
@@ -38,6 +44,7 @@ struct FocusCoverProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         Task { @MainActor in
             let entry = await fetchRealData()
+            // 静态封面无需高频刷新，交由主 App 数据变化时主动触发
             let timeline = Timeline(entries: [entry], policy: .never)
             completion(timeline)
         }
@@ -75,6 +82,9 @@ struct FocusCoverProvider: TimelineProvider {
 }
 
 // MARK: - UI 视图
+
+/// 小尺寸 (`.systemSmall`) 在读焦点渲染视图。
+/// 左侧大图封面裁剪显示，右侧使用细长胶囊展现进度百分比。
 struct FocusCoverWidgetView: View {
     var entry: FocusCoverEntry
     
@@ -156,7 +166,10 @@ struct FocusCoverWidgetView: View {
         .containerBackground(Color.adaptiveWidgetBackground, for: .widget)
     }
 }
+
 // MARK: - 组件注册入口
+
+/// 小号在读焦点小组件配置。
 struct FocusCoverWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "FocusCoverWidget", provider: FocusCoverProvider()) { entry in

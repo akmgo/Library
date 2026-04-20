@@ -3,6 +3,8 @@ import SwiftUI
 import WidgetKit
 
 // MARK: - 数据模型
+
+/// 思想共鸣 (`ResonanceWaveWidget`) 的数据实体。
 struct WaveEntry: TimelineEntry {
     let date: Date
     let content: String
@@ -10,6 +12,8 @@ struct WaveEntry: TimelineEntry {
 }
 
 // MARK: - 数据提供者
+
+/// 为中号灵感摘录小组件提供每 30 分钟轮换的内容。
 struct WaveProvider: TimelineProvider {
     func placeholder(in context: Context) -> WaveEntry {
         WaveEntry(date: Date(), content: "我们在阅读中寻找的，往往是那些能用文字精确描绘出我们内心模糊感受的瞬间。思想的留白，去阅读中遇见自己。", source: "阅读的意义")
@@ -48,6 +52,8 @@ struct WaveProvider: TimelineProvider {
 }
 
 // MARK: - 极简排版视图 (去除了多余标签)
+
+/// 采用文学感衬线体 (`.serif`) 展现大段文字摘录。
 struct WaveWidgetView: View {
     var entry: WaveProvider.Entry
 
@@ -85,6 +91,8 @@ struct WaveWidgetView: View {
 }
 
 // MARK: - 注册组件
+
+/// 中号思想共鸣摘录系统注册。
 struct ResonanceWaveWidget: Widget {
     let kind: String = "ResonanceWaveWidget"
     

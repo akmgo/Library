@@ -3,6 +3,8 @@ import SwiftUI
 import WidgetKit
 
 // MARK: - 1. 专属数据模型
+
+/// 小号四环统计盘实体。
 struct StatsGridEntry: TimelineEntry {
     let date: Date
     let weekCount: Int
@@ -16,6 +18,8 @@ struct StatsGridEntry: TimelineEntry {
 }
 
 // MARK: - 2. 专属数据引擎 (真实读取 SwiftData)
+
+/// 为小号四环提供数据源。
 struct StatsGridProvider: TimelineProvider {
     func placeholder(in context: Context) -> StatsGridEntry { mockEntry() }
     
@@ -86,6 +90,8 @@ struct StatsGridProvider: TimelineProvider {
 }
 
 // MARK: - 3. UI 视图
+
+/// 小号 (`.systemSmall`) 阅读仪表盘展现形式。
 struct StatsGridWidgetView: View {
     var entry: StatsGridEntry
     
@@ -106,6 +112,8 @@ struct StatsGridWidgetView: View {
 }
 
 // MARK: - 专属子组件：无字纯粹放大圆环
+
+/// 在极度受限的小号尺寸内使用无文字说明的粗体微缩圆环。
 private struct PureRingMetric: View {
     let current: Int
     let target: Int
@@ -135,6 +143,8 @@ private struct PureRingMetric: View {
 }
 
 // MARK: - 4. 组件注册入口
+
+/// 小号四环仪表盘系统注册。
 struct StatsGridWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "StatsGridWidget", provider: StatsGridProvider()) { entry in

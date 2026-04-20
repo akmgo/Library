@@ -1,9 +1,21 @@
 import SwiftUI
 
+// MARK: - 全局原生卡片样式
+
+/// 注入灵魂的苹果原生风格 `GroupBox` 样式扩展。
+///
+/// 该样式彻底重写了 SwiftUI 默认的 `GroupBox` 渲染逻辑，将其改造为具有
+/// 高级毛玻璃透视感、1px 高光边框以及自适应深浅模式阴影的 **拟物化玻璃卡片**。
+///
+/// **设计哲学：**
+/// - 浅色模式下：叠加 80% 透明度的纯白色洗掉系统毛玻璃自带的脏灰感，呈现清透的白玻璃质感。
+/// - 深色模式下：叠加半透明深灰，让深邃的背景透出，同时保持卡片内容的清晰度。
+///
+/// - 注意: 可通过在层级顶端调用 `.groupBoxStyle(NativeWidgetGroupBoxStyle())` 将其应用到全局。
 struct NativeWidgetGroupBoxStyle: GroupBoxStyle {
     @Environment(\.colorScheme) var colorScheme
     
-    // ✨ 在这里精准控制你的卡片底色调
+    /// 根据当前系统的外观模式（浅色/深色），计算并返回最佳的毛玻璃上层调色蒙版。
     private var cardTintColor: Color {
         if colorScheme == .light {
             // 🍎 苹果官方标准：浅色模式下，盖上一层高透明度的“纯白色”。
@@ -22,6 +34,9 @@ struct NativeWidgetGroupBoxStyle: GroupBoxStyle {
         }
     }
     
+    /// 构建包含内容与样式的最终视图。
+    ///
+    /// - Parameter configuration: 包含 `label`（标题部分）和 `content`（主体内容）的配置对象。
     func makeBody(configuration: Configuration) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             configuration.label
@@ -36,7 +51,7 @@ struct NativeWidgetGroupBoxStyle: GroupBoxStyle {
                 // 第 1 层 (最底层)：苹果极薄毛玻璃，负责吸收和模糊主页背景
                 Rectangle().fill(.ultraThinMaterial)
                 
-                // 第 2 层 (盖在玻璃上)：你的调色蒙版！用来去掉系统灰，或者涂上任何你想要的色调
+                // 第 2 层 (盖在玻璃上)：调色蒙版！用来去掉系统灰，或者涂上任何你想要的色调
                 Rectangle().fill(cardTintColor)
             }
         )

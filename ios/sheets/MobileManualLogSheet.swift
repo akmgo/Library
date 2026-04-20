@@ -1,8 +1,15 @@
-#if os(iOS)
-import SwiftData
 import SwiftUI
+import SwiftData
 
-// MARK: - 📑 手动打卡弹窗
+#if os(iOS)
+// MARK: - 📑 手动打卡与轨迹生成表单
+
+/// 处理用户手动补录单次阅读记录的业务视图。
+///
+/// **场景与逻辑：**
+/// 常用于用户忘记开启专注番茄钟，或者单纯想补录昨天的阅读时间。
+/// 它会要求选择“目标书籍”、“日期”和“专注时长”。
+/// 提交时，如果该书在指定日期已有记录，则智能执行**累加合并**操作，否则新建独立的流水记录。
 struct MobileManualLogSheet: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -14,6 +21,7 @@ struct MobileManualLogSheet: View {
     @State private var logDate: Date = Date()
     @State private var logMinutes: Int = 30
     
+    /// 自动筛选出处于在读状态的书籍供用户快速挑选
     var readingBooks: [Book] {
         allBooks.filter { $0.status == .reading }
     }
@@ -34,7 +42,7 @@ struct MobileManualLogSheet: View {
                         }
                     }
                     
-                    // ✨ 加入 .environment，强制让日历组件使用中文语言环境 (显示几月几日)
+                    // ✨ 加入 .environment，强制让日历组件使用中文语言环境 (完美显示几月几日)
                     DatePicker("打卡日期", selection: $logDate, in: ...Date(), displayedComponents: .date)
                         .environment(\.locale, Locale(identifier: "zh_CN"))
                 }
@@ -61,6 +69,7 @@ struct MobileManualLogSheet: View {
                         }
                     }
                     .foregroundColor(.white)
+                    // 使用极其突出的原生系统渐变色增强可点击感
                     .listRowBackground(Rectangle().fill(Color.indigo.gradient))
                 }
             }
@@ -74,10 +83,13 @@ struct MobileManualLogSheet: View {
         }
     }
     
+    // MARK: - 合并与持久化引擎
+    
     private func saveLog() {
         let cal = Calendar.current
         let targetDate = cal.startOfDay(for: logDate)
         
+        // 查找同一天是否已有流水记录
         let existingRecord = selectedBook.readingRecords?.first { record in
             guard let rDate = record.date else { return false }
             return cal.isDate(rDate, inSameDayAs: targetDate)
@@ -85,6 +97,7 @@ struct MobileManualLogSheet: View {
         
         let secondsToAdd = TimeInterval(logMinutes * 60)
         
+        // 如果存在则累加，不存在则开新行
         if let record = existingRecord {
             record.readingDuration += secondsToAdd
         } else {

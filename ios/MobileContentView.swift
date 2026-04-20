@@ -2,10 +2,14 @@
 import SwiftData
 import SwiftUI
 
-#if os(iOS)
-import SwiftData
-import SwiftUI
+// MARK: - 📱 iOS 根容器视图
 
+/// iOS 应用的全局入口与底层 `TabView` 导航控制器。
+///
+/// **架构职责：**
+/// 1. **主路由枢纽**：通过原生的 `TabView` 串联主页、画廊、漫游、碎片和归档五大核心模块。
+/// 2. **全局环境注入**：在 `onAppear` 时执行系统级深浅色主题覆盖 (`applyTheme`)，并触发 CloudKit 冗余配置清理 (`pruneDuplicateConfigs`)。
+/// 3. **全局弹窗拦截**：监听 `.showAddBookModal` 通知，允许应用内的任意子层级无感唤起添加书籍面板。
 struct MobileContentView: View {
     @Environment(\.modelContext) private var modelContext
     
@@ -44,11 +48,12 @@ struct MobileContentView: View {
             MobileArchiveHostView(monthTitle: currentMonthString)
                 .tabItem { Label("归档", systemImage: "clock.arrow.circlepath") }.tag(4)
         }
-        // ✨ 核心注入 2：每次 App 启动，静默清理由于 iCloud 同步产生的冗余配置
+        // ✨ 核心注入：每次 App 启动，应用主题并静默清理 iCloud 同步产生的冗余配置
         .onAppear {
             applyTheme(configs.first?.appTheme ?? "system")
             pruneDuplicateConfigs(context: modelContext)
         }
+        // 监听全局新建图书广播
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
             showingAddBookSheet = true
         }
@@ -70,12 +75,15 @@ struct MobileContentView: View {
         }
     }
     
+    // MARK: - 原生外观覆盖引擎
+    
+    /// 根据配置选项，强制接管当前 iOS 系统的 UI 界面风格。
     private func applyTheme(_ theme: String) {
         let style: UIUserInterfaceStyle = {
             switch theme {
             case "light": return .light
             case "dark": return .dark
-            default: return .unspecified // 👈 瞬间把控制权还给 iOS 系统！
+            default: return .unspecified // 瞬间把控制权还给 iOS 系统自适应！
             }
         }()
             
@@ -84,49 +92,6 @@ struct MobileContentView: View {
             for window in windowScene.windows {
                 window.overrideUserInterfaceStyle = style
             }
-        }
-    }
-}
-#endif
-// MARK: - ✨ 沉浸式归档主控视图
-
-struct MobileArchiveHostView: View {
-    let monthTitle: String
-    @State private var archiveMode: Int = 0
-    
-    // 🍏 监听屏幕旋转状态
-    @Environment(\.verticalSizeClass) var verticalSizeClass
-    var isLandscape: Bool {
-        verticalSizeClass == .compact
-    }
-    
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // ✨ 恢复展示：始终保留两小模块的切换标题
-                Picker("归档视图", selection: $archiveMode) {
-                    Text("年度轨迹").tag(0)
-                    Text("月历记录").tag(1)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.top, 10)
-                .padding(.bottom, 16)
-                
-                // 子视图渲染
-                if archiveMode == 0 {
-                    MobileYearlyTimelineView()
-                } else {
-                    MobileMonthlyRecordView(monthTitle: monthTitle)
-                }
-            }
-            .navigationTitle(archiveMode == 0 ? "年度轨迹" : "月历记录")
-            .navigationBarTitleDisplayMode(.inline)
-            // 🍏 使用原生底色
-            .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
-            // ✨ 核心魔法：横屏时只隐藏底部的 TabBar 以释放纵向空间，保留顶部导航
-            .toolbar(isLandscape ? .hidden : .visible, for: .tabBar)
-            .animation(.easeInOut(duration: 0.3), value: isLandscape)
         }
     }
 }

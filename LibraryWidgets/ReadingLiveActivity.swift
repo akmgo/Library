@@ -5,6 +5,7 @@ import SwiftData
 import SwiftUI
 import WidgetKit
 
+/// 灵动岛及锁屏活动的极简封面提取视图。
 struct LiveActivityCoverView: View {
     let coverFilePath: String? // ✨ 接收路径
     
@@ -72,10 +73,10 @@ struct ReadingLiveActivity: Widget {
                             .fixedSize(horizontal: true, vertical: false) // 🚫 强制系统在一行显示完整，宁可突破边界也绝不上下折叠！
                             .minimumScaleFactor(0.8)
                             .offset(y: 30) // 你的核心微调
-                                            
+                                                                    
                         // ✨ 核心弹簧：把进度顶在左侧，把按钮和倒计时死死推向右侧
                         Spacer(minLength: 0)
-                                            
+                                                                    
                         // ✨ 中间：结束按钮，紧贴数字
                         Button(intent: StopTimerIntent(bookTitle: context.attributes.bookTitle)) {
                             Image(systemName: "stop.circle.fill")
@@ -84,7 +85,7 @@ struct ReadingLiveActivity: Widget {
                                 .foregroundColor(.red.opacity(0.85))
                         }
                         .buttonStyle(.plain)
-                                            
+                                                                    
                         // ✨ 右侧：上下布局 (上数字，下圆点)
                         VStack(alignment: .trailing, spacing: 8) {
                             // 右上：倒计时器
@@ -97,7 +98,7 @@ struct ReadingLiveActivity: Widget {
                                 .multilineTextAlignment(.trailing)
                                 .padding(.bottom, -6)
                                 .frame(width: 130, alignment: .trailing) // ✨ 极其重要：锁死宽度，防止数字变化引起 UI 左右抖动
-                                                
+                                                                                
                             // 右下：计时段圆点
                             HStack(spacing: 12) { // 缩小圆点间距防越界
                                 ForEach(0 ..< 5, id: \.self) { index in

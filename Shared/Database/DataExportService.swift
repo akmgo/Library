@@ -5,14 +5,19 @@ import SwiftData
 
 // MARK: - 📦 导出数据结构 (DTO)
 
-// 这些结构体专为导出 JSON 设计，完全脱离 SwiftData 的上下文
+// 💡 架构设计说明：
+// 这四个结构体专为导出跨平台兼容的 JSON 数据而设计。
+// 由于 SwiftData 原生的 `@Model` 类包含了大量宏和内部代理变量，直接导出极易导致循环引用崩溃。
+// 这层“无状态数据桥梁”将 SwiftData 对象转换为纯粹的、仅含基础类型的结构，方便外部系统解析。
 
+/// 完整的数据备份压缩包根结构，涵盖时间戳和核心书籍列表。
 struct ExportArchive: Codable {
     let exportTime: Date
     let totalBooks: Int
     let books: [ExportBook]
 }
 
+/// 针对单本书籍建立的脱水级扁平导出模型。
 struct ExportBook: Codable {
     let title: String
     let author: String
@@ -23,14 +28,17 @@ struct ExportBook: Codable {
     let status: String
     let excerpts: [ExportExcerpt]
     let notes: [ExportNote]
-    let coverFileName: String? // 指向 Covers 文件夹中的图片名称
+    /// 导出的图片封面将独立存放在 `Covers` 文件夹中，该字段建立关联映射的文件名。
+    let coverFileName: String?
 }
 
+/// 脱水版的摘录记录 DTO。
 struct ExportExcerpt: Codable {
     let content: String
     let createdAt: Date?
 }
 
+/// 脱水版的笔记随笔 DTO。
 struct ExportNote: Codable {
     let content: String
     let createdAt: Date?
@@ -38,12 +46,33 @@ struct ExportNote: Codable {
 
 // MARK: - 🚀 核心导出引擎
 
+/// 处理应用内产生的所有数据向物理硬盘导出的中枢服务类。
+///
+/// **职责与特性：**
+/// 1. 利用 macOS 原生的 `NSOpenPanel` 获取安全的文件夹写入授权。
+/// 2. 进行深度数据脱水转换（将 `@Model` 转至 `DTO`）。
+/// 3. 通过内置编码器进行结构化 JSON 持久化以及海量封面的批量写入工作。
 @MainActor
 final class DataExportService {
+    /// 全局导出服务单例
     static let shared = DataExportService()
+    
     private init() {}
     
-    /// 执行导出流程，返回导出的目标文件夹 URL
+    /// 呼出 macOS 原生目录选择面板，执行全量阅读数据和封面图片的本地导出备份。
+    ///
+    /// - 流程细节：
+    ///   1. 调起系统 `NSOpenPanel` 请求一个宿主文件夹。
+    ///   2. 以当前系统时间创建带时间戳的专属二级根目录及并行的 `Covers` 子文件夹。
+    ///   3. 扫描每本传入的书籍对象。若带有封面数据，则对其标题进行特殊字符过滤后输出图片至子文件夹。
+    ///   4. 将对象结构转成 `DTO`，使用 `.prettyPrinted` 和标准化 ISO8601 时区算法进行规范化 JSON 序列写入。
+    ///
+    /// - Parameters:
+    ///   - books: 需要被抽取导出的全量内部 SwiftData `Book` 对象合集。
+    ///
+    /// - Returns: 若任务全部执行完成，返回导出创建的根级文件夹 `URL` 以供其他调用层触发 Finder。如果用户中途取消则返回 `nil`。
+    ///
+    /// - Throws: 如果文件物理写入失败、JSON 解析异常、或者由于权限被阻断，则抛出底层系统错误。
     func exportBooks(_ books: [Book]) async throws -> URL? {
         // 1. 弹出 macOS 原生文件夹选择器
         let openPanel = NSOpenPanel()

@@ -5,6 +5,21 @@ import AppKit
 import UIKit
 #endif
 
+// MARK: - 跨端本地封面渲染组件
+
+/// 高性能的跨端本地封面图片渲染组件。
+///
+/// 该视图专门用于处理从数据库或本地存储中读取的原始图片数据 (`Data`)。
+/// 它内置了**异步加载**、**内存缓存**以及**跨平台 (iOS/macOS) 图像解析**引擎。
+///
+/// **视觉特性：**
+/// - 加载中：显示系统标准的二级占位色 (`Color.secondary`)。
+/// - 加载失败：显示带有书籍名称的原生风格骨架屏。
+/// - 加载成功：执行丝滑的 `0.4` 秒淡入动画。
+///
+/// - Parameters:
+///   - coverData: 原始图片二进制数据。如果传入 `nil`，将直接展示占位图。
+///   - fallbackTitle: 当图片解析失败或为空时，在占位骨架屏上显示的兜底文字。
 struct LocalCoverView: View {
     let coverData: Data?
     let fallbackTitle: String
@@ -77,6 +92,11 @@ struct LocalCoverView: View {
     }
     
     // MARK: - 🍏 原生化占位视图
+    
+    /// 内部使用的兜底占位视图。
+    ///
+    /// 当图片完全无法加载时，该视图会使用 iOS/macOS 的原生次级背景色，
+    /// 并居中绘制传入的 `fallbackTitle`（支持动态字体缩放）。
     private var fallbackView: some View {
         ZStack {
             #if os(macOS)

@@ -3,15 +3,20 @@ import SwiftData
 
 // MARK: - 统一控制的常量与枚举 (Enum)
 
-/// 书籍阅读状态枚举
-/// 遵循 Codable 以便存入数据库，String 类型代表底层存的是字符串
+/// 标识书籍当前生命周期的枚举。
+///
+/// 遵循 `Codable`，底层通过字符串持久化到 SQLite 中。
 enum BookStatus: String, Codable, CaseIterable {
-    case unread = "UNREAD"       // 未读
-    case reading = "READING"     // 在读
-    case finished = "FINISHED"   // 已读
-    case abandoned = "ABANDONED" // 弃读（为你未来可能的功能留个口子）
+    /// 尚未开始阅读的书籍（在想读队列中）。
+    case unread = "UNREAD"
+    /// 当前正在进行焦点计时或阅读的书籍。
+    case reading = "READING"
+    /// 已经读完的书籍（将被计入年度成就）。
+    case finished = "FINISHED"
+    /// 放弃阅读的书籍。
+    case abandoned = "ABANDONED"
     
-    // 你可以直接在这里写些辅助方法，比如 UI 显示的中文名字
+    /// 用于前端 UI 展示的本地化中文标签。
     var displayName: String {
         switch self {
         case .unread: return "未读"
@@ -24,7 +29,13 @@ enum BookStatus: String, Codable, CaseIterable {
 
 // MARK: - 核心实体模型 (Entities)
 
-/// 书籍模型对象 (对应数据库 Books 表)
+/// 核心数据模型：代表用户书架上的一本书（对应底层 SQLite 数据库的 Books 表）。
+///
+/// 它是整个架构的中心节点（Hub）。一本书可以拥有多条 `ReadingRecord`（打卡记录）、
+/// 多条 `Excerpt`（摘录）和多条 `Note`（笔记）。
+///
+/// - 注意: `coverData` 字段使用了 `@Attribute(.externalStorage)`，
+/// 确保大型图片数据被存放在沙盒文件系统中，维持 SQLite 查询的极速性能。
 @Model
 final class Book {
     // 基础信息
@@ -32,11 +43,11 @@ final class Book {
     var title: String?
     var author: String?
     
-    // ✨ 只有这个字段负责存封面，.externalStorage 告诉底层把大文件存在沙盒文件系统，而不是塞爆 SQLite
+    /// 书籍封面原始二进制数据。由于体积较大，底层映射于外部沙盒存储。
     @Attribute(.externalStorage) var coverData: Data?
     
     // 状态与分类
-    var status: BookStatus? // 使用枚举替换魔法字符串
+    var status: BookStatus?
     var rating: Int?
     var tags: [String]?
     
@@ -47,26 +58,28 @@ final class Book {
     var isWantToRead: Bool = false
     
     // MARK: - 关联关系 (Relationships)
-    // 类比 Java 里的 @OneToMany(cascade = CascadeType.ALL)
-    // deleteRule: .cascade 意味着：删了这本书，它底下的所有笔记、摘录都会跟着被销毁，防止产生孤儿数据
     
-    // ⚠️ SwiftData 最佳实践：指明反向关系 (inverse)。这样双向绑定更牢固
+    /// 书中保存的精彩摘录集合。
+    /// 级联删除 (`.cascade`) 意味着：若删除本书，它关联的所有摘录也将被一同销毁。
     @Relationship(deleteRule: .cascade, inverse: \Excerpt.book)
     var excerpts: [Excerpt]?
     
+    /// 该书的历史阅读打卡时间记录。
     @Relationship(deleteRule: .cascade, inverse: \ReadingRecord.book)
-    var readingRecords: [ReadingRecord]? // 变量名遵循驼峰命名法，改成了 readingRecords
+    var readingRecords: [ReadingRecord]?
     
+    /// 用户为本书撰写的随笔与笔记。
     @Relationship(deleteRule: .cascade, inverse: \Note.book)
     var notes: [Note]?
     
     // MARK: - 初始化
+    
     init(
         id: String = UUID().uuidString,
         title: String,
         author: String,
         coverData: Data? = nil,
-        status: BookStatus = .unread, // 默认状态为枚举值
+        status: BookStatus = .unread,
         rating: Int = 0,
         tags: [String] = [],
         startTime: Date? = nil,
@@ -84,20 +97,21 @@ final class Book {
         self.startTime = startTime
         self.endTime = endTime
         self.progress = progress
-        self.isWantToRead = isWantToRead // 🐛 Bug 修复：不再写死 false
+        self.isWantToRead = isWantToRead
     }
 }
 
 // MARK: - 附属内容模型
 
-/// 摘录模型 (对应书中划线的精彩句子)
+/// 摘录数据模型：对应书中的精彩原文划线。
 @Model
 final class Excerpt {
     var id: String?
     var content: String?
     var createdAt: Date?
     
-    var book: Book? // 多对一关系：这条摘录属于哪本书
+    /// 指向当前摘录所属书籍的引用引用关系。
+    var book: Book?
     
     init(id: String = UUID().uuidString, content: String, createdAt: Date = Date(), book: Book? = nil) {
         self.id = id
@@ -107,7 +121,7 @@ final class Excerpt {
     }
 }
 
-/// 随笔/笔记模型
+/// 笔记数据模型：对应用户的原创心得。
 @Model
 final class Note {
     var id: String?
@@ -123,29 +137,42 @@ final class Note {
     }
 }
 
-/// 每日阅读打卡记录
+/// 每日阅读打卡流水模型。
+///
+/// 该模型用于驱动主页的“双周动能图”和“年度热力图”。
+///
+/// - 注意: 每次初始化时，它都会自动利用 `Calendar` 抹去时分秒，仅保留当天的零点时间 (`yyyy-MM-dd 00:00:00`)，
+/// 这对于后续按照“日”维度进行 `Group By` 聚合计算至关重要。
 @Model
 final class ReadingRecord {
     var id: String?
-    var date: Date? // 打卡日期
-    var readingDuration: TimeInterval = 0 // 阅读时长 (秒)
-    var book: Book? // 关联的在读书籍（可以为空，代表仅泛泛打卡，没特指哪本书）
+    
+    /// 标准化到当日零点的时间戳。
+    var date: Date?
+    
+    /// 本次/本日累积阅读的总时长，单位为秒 (Seconds)。
+    var readingDuration: TimeInterval = 0
+    
+    /// 产生该专注时长的目标书籍。
+    var book: Book?
     
     init(date: Date = Date(), readingDuration: TimeInterval = 0, book: Book? = nil) {
         self.id = UUID().uuidString
         self.readingDuration = readingDuration
         self.book = book
         
-        // 抹去具体的时间（时分秒），只保留年月日。保证一天只有一条记录或方便聚合
+        // 抹去具体的时间（时分秒），只保留年月日。保证后续可基于日期作精准聚合。
         let calendar = Calendar.current
         let components = calendar.dateComponents([.year, .month, .day], from: date)
         self.date = calendar.date(from: components) ?? date
     }
 }
 
+/// 用户偏好配置数据模型。
+///
+/// 用于存储跨设备的个人阅读目标、主题设定等。
 @Model
 final class UserConfig {
-    // ✨ 核心修复：必须在这里直接赋予默认值！这是 CloudKit 强制要求的“安全底线”
     var dailyReadingGoal: Int = 30
     var yearlyBookGoal: Int = 50
     var libraryTargetGoal: Int = 500
