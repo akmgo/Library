@@ -1,6 +1,5 @@
 #if os(macOS)
 import SwiftUI
-import SwiftData
 
 // MARK: - 🧠 知识基因图谱
 
@@ -8,51 +7,92 @@ import SwiftData
 ///
 /// 最高排名的 5 个维度将被映射为长度不等、颜色绚丽的光滑胶囊条，呈现用户的宏观知识面分布。
 struct FluidKnowledgeSpectrumCard: View {
-    let readBooks: [Book]
-    @State private var data: [(String, Double, Color)] = []
-    let colors: [Color] = [.purple, .indigo, .teal, .orange, .blue]
+    /// 1. 彻底解耦：只接收纯粹的 UI 数据点
+    let dataPoints: [SpectrumDataPoint]
     
     var body: some View {
-        GroupBox {
-            if data.isEmpty {
-                VStack(spacing: 8) { Image(systemName: "chart.pie").font(.system(size: 24)).foregroundColor(.secondary.opacity(0.4)); Text("缺乏数据").font(.system(size: 13)).foregroundColor(.secondary) }.frame(maxWidth: .infinity, maxHeight: .infinity)
+        // ✨ 核心重构：抛弃 GroupBox，换上原生的液态玻璃舱
+        VStack(alignment: .leading, spacing: 16) {
+            // 头部 Label
+            HStack {
+                Text("知识基因")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                Spacer()
+                Image(systemName: "chart.pie.fill")
+                    .foregroundColor(.purple)
+            }
+            
+            if dataPoints.isEmpty {
+                // 空状态
+                VStack(spacing: 8) {
+                    Image(systemName: "chart.pie")
+                        .font(.system(size: 24))
+                        .foregroundColor(.secondary.opacity(0.4))
+                    Text("缺乏数据")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
+                // 数据展示状态
                 VStack(spacing: 24) {
+                    // 🌈 光谱彩带渲染区
                     GeometryReader { geo in
-                        HStack(spacing: 4) {
-                            ForEach(0..<data.count, id: \.self) { i in
-                                Rectangle().fill(data[i].2.gradient).frame(width: max(0, geo.size.width * (data[i].1 / 100.0) - 4))
+                        // 1. 定义固定的间距
+                        let spacing: CGFloat = 4
+                                                
+                        // 2. 算出现有元素之间共有几个间隙
+                        let gapsCount = CGFloat(max(0, dataPoints.count - 1))
+                                                
+                        // 3. 计算扣除所有间隙后，真正可以用来画色块的“净可用宽度”
+                        let availableWidth = max(0, geo.size.width - (spacing * gapsCount))
+                                                
+                        HStack(spacing: spacing) {
+                            ForEach(dataPoints) { point in
+                                Rectangle()
+                                    .fill(point.color.gradient)
+                                    // 4. 完美按百分比瓜分“净宽度”
+                                    .frame(width: availableWidth * (point.percentage / 100.0))
                             }
                         }
                         .clipShape(Capsule())
-                    }.frame(height: 18)
+                    }
+                    .frame(height: 18)
                     
+                    // 🏷️ 底部图例标签区
                     HStack(spacing: 40) {
-                        ForEach(0..<data.count, id: \.self) { i in
+                        ForEach(dataPoints) { point in
                             HStack(spacing: 8) {
-                                Circle().fill(data[i].2).frame(width: 10, height: 10)
+                                Circle()
+                                    .fill(point.color)
+                                    .frame(width: 10, height: 10)
                                 VStack(alignment: .leading, spacing: 0) {
-                                    Text(data[i].0).font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundColor(.primary)
-                                    Text("\(Int(data[i].1))%").font(.system(size: 12, weight: .medium)).foregroundColor(.secondary)
+                                    Text(point.tagName)
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.primary)
+                                    Text("\(Int(point.percentage))%")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.secondary)
                                 }
                             }
                         }
-                    }.frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .frame(maxHeight: .infinity, alignment: .center)
             }
-        } label: {
-            HStack { Text("知识基因").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundColor(.primary); Spacer(); Image(systemName: "chart.pie.fill").foregroundColor(.purple) }
         }
-        .groupBoxStyle(NativeWidgetGroupBoxStyle())
-        .onAppear { process() }.onChange(of: readBooks) { _, _ in process() }
+        .padding(24) // 撑开内部空间
+        .glassEffect(in: .rect(cornerRadius: 24.0)) // ✨ 注入极致通透的液态玻璃外壳
     }
-    
-    private func process() {
-        var counts: [String: Double] = [:]; var total = 0.0
-        for b in readBooks { for t in b.tags ?? [] { counts[t, default: 0] += 1; total += 1 } }
-        guard total > 0 else { data = []; return }
-        data = counts.sorted { $0.value > $1.value }.prefix(5).enumerated().map { ($0.element.key, ($0.element.value / total) * 100.0, colors[$0.offset % colors.count]) }
-    }
+}
+
+// MARK: - 预览
+
+#Preview("知识基因光谱") {
+    FluidKnowledgeSpectrumCard(dataPoints: PreviewData.mockSpectrumData)
+        .padding()
+        .frame(height: 180)
 }
 #endif

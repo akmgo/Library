@@ -31,21 +31,16 @@ struct DashboardEntry: TimelineEntry {
     let yearTarget: Int
 }
 
-// MARK: - 数据提供者
-
 /// 为中号数据大盘提供时间线数据的核心引擎。
 struct DashboardProvider: TimelineProvider {
-    /// 提供在小组件库中预览时的占位符数据。
     func placeholder(in context: Context) -> DashboardEntry {
         DashboardEntry(date: Date(), weekCount: 3, monthlyDays: 12, yearlyCount: 25, totalFinished: 25, totalBooksInLibrary: 42, todayMinutes: 15, dailyGoal: 30, weekTarget: 7, monthTarget: 30, yearTarget: 50)
     }
 
-    /// 提供小组件添加时的瞬时快照。
     func getSnapshot(in context: Context, completion: @escaping (DashboardEntry) -> ()) {
         Task { @MainActor in completion(fetchRealData()) }
     }
 
-    /// 生成小组件的未来更新时间线（设定为每 30 分钟刷新一次）。
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         Task { @MainActor in
             let entry = fetchRealData()
@@ -54,61 +49,71 @@ struct DashboardProvider: TimelineProvider {
         }
     }
 
-    /// 从共享的 SwiftData 容器中提取全库阅读记录并进行实时数学聚合。
     @MainActor
     private func fetchRealData() -> DashboardEntry {
         let context = SharedDatabase.shared.container.mainContext
         do {
-            let allBooks = try context.fetch(FetchDescriptor<Book>())
-            let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
-            
-            // ✨ 核心替换：直接从 SwiftData 中提取最新的 UserConfig，抛弃 JSON！
-            let configDesc = FetchDescriptor<UserConfig>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
-            let globalConfig = (try? context.fetch(configDesc))?.first ?? UserConfig() // 查不到就给默认值
-            
-            let calendar = Calendar.current; let today = Date()
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
             let currentYear = calendar.component(.year, from: today)
             let currentMonth = calendar.component(.month, from: today)
+            
+            // ✨ 优化 1：配置抓取限制为 1 条，极速返回
+            var configDesc = FetchDescriptor<UserConfig>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
+            configDesc.fetchLimit = 1
+            let globalConfig = (try? context.fetch(configDesc))?.first ?? UserConfig()
 
-            // 1. 本周打卡天数
-            var tempCalendar = calendar; tempCalendar.firstWeekday = 2; var tempWeekCount = 0
-            if let startOfWeek = tempCalendar.date(from: tempCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) {
-                for i in 0 ..< 7 {
-                    if let dayDate = tempCalendar.date(byAdding: .day, value: i, to: startOfWeek) {
-                        if allRecords.contains(where: { tempCalendar.isDate($0.date ?? Date.distantPast, inSameDayAs: dayDate) }) { tempWeekCount += 1 }
+            // ✨ 优化 2：单次遍历完成书籍统计 (O(N))
+            let allBooks = try context.fetch(FetchDescriptor<Book>())
+            var totalFinishedCount = 0
+            var yearlyCount = 0
+            
+            for book in allBooks {
+                if book.status == .finished {
+                    totalFinishedCount += 1
+                    if let endTime = book.endTime, calendar.component(.year, from: endTime) == currentYear {
+                        yearlyCount += 1
                     }
                 }
             }
+            let totalLibraryCount = allBooks.count
 
-            // 2. 本月阅读天数
-            let thisMonthRecords = allRecords.filter {
-                let safeDate = $0.date ?? Date.distantPast
-                return calendar.component(.year, from: safeDate) == currentYear && calendar.component(.month, from: safeDate) == currentMonth
+            // ✨ 优化 3：单次遍历完成记录统计，拒绝在循环中使用 filter/contains
+            let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
+            
+            var tempCalendar = calendar
+            tempCalendar.firstWeekday = 2 // 周一为每周第一天
+            let startOfWeek = tempCalendar.date(from: tempCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) ?? today
+
+            var weekDaysSet = Set<Int>()
+            var monthDaysSet = Set<Int>()
+            var todaySeconds: TimeInterval = 0
+
+            for record in allRecords {
+                let recDate = calendar.startOfDay(for: record.date)
+                
+                // 1. 今日时长
+                if recDate == today { todaySeconds += record.readingDuration }
+                
+                // 2. 本周打卡天数
+                if recDate >= startOfWeek && recDate <= today {
+                    weekDaysSet.insert(calendar.ordinality(of: .day, in: .era, for: recDate) ?? 0)
+                }
+                
+                // 3. 本月阅读天数
+                if calendar.component(.year, from: recDate) == currentYear && calendar.component(.month, from: recDate) == currentMonth {
+                    monthDaysSet.insert(calendar.component(.day, from: recDate))
+                }
             }
-            let monthlyDays = Set(thisMonthRecords.map { calendar.component(.day, from: $0.date ?? Date.distantPast) }).count
-
-            // 3. 年度已读完数量
-            let yearlyCount = allBooks.filter { $0.status == .finished && calendar.component(.year, from: $0.endTime ?? today) == currentYear }.count
-
-            // ==========================================
-            // ✨ 4. 实时计算：全局通关率（取代了原先的手动目标）
-            // ==========================================
-            let totalFinishedCount = allBooks.filter { $0.status == .finished }.count
-            let totalLibraryCount = allBooks.count // 书库真实总量
-
-            // 5. 今日阅读进度逻辑
-            let todayRecords = allRecords.filter { calendar.isDate($0.date ?? Date.distantPast, inSameDayAs: today) }
-            let todaySeconds = todayRecords.reduce(0) { $0 + Int($1.readingDuration) }
-            let todayMinutes = todaySeconds / 60
 
             return DashboardEntry(
-                date: today,
-                weekCount: tempWeekCount,
-                monthlyDays: monthlyDays,
+                date: Date(),
+                weekCount: weekDaysSet.count,
+                monthlyDays: monthDaysSet.count,
                 yearlyCount: yearlyCount,
-                totalFinished: totalFinishedCount, // 传入实时已读数
-                totalBooksInLibrary: totalLibraryCount, // 传入实时总藏书
-                todayMinutes: todayMinutes,
+                totalFinished: totalFinishedCount,
+                totalBooksInLibrary: totalLibraryCount,
+                todayMinutes: Int(todaySeconds / 60),
                 dailyGoal: globalConfig.dailyReadingGoal,
                 weekTarget: 7,
                 monthTarget: 30,
@@ -125,6 +130,9 @@ struct DashboardProvider: TimelineProvider {
 /// 中号尺寸 (`.systemMedium`) 的阅读统计看板视图。
 ///
 /// 上方并排呈现四个微型环形图表，下方辅以今日进度的线性指示器。
+// MARK: - 主视图 (极致利用原生边距)
+
+/// 中号尺寸 (`.systemMedium`) 的阅读统计看板视图。
 struct DashboardWidgetEntryView: View {
     var entry: DashboardProvider.Entry
 
@@ -138,7 +146,6 @@ struct DashboardWidgetEntryView: View {
                 Spacer()
                 WidgetMicroMetric(title: "年度阅卷", current: entry.yearlyCount, target: entry.yearTarget, color: .cyan, icon: "book.closed.fill")
                 Spacer()
-                // ✨ 馆藏进度：使用实时数据，更换排书图标
                 WidgetMicroMetric(title: "馆藏进度", current: entry.totalFinished, target: entry.totalBooksInLibrary, color: .indigo, icon: "books.vertical.fill")
             }
 
@@ -156,18 +163,21 @@ struct DashboardWidgetEntryView: View {
                     if entry.todayMinutes >= entry.dailyGoal {
                         Text("🎉 目标达成")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.blue)
+                            .foregroundColor(.cyan) // 配合渐变色调
                     } else {
                         Text("\(entry.todayMinutes) / \(entry.dailyGoal) 分钟")
                             .font(.system(size: 13, weight: .heavy, design: .rounded))
-                            .foregroundColor(.blue)
+                            .monospacedDigit() // ✨ 优化点 1：等宽数字，彻底防止数字跳动导致的 UI 位移抖动
+                            .foregroundColor(.cyan)
                     }
                 }
 
                 let safeProgress = min(max(Double(entry.todayMinutes) / Double(entry.dailyGoal), 0.0), 1.0)
+                
                 ProgressView(value: safeProgress)
                     .progressViewStyle(.linear)
-                    .tint(.blue)
+                    // ✨ 优化点 2：使用更高级的渐变色替代单调的纯蓝
+                    .tint(LinearGradient(colors: [.indigo, .cyan], startPoint: .leading, endPoint: .trailing))
             }
         }
         .frame(maxHeight: .infinity)

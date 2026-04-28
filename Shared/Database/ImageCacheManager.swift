@@ -49,6 +49,14 @@ public final class ImageCacheManager: @unchecked Sendable {
         cache.setObject(image, forKey: key as NSString)
     }
     
+    /// 从内存缓存中强制移除指定的图像。
+        ///
+        /// - Parameter key: 需要移除的图像的唯一标识符。
+        public func removeImage(forKey key: String) {
+            cache.removeObject(forKey: key as NSString)
+        }
+    
+    
     #if os(iOS)
     /// 对高分辨率原始图片数据执行极限降采样缩放。
     ///

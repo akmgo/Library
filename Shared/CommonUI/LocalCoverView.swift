@@ -8,19 +8,9 @@ import UIKit
 // MARK: - 跨端本地封面渲染组件
 
 /// 高性能的跨端本地封面图片渲染组件。
-///
-/// 该视图专门用于处理从数据库或本地存储中读取的原始图片数据 (`Data`)。
-/// 它内置了**异步加载**、**内存缓存**以及**跨平台 (iOS/macOS) 图像解析**引擎。
-///
-/// **视觉特性：**
-/// - 加载中：显示系统标准的二级占位色 (`Color.secondary`)。
-/// - 加载失败：显示带有书籍名称的原生风格骨架屏。
-/// - 加载成功：执行丝滑的 `0.4` 秒淡入动画。
-///
-/// - Parameters:
-///   - coverData: 原始图片二进制数据。如果传入 `nil`，将直接展示占位图。
-///   - fallbackTitle: 当图片解析失败或为空时，在占位骨架屏上显示的兜底文字。
 struct LocalCoverView: View {
+    /// 外部唯一标识符作为缓存 Key，拒绝动态 Hash
+    let coverID: String
     let coverData: Data?
     let fallbackTitle: String
     
@@ -33,59 +23,82 @@ struct LocalCoverView: View {
                 #if os(macOS)
                 Image(nsImage: image)
                     .resizable()
-                    .scaledToFill()
-                    .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+                    // ✨ 核心 1：必须是 fill，保证无论图片什么比例，都绝对填满父容器
+                    .aspectRatio(contentMode: .fill)
+                    .transition(.opacity)
                 #else
                 Image(uiImage: image)
                     .resizable()
-                    .scaledToFill()
-                    .transition(.opacity.animation(.easeInOut(duration: 0.4)))
+                    .aspectRatio(contentMode: .fill)
+                    .transition(.opacity)
                 #endif
             } else if isLoading && coverData != nil {
-                // 🍏 原生骨架屏：使用系统自带的 secondary 语义色
+                // 🍏 原生骨架屏
                 Color.secondary.opacity(0.2)
             } else {
-                // 🍏 原生文字占位：使用系统次级背景和原生 Headline 字体
+                // 🍏 原生文字占位
                 fallbackView
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // ✨ 核心 2：撑满父容器给予的最大空间
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+        // ✨ 核心 3：冷酷无情地切掉所有溢出边界的像素，彻底消灭悬浮时的透明黑框！
         .clipped()
-        .task(id: coverData) {
-            isLoading = true
-            
-            guard let data = coverData else {
-                isLoading = false
-                return
-            }
-            
-            // 直接在后台任务中处理，不需要 Task.detached
-            let cacheKey = String(data.hashValue)
-            
-            // 极速读取缓存
-            if let cachedImage = ImageCacheManager.shared.getImage(forKey: cacheKey) {
+        // 保证整个区域（哪怕是透明部分）都能响应鼠标悬停和点击
+        .contentShape(Rectangle())
+        .task(id: coverID) {
+            await loadCoverImage()
+        }
+        // ✨ 补上这三行：专门监听封面数据的真实变化
+        .onChange(of: coverData) { _, _ in
+            Task { await loadCoverImage() }
+        }
+    }
+    
+    // MARK: - 核心异步加载引擎
+    
+    private func loadCoverImage() async {
+        // 重置状态
+        if !isLoading { isLoading = true }
+        
+        guard let data = coverData, !coverID.isEmpty else {
+            withAnimation { isLoading = false }
+            return
+        }
+        
+        let cacheKey = "cover_img_\(coverID)"
+        
+        // 1. 极速读取内存缓存
+        if let cachedImage = ImageCacheManager.shared.getImage(forKey: cacheKey) {
+            withAnimation(.easeOut(duration: 0.3)) {
                 self.loadedImage = cachedImage
                 self.isLoading = false
-                return
             }
-            
-            // 处理/压缩新图片
+            return
+        }
+        
+        // 2. 强制剥离主线程处理重度 CPU 运算
+        let processedImage = await Task.detached(priority: .userInitiated) { () -> PlatformImage? in
             #if os(iOS)
             let targetSize = CGSize(width: 300, height: 450)
-            let newImage = ImageCacheManager.shared.downsample(data: data, to: targetSize)
+            return ImageCacheManager.shared.downsample(data: data, to: targetSize)
             #else
-            let newImage = NSImage(data: data)
+            return NSImage(data: data)
             #endif
-            
-            // 存入缓存
-            if let validImage = newImage {
-                // ✨ 修复：因为 setImage 不是 async 函数，所以这里去掉 await
-                ImageCacheManager.shared.setImage(validImage, forKey: cacheKey)
-            }
-            
-            // 回到主线程更新 UI 绑定的 State
-            await MainActor.run {
-                self.loadedImage = newImage
+        }.value
+        
+        guard let validImage = processedImage else {
+            withAnimation { isLoading = false }
+            return
+        }
+        
+        // 写入缓存 (后台完成，不阻碍 UI)
+        ImageCacheManager.shared.setImage(validImage, forKey: cacheKey)
+        
+        // 3. 回到主线程，触发极简柔和的图片加载淡入动画
+        await MainActor.run {
+            withAnimation(.easeOut(duration: 0.3)) {
+                self.loadedImage = validImage
                 self.isLoading = false
             }
         }
@@ -93,10 +106,6 @@ struct LocalCoverView: View {
     
     // MARK: - 🍏 原生化占位视图
     
-    /// 内部使用的兜底占位视图。
-    ///
-    /// 当图片完全无法加载时，该视图会使用 iOS/macOS 的原生次级背景色，
-    /// 并居中绘制传入的 `fallbackTitle`（支持动态字体缩放）。
     private var fallbackView: some View {
         ZStack {
             #if os(macOS)
@@ -106,8 +115,8 @@ struct LocalCoverView: View {
             #endif
             
             Text(fallbackTitle.isEmpty ? "未命名" : fallbackTitle)
-                .font(.headline) // 🍏 使用原生动态字体，支持无障碍缩放
-                .foregroundColor(.secondary) // 🍏 自动适应深浅模式的次级文字颜色
+                .font(.headline)
+                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding()
         }

@@ -16,7 +16,7 @@ struct DailyProgressRingView: View {
     // 计算今天总共读了多少分钟
     var todayMinutes: Int {
         let calendar = Calendar.current
-        let todayRecords = allRecords.filter { calendar.isDateInToday($0.date ?? Date()) }
+        let todayRecords = allRecords.filter { calendar.isDateInToday($0.date) }
         let totalSeconds = todayRecords.reduce(0) { $0 + Int($1.readingDuration) }
         return totalSeconds / 60
     }
@@ -84,7 +84,9 @@ struct SettingsHeaderRow: View {
     }
 }
 
-/// 渲染一行设置选项。左侧包含图标与信息，右侧使用 `@ViewBuilder` 开口以承载复选框、按钮或下拉菜单。
+// MARK: - 设置面板 UI 原子组件 (全局复用)
+
+/// 渲染一行设置选项，左侧包含带背景底座的图标与文案，右侧开口用于承载控件。
 struct SettingsControlRow<Content: View>: View {
     let icon: String
     let iconColor: Color

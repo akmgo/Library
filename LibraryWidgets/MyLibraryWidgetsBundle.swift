@@ -8,22 +8,17 @@ import WidgetKit
 struct MyLibraryWidgetsBundle: WidgetBundle {
     var body: some Widget {
         
-        FocusCoverWidget()
-        StatsGridWidget()
-        MomentumChartWidget()
+        FocusHeroWidget()
         
-        // ✨ 必须加上这一段！告诉系统我们要启动灵动岛
-        #if os(iOS)
-        ReadingLiveActivity()
-        #endif
+        StatsGridWidget()
+        
+        MomentumChartWidget()
         
         MomentumWidget()
         
         YearlyHeatmapWidget()
         
         ResonanceWaveWidget()
-        
-        ReadingFocusWidget()
         
         DesktopDashboardWidget()
                 

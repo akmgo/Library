@@ -7,62 +7,37 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C5FD82542F90C4560003A500 /* 娱乐至死.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824D2F90C4560003A500 /* 娱乐至死.jpg */; };
-		C5FD82552F90C4560003A500 /* 茶花女.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82282F90C4560003A500 /* 茶花女.jpg */; };
-		C5FD82562F90C4560003A500 /* 共产党宣言.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822F2F90C4560003A500 /* 共产党宣言.jpg */; };
-		C5FD82572F90C4560003A500 /* 君主论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82352F90C4560003A500 /* 君主论.jpg */; };
-		C5FD82582F90C4560003A500 /* 贫穷的本质.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823F2F90C4560003A500 /* 贫穷的本质.jpg */; };
-		C5FD82592F90C4560003A500 /* 二十四史.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822D2F90C4560003A500 /* 二十四史.jpg */; };
-		C5FD825A2F90C4560003A500 /* 奥德赛.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82262F90C4560003A500 /* 奥德赛.jpg */; };
-		C5FD825B2F90C4560003A500 /* 罪与罚.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82512F90C4560003A500 /* 罪与罚.jpg */; };
-		C5FD825C2F90C4560003A500 /* 撒哈拉的故事.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82432F90C4560003A500 /* 撒哈拉的故事.jpg */; };
-		C5FD825D2F90C4560003A500 /* 文明的冲突.webp in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82472F90C4560003A500 /* 文明的冲突.webp */; };
-		C5FD825E2F90C4560003A500 /* 人类简史：从动物到上帝.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82402F90C4560003A500 /* 人类简史：从动物到上帝.jpg */; };
-		C5FD825F2F90C4560003A500 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82522F90C4560003A500 /* Assets.xcassets */; };
-		C5FD82602F90C4560003A500 /* 呐喊.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823B2F90C4560003A500 /* 呐喊.jpg */; };
-		C5FD82612F90C4560003A500 /* 局外人.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82342F90C4560003A500 /* 局外人.jpg */; };
-		C5FD82622F90C4560003A500 /* 万历十五年.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82462F90C4560003A500 /* 万历十五年.jpg */; };
-		C5FD82632F90C4560003A500 /* 江城.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82332F90C4560003A500 /* 江城.jpg */; };
-		C5FD82642F90C4560003A500 /* 你当像鸟飞往你的山.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823C2F90C4560003A500 /* 你当像鸟飞往你的山.jpg */; };
-		C5FD82652F90C4560003A500 /* 如何阅读一本书.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82422F90C4560003A500 /* 如何阅读一本书.jpg */; };
-		C5FD82662F90C4560003A500 /* 朝花夕拾.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822A2F90C4560003A500 /* 朝花夕拾.jpg */; };
-		C5FD82672F90C4560003A500 /* 明朝那些事儿.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823A2F90C4560003A500 /* 明朝那些事儿.jpg */; };
-		C5FD82682F90C4560003A500 /* 霍乱时期的爱情.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82322F90C4560003A500 /* 霍乱时期的爱情.jpg */; };
-		C5FD82692F90C4560003A500 /* 忏悔录.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82292F90C4560003A500 /* 忏悔录.jpg */; };
-		C5FD826A2F90C4560003A500 /* 乌合之众.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82482F90C4560003A500 /* 乌合之众.jpg */; };
-		C5FD826B2F90C4560003A500 /* 资本论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82502F90C4560003A500 /* 资本论.jpg */; };
-		C5FD826C2F90C4560003A500 /* 法律的悖论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822E2F90C4560003A500 /* 法律的悖论.jpg */; };
-		C5FD826D2F90C4560003A500 /* 杀死一只知更鸟.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82452F90C4560003A500 /* 杀死一只知更鸟.jpg */; };
-		C5FD826E2F90C4560003A500 /* 月亮与六便士.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824E2F90C4560003A500 /* 月亮与六便士.jpg */; };
-		C5FD826F2F90C4560003A500 /* 三体.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82442F90C4560003A500 /* 三体.jpg */; };
-		C5FD82702F90C4560003A500 /* 百年孤独.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82272F90C4560003A500 /* 百年孤独.jpg */; };
-		C5FD82712F90C4560003A500 /* 一个人的朝圣.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824A2F90C4560003A500 /* 一个人的朝圣.jpg */; };
-		C5FD82722F90C4560003A500 /* 活着.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82312F90C4560003A500 /* 活着.jpg */; };
-		C5FD82732F90C4560003A500 /* 人性的弱点.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82412F90C4560003A500 /* 人性的弱点.jpg */; };
-		C5FD82742F90C4560003A500 /* 美的历程.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82392F90C4560003A500 /* 美的历程.jpg */; };
-		C5FD82752F90C4560003A500 /* 悉达多.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82492F90C4560003A500 /* 悉达多.jpg */; };
-		C5FD82762F90C4560003A500 /* 追风筝的人.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824F2F90C4560003A500 /* 追风筝的人.jpg */; };
-		C5FD82772F90C4560003A500 /* 沉默的大多数.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822B2F90C4560003A500 /* 沉默的大多数.jpg */; };
-		C5FD82782F90C4560003A500 /* 论美国的民主.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82372F90C4560003A500 /* 论美国的民主.jpg */; };
-		C5FD82792F90C4560003A500 /* 毛泽东选集.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82382F90C4560003A500 /* 毛泽东选集.jpg */; };
-		C5FD827A2F90C4560003A500 /* 艺术的故事.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824C2F90C4560003A500 /* 艺术的故事.jpg */; };
-		C5FD827B2F90C4560003A500 /* 理想国.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82362F90C4560003A500 /* 理想国.jpg */; };
-		C5FD827C2F90C4560003A500 /* 挪威的森林.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823D2F90C4560003A500 /* 挪威的森林.jpg */; };
-		C5FD827D2F90C4560003A500 /* 第一性原理.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD822C2F90C4560003A500 /* 第一性原理.jpg */; };
-		C5FD827E2F90C4560003A500 /* 国富论.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD82302F90C4560003A500 /* 国富论.jpg */; };
-		C5FD827F2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD824B2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg */; };
-		C5FD82802F90C4560003A500 /* 飘.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C5FD823E2F90C4560003A500 /* 飘.jpg */; };
+		C54818F12F97C47F006D5686 /* DataStructs.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54818F02F97C47F006D5686 /* DataStructs.swift */; };
+		C54818F22F97C840006D5686 /* DataStructs.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54818F02F97C47F006D5686 /* DataStructs.swift */; };
+		C54818FE2F9A66D4006D5686 /* Buttons.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54818FD2F9A66D4006D5686 /* Buttons.swift */; };
+		C54819002F9A7190006D5686 /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54818FF2F9A7190006D5686 /* Animations.swift */; };
+		C54819022F9B67EC006D5686 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819012F9B67EC006D5686 /* AppConstants.swift */; };
+		C54819042F9B684C006D5686 /* AppFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819032F9B684C006D5686 /* AppFormatters.swift */; };
+		C54819062F9B6875006D5686 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819052F9B6875006D5686 /* AppNotifications.swift */; };
+		C54819082F9B775B006D5686 /* VisualEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819072F9B775B006D5686 /* VisualEngines.swift */; };
+		C548190C2F9C44EA006D5686 /* CloudSearchEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548190B2F9C44EA006D5686 /* CloudSearchEngine.swift */; };
+		C548190E2F9C463D006D5686 /* CloudSearchSpotlightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548190D2F9C463D006D5686 /* CloudSearchSpotlightView.swift */; };
+		C54819122F9C52C3006D5686 /* UniversalCloudSearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819112F9C52C3006D5686 /* UniversalCloudSearchComponents.swift */; };
+		C54819152F9C6093006D5686 /* DiscoveryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819142F9C6093006D5686 /* DiscoveryEngine.swift */; };
+		C54819172F9C6137006D5686 /* DiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819162F9C6137006D5686 /* DiscoveryView.swift */; };
+		C548191C2F9CBD48006D5686 /* InkGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191B2F9CBD48006D5686 /* InkGalleryView.swift */; };
+		C548191E2F9DABBE006D5686 /* SnippetEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */; };
+		C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819272F9F385D006D5686 /* GoalSettingsView.swift */; };
+		C548192E2F9F38AC006D5686 /* DataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548192D2F9F38AC006D5686 /* DataSettingsView.swift */; };
+		C54819312F9F38C6006D5686 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819302F9F38C6006D5686 /* AboutSettingsView.swift */; };
+		C54819332F9F54A9006D5686 /* WeChatReadingParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819322F9F54A9006D5686 /* WeChatReadingParser.swift */; };
+		C54819362F9F54D3006D5686 /* KindleParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819352F9F54D3006D5686 /* KindleParser.swift */; };
+		C548194E2F9F78A2006D5686 /* AppleBooksParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548194D2F9F78A2006D5686 /* AppleBooksParser.swift */; };
+		C548195F2F9F78FD006D5686 /* LibraryShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C54819532F9F78FD006D5686 /* LibraryShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C54819652F9F7938006D5686 /* AppleBooksParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548194D2F9F78A2006D5686 /* AppleBooksParser.swift */; };
+		C54819662F9F793F006D5686 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82812F90C47D0003A500 /* DataModels.swift */; };
+		C54819672F9F7A4B006D5686 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
 		C5FD82822F90C47D0003A500 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82812F90C47D0003A500 /* DataModels.swift */; };
 		C5FD82842F90C4830003A500 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82832F90C4830003A500 /* PreviewData.swift */; };
 		C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
-		C5FD828D2F90C4BB0003A500 /* AppleBooksDBUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82852F90C4BB0003A500 /* AppleBooksDBUtils.swift */; };
-		C5FD828E2F90C4BB0003A500 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828B2F90C4BB0003A500 /* SyncEngine.swift */; };
-		C5FD828F2F90C4BB0003A500 /* ImportDTO.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82892F90C4BB0003A500 /* ImportDTO.swift */; };
-		C5FD82902F90C4BB0003A500 /* DataExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82872F90C4BB0003A500 /* DataExportService.swift */; };
 		C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */; };
-		C5FD82922F90C4BB0003A500 /* AppleBooksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82862F90C4BB0003A500 /* AppleBooksImporter.swift */; };
 		C5FD82AA2F90C5640003A500 /* BookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */; };
-		C5FD82AB2F90C5640003A500 /* AddContentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A82F90C5640003A500 /* AddContentSheet.swift */; };
+		C5FD82AB2F90C5640003A500 /* ContentEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82A82F90C5640003A500 /* ContentEditorSheet.swift */; };
 		C5FD82B02F90C59F0003A500 /* MobileCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */; };
 		C5FD82B12F90C59F0003A500 /* MobileGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */; };
 		C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82B42F90C5A70003A500 /* MobileContentView.swift */; };
@@ -72,9 +47,7 @@
 		C5FD82BF2F90C5CB0003A500 /* MobileBookEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */; };
 		C5FD82C02F90C5CB0003A500 /* MobileAddExcerptSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */; };
 		C5FD82CC2F90C6150003A500 /* SettingsComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C92F90C6150003A500 /* SettingsComponents.swift */; };
-		C5FD82CD2F90C6150003A500 /* DeleteSelectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */; };
 		C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */; };
-		C5FD82D02F90C6150003A500 /* AchievementWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82C42F90C6150003A500 /* AchievementWallView.swift */; };
 		C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82CA2F90C6150003A500 /* SettingsView.swift */; };
 		C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82D42F90C9370003A500 /* ContentView.swift */; };
 		C5FD82DD2F90CC1D0003A500 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */; };
@@ -83,20 +56,14 @@
 		C5FD82FA2F90CD1F0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
 		C5FD82FB2F90CD290003A500 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82832F90C4830003A500 /* PreviewData.swift */; };
 		C5FD82FC2F90CD2E0003A500 /* DataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82812F90C47D0003A500 /* DataModels.swift */; };
-		C5FD830F2F92890E0003A500 /* ReadingTimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */; };
-		C5FD83102F92890E0003A500 /* ReadingTimerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */; };
 		C5FD83162F9342350003A500 /* MobileManualLogSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83152F9342350003A500 /* MobileManualLogSheet.swift */; };
-		C5FD831F2F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */; };
-		C5FD83202F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */; };
 		C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */; };
 		C5FD83272F934C250003A500 /* AmbientGlowBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */; };
 		C5FD83282F934C250003A500 /* LocalCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83242F934C250003A500 /* LocalCoverView.swift */; };
 		C5FD83292F934C250003A500 /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83222F934C250003A500 /* Background.swift */; };
 		C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83232F934C250003A500 /* ConfettiView.swift */; };
-		C5FD83492F93D8A40003A500 /* LiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */; };
-		C5FD834A2F93D8A40003A500 /* LiveActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */; };
 		C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834C2F9513080003A500 /* ReadingHero.swift */; };
-		C5FD83502F9513210003A500 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834F2F9513210003A500 /* FocusTimer.swift */; };
+		C5FD83502F9513210003A500 /* AmbientClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834F2F9513210003A500 /* AmbientClock.swift */; };
 		C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83522F9513340003A500 /* MomentumChart.swift */; };
 		C5FD83572F95134E0003A500 /* HeatmapRibbon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */; };
 		C5FD83592F95135F0003A500 /* ResonanceWave.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83582F95135F0003A500 /* ResonanceWave.swift */; };
@@ -106,21 +73,13 @@
 		C5FD83662F95152A0003A500 /* BookCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83652F95152A0003A500 /* BookCard.swift */; };
 		C5FD83682F9515500003A500 /* MiniInventoryBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83672F9515500003A500 /* MiniInventoryBar.swift */; };
 		C5FD836A2F95156D0003A500 /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83692F95156D0003A500 /* GalleryView.swift */; };
-		C5FD836D2F9516410003A500 /* CarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD836C2F9516410003A500 /* CarouselView.swift */; };
-		C5FD836F2F9516590003A500 /* CoverFlowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD836E2F9516590003A500 /* CoverFlowCard.swift */; };
-		C5FD83722F9517010003A500 /* InspirationWallModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83712F9517010003A500 /* InspirationWallModels.swift */; };
 		C5FD83762F9517330003A500 /* InspirationWallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83752F9517330003A500 /* InspirationWallView.swift */; };
 		C5FD83782F95174A0003A500 /* InspirationWallCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83772F95174A0003A500 /* InspirationWallCards.swift */; };
 		C5FD837B2F9518440003A500 /* YearlyTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD837A2F9518440003A500 /* YearlyTimelineView.swift */; };
 		C5FD837E2F9518D50003A500 /* MonthlyRecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD837D2F9518D50003A500 /* MonthlyRecordView.swift */; };
 		C5FD83812F9519930003A500 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83802F9519930003A500 /* BookDetailView.swift */; };
 		C5FD83832F9519B60003A500 /* BookDossier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83822F9519B60003A500 /* BookDossier.swift */; };
-		C5FD83852F9519CE0003A500 /* BookDatePickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83842F9519CE0003A500 /* BookDatePickers.swift */; };
 		C5FD83882F9519EB0003A500 /* BookExcerpts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83872F9519EB0003A500 /* BookExcerpts.swift */; };
-		C5FD838D2F952C1E0003A500 /* DataPanelUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD838C2F952C1E0003A500 /* DataPanelUI.swift */; };
-		C5FD838F2F952C500003A500 /* DataPanelImportLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD838E2F952C500003A500 /* DataPanelImportLogic.swift */; };
-		C5FD83912F952C740003A500 /* DataPanelSystemLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83902F952C740003A500 /* DataPanelSystemLogic.swift */; };
-		C5FD83932F952C9E0003A500 /* DataPanelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83922F952C9E0003A500 /* DataPanelSettingsView.swift */; };
 		C5FD83992F952F7C0003A500 /* MobileHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83982F952F7C0003A500 /* MobileHomeView.swift */; };
 		C5FD839B2F952F930003A500 /* MobileHeroCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD839A2F952F930003A500 /* MobileHeroCards.swift */; };
 		C5FD839D2F952FA50003A500 /* MobileFocusTimerCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD839C2F952FA50003A500 /* MobileFocusTimerCard.swift */; };
@@ -143,6 +102,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		C548195D2F9F78FD006D5686 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C5FD82032F90C3530003A500 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C54819522F9F78FD006D5686;
+			remoteInfo = LibraryShareExtension;
+		};
 		C5FD82E82F90CC1D0003A500 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = C5FD82032F90C3530003A500 /* Project object */;
@@ -159,6 +125,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				C548195F2F9F78FD006D5686 /* LibraryShareExtension.appex in Embed Foundation Extensions */,
 				C5FD82EA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
@@ -167,62 +134,33 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C54818F02F97C47F006D5686 /* DataStructs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStructs.swift; sourceTree = "<group>"; };
+		C54818FD2F9A66D4006D5686 /* Buttons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buttons.swift; sourceTree = "<group>"; };
+		C54818FF2F9A7190006D5686 /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
+		C54819012F9B67EC006D5686 /* AppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConstants.swift; sourceTree = "<group>"; };
+		C54819032F9B684C006D5686 /* AppFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFormatters.swift; sourceTree = "<group>"; };
+		C54819052F9B6875006D5686 /* AppNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotifications.swift; sourceTree = "<group>"; };
+		C54819072F9B775B006D5686 /* VisualEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEngines.swift; sourceTree = "<group>"; };
+		C548190B2F9C44EA006D5686 /* CloudSearchEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSearchEngine.swift; sourceTree = "<group>"; };
+		C548190D2F9C463D006D5686 /* CloudSearchSpotlightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSearchSpotlightView.swift; sourceTree = "<group>"; };
+		C54819112F9C52C3006D5686 /* UniversalCloudSearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalCloudSearchComponents.swift; sourceTree = "<group>"; };
+		C54819142F9C6093006D5686 /* DiscoveryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryEngine.swift; sourceTree = "<group>"; };
+		C54819162F9C6137006D5686 /* DiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryView.swift; sourceTree = "<group>"; };
+		C548191B2F9CBD48006D5686 /* InkGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkGalleryView.swift; sourceTree = "<group>"; };
+		C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetEditorSheet.swift; sourceTree = "<group>"; };
+		C54819272F9F385D006D5686 /* GoalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalSettingsView.swift; sourceTree = "<group>"; };
+		C548192D2F9F38AC006D5686 /* DataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsView.swift; sourceTree = "<group>"; };
+		C54819302F9F38C6006D5686 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
+		C54819322F9F54A9006D5686 /* WeChatReadingParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeChatReadingParser.swift; sourceTree = "<group>"; };
+		C54819352F9F54D3006D5686 /* KindleParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KindleParser.swift; sourceTree = "<group>"; };
+		C548194D2F9F78A2006D5686 /* AppleBooksParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBooksParser.swift; sourceTree = "<group>"; };
+		C54819532F9F78FD006D5686 /* LibraryShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LibraryShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FD820B2F90C3530003A500 /* Library.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Library.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		C5FD82262F90C4560003A500 /* 奥德赛.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "奥德赛.jpg"; sourceTree = "<group>"; };
-		C5FD82272F90C4560003A500 /* 百年孤独.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "百年孤独.jpg"; sourceTree = "<group>"; };
-		C5FD82282F90C4560003A500 /* 茶花女.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "茶花女.jpg"; sourceTree = "<group>"; };
-		C5FD82292F90C4560003A500 /* 忏悔录.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "忏悔录.jpg"; sourceTree = "<group>"; };
-		C5FD822A2F90C4560003A500 /* 朝花夕拾.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "朝花夕拾.jpg"; sourceTree = "<group>"; };
-		C5FD822B2F90C4560003A500 /* 沉默的大多数.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "沉默的大多数.jpg"; sourceTree = "<group>"; };
-		C5FD822C2F90C4560003A500 /* 第一性原理.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "第一性原理.jpg"; sourceTree = "<group>"; };
-		C5FD822D2F90C4560003A500 /* 二十四史.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "二十四史.jpg"; sourceTree = "<group>"; };
-		C5FD822E2F90C4560003A500 /* 法律的悖论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "法律的悖论.jpg"; sourceTree = "<group>"; };
-		C5FD822F2F90C4560003A500 /* 共产党宣言.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "共产党宣言.jpg"; sourceTree = "<group>"; };
-		C5FD82302F90C4560003A500 /* 国富论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "国富论.jpg"; sourceTree = "<group>"; };
-		C5FD82312F90C4560003A500 /* 活着.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "活着.jpg"; sourceTree = "<group>"; };
-		C5FD82322F90C4560003A500 /* 霍乱时期的爱情.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "霍乱时期的爱情.jpg"; sourceTree = "<group>"; };
-		C5FD82332F90C4560003A500 /* 江城.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "江城.jpg"; sourceTree = "<group>"; };
-		C5FD82342F90C4560003A500 /* 局外人.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "局外人.jpg"; sourceTree = "<group>"; };
-		C5FD82352F90C4560003A500 /* 君主论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "君主论.jpg"; sourceTree = "<group>"; };
-		C5FD82362F90C4560003A500 /* 理想国.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "理想国.jpg"; sourceTree = "<group>"; };
-		C5FD82372F90C4560003A500 /* 论美国的民主.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "论美国的民主.jpg"; sourceTree = "<group>"; };
-		C5FD82382F90C4560003A500 /* 毛泽东选集.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "毛泽东选集.jpg"; sourceTree = "<group>"; };
-		C5FD82392F90C4560003A500 /* 美的历程.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "美的历程.jpg"; sourceTree = "<group>"; };
-		C5FD823A2F90C4560003A500 /* 明朝那些事儿.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "明朝那些事儿.jpg"; sourceTree = "<group>"; };
-		C5FD823B2F90C4560003A500 /* 呐喊.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "呐喊.jpg"; sourceTree = "<group>"; };
-		C5FD823C2F90C4560003A500 /* 你当像鸟飞往你的山.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "你当像鸟飞往你的山.jpg"; sourceTree = "<group>"; };
-		C5FD823D2F90C4560003A500 /* 挪威的森林.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "挪威的森林.jpg"; sourceTree = "<group>"; };
-		C5FD823E2F90C4560003A500 /* 飘.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "飘.jpg"; sourceTree = "<group>"; };
-		C5FD823F2F90C4560003A500 /* 贫穷的本质.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "贫穷的本质.jpg"; sourceTree = "<group>"; };
-		C5FD82402F90C4560003A500 /* 人类简史：从动物到上帝.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "人类简史：从动物到上帝.jpg"; sourceTree = "<group>"; };
-		C5FD82412F90C4560003A500 /* 人性的弱点.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "人性的弱点.jpg"; sourceTree = "<group>"; };
-		C5FD82422F90C4560003A500 /* 如何阅读一本书.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "如何阅读一本书.jpg"; sourceTree = "<group>"; };
-		C5FD82432F90C4560003A500 /* 撒哈拉的故事.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "撒哈拉的故事.jpg"; sourceTree = "<group>"; };
-		C5FD82442F90C4560003A500 /* 三体.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "三体.jpg"; sourceTree = "<group>"; };
-		C5FD82452F90C4560003A500 /* 杀死一只知更鸟.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "杀死一只知更鸟.jpg"; sourceTree = "<group>"; };
-		C5FD82462F90C4560003A500 /* 万历十五年.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "万历十五年.jpg"; sourceTree = "<group>"; };
-		C5FD82472F90C4560003A500 /* 文明的冲突.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = "文明的冲突.webp"; sourceTree = "<group>"; };
-		C5FD82482F90C4560003A500 /* 乌合之众.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "乌合之众.jpg"; sourceTree = "<group>"; };
-		C5FD82492F90C4560003A500 /* 悉达多.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "悉达多.jpg"; sourceTree = "<group>"; };
-		C5FD824A2F90C4560003A500 /* 一个人的朝圣.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "一个人的朝圣.jpg"; sourceTree = "<group>"; };
-		C5FD824B2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "一个人的朝圣2：奎妮的情歌.jpg"; sourceTree = "<group>"; };
-		C5FD824C2F90C4560003A500 /* 艺术的故事.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "艺术的故事.jpg"; sourceTree = "<group>"; };
-		C5FD824D2F90C4560003A500 /* 娱乐至死.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "娱乐至死.jpg"; sourceTree = "<group>"; };
-		C5FD824E2F90C4560003A500 /* 月亮与六便士.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "月亮与六便士.jpg"; sourceTree = "<group>"; };
-		C5FD824F2F90C4560003A500 /* 追风筝的人.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "追风筝的人.jpg"; sourceTree = "<group>"; };
-		C5FD82502F90C4560003A500 /* 资本论.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "资本论.jpg"; sourceTree = "<group>"; };
-		C5FD82512F90C4560003A500 /* 罪与罚.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "罪与罚.jpg"; sourceTree = "<group>"; };
-		C5FD82522F90C4560003A500 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C5FD82812F90C47D0003A500 /* DataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataModels.swift; sourceTree = "<group>"; };
 		C5FD82832F90C4830003A500 /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
-		C5FD82852F90C4BB0003A500 /* AppleBooksDBUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBooksDBUtils.swift; sourceTree = "<group>"; };
-		C5FD82862F90C4BB0003A500 /* AppleBooksImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleBooksImporter.swift; sourceTree = "<group>"; };
-		C5FD82872F90C4BB0003A500 /* DataExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportService.swift; sourceTree = "<group>"; };
 		C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
-		C5FD82892F90C4BB0003A500 /* ImportDTO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDTO.swift; sourceTree = "<group>"; };
 		C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDatabase.swift; sourceTree = "<group>"; };
-		C5FD828B2F90C4BB0003A500 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
-		C5FD82A82F90C5640003A500 /* AddContentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddContentSheet.swift; sourceTree = "<group>"; };
+		C5FD82A82F90C5640003A500 /* ContentEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentEditorSheet.swift; sourceTree = "<group>"; };
 		C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookEditorSheet.swift; sourceTree = "<group>"; };
 		C5FD82AC2F90C59F0003A500 /* MobileCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileCarouselView.swift; sourceTree = "<group>"; };
 		C5FD82AD2F90C59F0003A500 /* MobileGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileGalleryView.swift; sourceTree = "<group>"; };
@@ -232,8 +170,6 @@
 		C5FD82B92F90C5B70003A500 /* MobileYearlyTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileYearlyTimelineView.swift; sourceTree = "<group>"; };
 		C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileAddExcerptSheet.swift; sourceTree = "<group>"; };
 		C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookEditorSheet.swift; sourceTree = "<group>"; };
-		C5FD82C42F90C6150003A500 /* AchievementWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementWallView.swift; sourceTree = "<group>"; };
-		C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteSelectionSheet.swift; sourceTree = "<group>"; };
 		C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		C5FD82C92F90C6150003A500 /* SettingsComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsComponents.swift; sourceTree = "<group>"; };
 		C5FD82CA2F90C6150003A500 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -242,17 +178,14 @@
 		C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
 		C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
 		C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibraryWidgetsExtension.entitlements; sourceTree = "<group>"; };
-		C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimerManager.swift; sourceTree = "<group>"; };
 		C5FD83152F9342350003A500 /* MobileManualLogSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileManualLogSheet.swift; sourceTree = "<group>"; };
-		C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimerAttributes.swift; sourceTree = "<group>"; };
 		C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientGlowBackground.swift; sourceTree = "<group>"; };
 		C5FD83222F934C250003A500 /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		C5FD83232F934C250003A500 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		C5FD83242F934C250003A500 /* LocalCoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalCoverView.swift; sourceTree = "<group>"; };
 		C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWidgetGroupBoxStyle.swift; sourceTree = "<group>"; };
-		C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityIntent.swift; sourceTree = "<group>"; };
 		C5FD834C2F9513080003A500 /* ReadingHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHero.swift; sourceTree = "<group>"; };
-		C5FD834F2F9513210003A500 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
+		C5FD834F2F9513210003A500 /* AmbientClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientClock.swift; sourceTree = "<group>"; };
 		C5FD83522F9513340003A500 /* MomentumChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentumChart.swift; sourceTree = "<group>"; };
 		C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatmapRibbon.swift; sourceTree = "<group>"; };
 		C5FD83582F95135F0003A500 /* ResonanceWave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResonanceWave.swift; sourceTree = "<group>"; };
@@ -262,21 +195,13 @@
 		C5FD83652F95152A0003A500 /* BookCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCard.swift; sourceTree = "<group>"; };
 		C5FD83672F9515500003A500 /* MiniInventoryBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniInventoryBar.swift; sourceTree = "<group>"; };
 		C5FD83692F95156D0003A500 /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
-		C5FD836C2F9516410003A500 /* CarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselView.swift; sourceTree = "<group>"; };
-		C5FD836E2F9516590003A500 /* CoverFlowCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverFlowCard.swift; sourceTree = "<group>"; };
-		C5FD83712F9517010003A500 /* InspirationWallModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallModels.swift; sourceTree = "<group>"; };
 		C5FD83752F9517330003A500 /* InspirationWallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallView.swift; sourceTree = "<group>"; };
 		C5FD83772F95174A0003A500 /* InspirationWallCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspirationWallCards.swift; sourceTree = "<group>"; };
 		C5FD837A2F9518440003A500 /* YearlyTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearlyTimelineView.swift; sourceTree = "<group>"; };
 		C5FD837D2F9518D50003A500 /* MonthlyRecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyRecordView.swift; sourceTree = "<group>"; };
 		C5FD83802F9519930003A500 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 		C5FD83822F9519B60003A500 /* BookDossier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDossier.swift; sourceTree = "<group>"; };
-		C5FD83842F9519CE0003A500 /* BookDatePickers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDatePickers.swift; sourceTree = "<group>"; };
 		C5FD83872F9519EB0003A500 /* BookExcerpts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookExcerpts.swift; sourceTree = "<group>"; };
-		C5FD838C2F952C1E0003A500 /* DataPanelUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelUI.swift; sourceTree = "<group>"; };
-		C5FD838E2F952C500003A500 /* DataPanelImportLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelImportLogic.swift; sourceTree = "<group>"; };
-		C5FD83902F952C740003A500 /* DataPanelSystemLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelSystemLogic.swift; sourceTree = "<group>"; };
-		C5FD83922F952C9E0003A500 /* DataPanelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPanelSettingsView.swift; sourceTree = "<group>"; };
 		C5FD83982F952F7C0003A500 /* MobileHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHomeView.swift; sourceTree = "<group>"; };
 		C5FD839A2F952F930003A500 /* MobileHeroCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHeroCards.swift; sourceTree = "<group>"; };
 		C5FD839C2F952FA50003A500 /* MobileFocusTimerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileFocusTimerCard.swift; sourceTree = "<group>"; };
@@ -299,6 +224,27 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C54819632F9F78FD006D5686 /* Exceptions for "LibraryShareExtension" folder in "LibraryShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C54819522F9F78FD006D5686 /* LibraryShareExtension */;
+		};
+		C54819682F9FAEA0006D5686 /* Exceptions for "Library" folder in "LibraryWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+			);
+			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
+		};
+		C548196B2F9FC760006D5686 /* Exceptions for "Library" folder in "LibraryShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+			);
+			target = C54819522F9F78FD006D5686 /* LibraryShareExtension */;
+		};
 		C5FD82182F90C3530003A500 /* Exceptions for "Library" folder in "Library" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -313,20 +259,23 @@
 			);
 			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
 		};
-		C5FD83042F91385D0003A500 /* Exceptions for "LibraryWidgets" folder in "Library" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				MomentumWidget.swift,
-			);
-			target = C5FD820A2F90C3530003A500 /* Library */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		C54819542F9F78FD006D5686 /* LibraryShareExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C54819632F9F78FD006D5686 /* Exceptions for "LibraryShareExtension" folder in "LibraryShareExtension" target */,
+			);
+			path = LibraryShareExtension;
+			sourceTree = "<group>";
+		};
 		C5FD820D2F90C3530003A500 /* Library */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				C5FD82182F90C3530003A500 /* Exceptions for "Library" folder in "Library" target */,
+				C54819682F9FAEA0006D5686 /* Exceptions for "Library" folder in "LibraryWidgetsExtension" target */,
+				C548196B2F9FC760006D5686 /* Exceptions for "Library" folder in "LibraryShareExtension" target */,
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -334,7 +283,6 @@
 		C5FD82E02F90CC1D0003A500 /* LibraryWidgets */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				C5FD83042F91385D0003A500 /* Exceptions for "LibraryWidgets" folder in "Library" target */,
 				C5FD82EE2F90CC1D0003A500 /* Exceptions for "LibraryWidgets" folder in "LibraryWidgetsExtension" target */,
 			);
 			path = LibraryWidgets;
@@ -343,6 +291,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		C54819502F9F78FD006D5686 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C5FD82082F90C3530003A500 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -362,6 +317,83 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C54818F92F9A6193006D5686 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				C54818FC2F9A64F8006D5686 /* UIComponents */,
+				C5FD82A72F90C5570003A500 /* Sheets */,
+				C54819012F9B67EC006D5686 /* AppConstants.swift */,
+				C54819032F9B684C006D5686 /* AppFormatters.swift */,
+				C54819052F9B6875006D5686 /* AppNotifications.swift */,
+				C54819072F9B775B006D5686 /* VisualEngines.swift */,
+				C548190B2F9C44EA006D5686 /* CloudSearchEngine.swift */,
+				C548190D2F9C463D006D5686 /* CloudSearchSpotlightView.swift */,
+				C54819112F9C52C3006D5686 /* UniversalCloudSearchComponents.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		C54818FC2F9A64F8006D5686 /* UIComponents */ = {
+			isa = PBXGroup;
+			children = (
+				C54818FD2F9A66D4006D5686 /* Buttons.swift */,
+				C54818FF2F9A7190006D5686 /* Animations.swift */,
+			);
+			path = UIComponents;
+			sourceTree = "<group>";
+		};
+		C54819132F9C6087006D5686 /* Discovery */ = {
+			isa = PBXGroup;
+			children = (
+				C54819142F9C6093006D5686 /* DiscoveryEngine.swift */,
+				C54819162F9C6137006D5686 /* DiscoveryView.swift */,
+			);
+			path = Discovery;
+			sourceTree = "<group>";
+		};
+		C54819182F9CBD20006D5686 /* Verse */ = {
+			isa = PBXGroup;
+			children = (
+				C548191B2F9CBD48006D5686 /* InkGalleryView.swift */,
+			);
+			path = Verse;
+			sourceTree = "<group>";
+		};
+		C54819262F9F3849006D5686 /* Goals */ = {
+			isa = PBXGroup;
+			children = (
+				C54819272F9F385D006D5686 /* GoalSettingsView.swift */,
+			);
+			path = Goals;
+			sourceTree = "<group>";
+		};
+		C548192C2F9F389F006D5686 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				C54819342F9F54B2006D5686 /* Parsers */,
+				C548192D2F9F38AC006D5686 /* DataSettingsView.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		C548192F2F9F38BC006D5686 /* About */ = {
+			isa = PBXGroup;
+			children = (
+				C54819302F9F38C6006D5686 /* AboutSettingsView.swift */,
+			);
+			path = About;
+			sourceTree = "<group>";
+		};
+		C54819342F9F54B2006D5686 /* Parsers */ = {
+			isa = PBXGroup;
+			children = (
+				C54819322F9F54A9006D5686 /* WeChatReadingParser.swift */,
+				C54819352F9F54D3006D5686 /* KindleParser.swift */,
+				C548194D2F9F78A2006D5686 /* AppleBooksParser.swift */,
+			);
+			path = Parsers;
+			sourceTree = "<group>";
+		};
 		C5FD82022F90C3530003A500 = {
 			isa = PBXGroup;
 			children = (
@@ -371,6 +403,7 @@
 				C5FD821E2F90C3730003A500 /* Shared */,
 				C5FD820D2F90C3530003A500 /* Library */,
 				C5FD82E02F90CC1D0003A500 /* LibraryWidgets */,
+				C54819542F9F78FD006D5686 /* LibraryShareExtension */,
 				C5FD82DB2F90CC1D0003A500 /* Frameworks */,
 				C5FD820C2F90C3530003A500 /* Products */,
 			);
@@ -381,6 +414,7 @@
 			children = (
 				C5FD820B2F90C3530003A500 /* Library.app */,
 				C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */,
+				C54819532F9F78FD006D5686 /* LibraryShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -391,7 +425,6 @@
 				C5FD831D2F934BD20003A500 /* CommonUI */,
 				C5FD821F2F90C3820003A500 /* Models */,
 				C5FD82202F90C3990003A500 /* Database */,
-				C5FD82532F90C4560003A500 /* Resources */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -408,14 +441,9 @@
 		C5FD82202F90C3990003A500 /* Database */ = {
 			isa = PBXGroup;
 			children = (
-				C5FD82852F90C4BB0003A500 /* AppleBooksDBUtils.swift */,
-				C5FD82862F90C4BB0003A500 /* AppleBooksImporter.swift */,
-				C5FD82872F90C4BB0003A500 /* DataExportService.swift */,
 				C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */,
-				C5FD82892F90C4BB0003A500 /* ImportDTO.swift */,
 				C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */,
-				C5FD828B2F90C4BB0003A500 /* SyncEngine.swift */,
-				C5FD830E2F92890E0003A500 /* ReadingTimerManager.swift */,
+				C54818F02F97C47F006D5686 /* DataStructs.swift */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -423,15 +451,16 @@
 		C5FD82232F90C3C60003A500 /* macOs */ = {
 			isa = PBXGroup;
 			children = (
+				C54819182F9CBD20006D5686 /* Verse */,
+				C54819132F9C6087006D5686 /* Discovery */,
+				C54818F92F9A6193006D5686 /* Shared */,
 				C5FD837F2F9519850003A500 /* BookDetail */,
 				C5FD837C2F9518C50003A500 /* MonthlyRecord */,
 				C5FD83792F9518340003A500 /* YearlyTimeline */,
 				C5FD83702F9516EF0003A500 /* InspirationWall */,
-				C5FD836B2F95162A0003A500 /* Carousel */,
 				C5FD83642F9515110003A500 /* Gallery */,
 				C5FD834B2F9512FE0003A500 /* Home */,
 				C5FD82C32F90C6000003A500 /* Settings */,
-				C5FD82A72F90C5570003A500 /* Sheets */,
 				C5FD82D42F90C9370003A500 /* ContentView.swift */,
 			);
 			path = macOs;
@@ -453,63 +482,12 @@
 			path = ios;
 			sourceTree = "<group>";
 		};
-		C5FD82532F90C4560003A500 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				C5FD82262F90C4560003A500 /* 奥德赛.jpg */,
-				C5FD82272F90C4560003A500 /* 百年孤独.jpg */,
-				C5FD82282F90C4560003A500 /* 茶花女.jpg */,
-				C5FD82292F90C4560003A500 /* 忏悔录.jpg */,
-				C5FD822A2F90C4560003A500 /* 朝花夕拾.jpg */,
-				C5FD822B2F90C4560003A500 /* 沉默的大多数.jpg */,
-				C5FD822C2F90C4560003A500 /* 第一性原理.jpg */,
-				C5FD822D2F90C4560003A500 /* 二十四史.jpg */,
-				C5FD822E2F90C4560003A500 /* 法律的悖论.jpg */,
-				C5FD822F2F90C4560003A500 /* 共产党宣言.jpg */,
-				C5FD82302F90C4560003A500 /* 国富论.jpg */,
-				C5FD82312F90C4560003A500 /* 活着.jpg */,
-				C5FD82322F90C4560003A500 /* 霍乱时期的爱情.jpg */,
-				C5FD82332F90C4560003A500 /* 江城.jpg */,
-				C5FD82342F90C4560003A500 /* 局外人.jpg */,
-				C5FD82352F90C4560003A500 /* 君主论.jpg */,
-				C5FD82362F90C4560003A500 /* 理想国.jpg */,
-				C5FD82372F90C4560003A500 /* 论美国的民主.jpg */,
-				C5FD82382F90C4560003A500 /* 毛泽东选集.jpg */,
-				C5FD82392F90C4560003A500 /* 美的历程.jpg */,
-				C5FD823A2F90C4560003A500 /* 明朝那些事儿.jpg */,
-				C5FD823B2F90C4560003A500 /* 呐喊.jpg */,
-				C5FD823C2F90C4560003A500 /* 你当像鸟飞往你的山.jpg */,
-				C5FD823D2F90C4560003A500 /* 挪威的森林.jpg */,
-				C5FD823E2F90C4560003A500 /* 飘.jpg */,
-				C5FD823F2F90C4560003A500 /* 贫穷的本质.jpg */,
-				C5FD82402F90C4560003A500 /* 人类简史：从动物到上帝.jpg */,
-				C5FD82412F90C4560003A500 /* 人性的弱点.jpg */,
-				C5FD82422F90C4560003A500 /* 如何阅读一本书.jpg */,
-				C5FD82432F90C4560003A500 /* 撒哈拉的故事.jpg */,
-				C5FD82442F90C4560003A500 /* 三体.jpg */,
-				C5FD82452F90C4560003A500 /* 杀死一只知更鸟.jpg */,
-				C5FD82462F90C4560003A500 /* 万历十五年.jpg */,
-				C5FD82472F90C4560003A500 /* 文明的冲突.webp */,
-				C5FD82482F90C4560003A500 /* 乌合之众.jpg */,
-				C5FD82492F90C4560003A500 /* 悉达多.jpg */,
-				C5FD824A2F90C4560003A500 /* 一个人的朝圣.jpg */,
-				C5FD824B2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg */,
-				C5FD824C2F90C4560003A500 /* 艺术的故事.jpg */,
-				C5FD824D2F90C4560003A500 /* 娱乐至死.jpg */,
-				C5FD824E2F90C4560003A500 /* 月亮与六便士.jpg */,
-				C5FD824F2F90C4560003A500 /* 追风筝的人.jpg */,
-				C5FD82502F90C4560003A500 /* 资本论.jpg */,
-				C5FD82512F90C4560003A500 /* 罪与罚.jpg */,
-				C5FD82522F90C4560003A500 /* Assets.xcassets */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		C5FD82A72F90C5570003A500 /* Sheets */ = {
 			isa = PBXGroup;
 			children = (
-				C5FD82A82F90C5640003A500 /* AddContentSheet.swift */,
+				C5FD82A82F90C5640003A500 /* ContentEditorSheet.swift */,
 				C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */,
+				C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */,
 			);
 			path = Sheets;
 			sourceTree = "<group>";
@@ -527,9 +505,10 @@
 		C5FD82C32F90C6000003A500 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				C5FD838B2F9528570003A500 /* DataPanel */,
+				C548192F2F9F38BC006D5686 /* About */,
+				C548192C2F9F389F006D5686 /* Data */,
+				C54819262F9F3849006D5686 /* Goals */,
 				C5FD838A2F9527FB0003A500 /* General */,
-				C5FD83892F9527E80003A500 /* Achievement */,
 				C5FD82C92F90C6150003A500 /* SettingsComponents.swift */,
 				C5FD82CA2F90C6150003A500 /* SettingsView.swift */,
 			);
@@ -553,8 +532,6 @@
 				C5FD83232F934C250003A500 /* ConfettiView.swift */,
 				C5FD83242F934C250003A500 /* LocalCoverView.swift */,
 				C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */,
-				C5FD831E2F934BFB0003A500 /* ReadingTimerAttributes.swift */,
-				C5FD83482F93D8A40003A500 /* LiveActivityIntent.swift */,
 			);
 			path = CommonUI;
 			sourceTree = "<group>";
@@ -563,7 +540,7 @@
 			isa = PBXGroup;
 			children = (
 				C5FD834C2F9513080003A500 /* ReadingHero.swift */,
-				C5FD834F2F9513210003A500 /* FocusTimer.swift */,
+				C5FD834F2F9513210003A500 /* AmbientClock.swift */,
 				C5FD83522F9513340003A500 /* MomentumChart.swift */,
 				C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */,
 				C5FD83582F95135F0003A500 /* ResonanceWave.swift */,
@@ -584,19 +561,9 @@
 			path = Gallery;
 			sourceTree = "<group>";
 		};
-		C5FD836B2F95162A0003A500 /* Carousel */ = {
-			isa = PBXGroup;
-			children = (
-				C5FD836C2F9516410003A500 /* CarouselView.swift */,
-				C5FD836E2F9516590003A500 /* CoverFlowCard.swift */,
-			);
-			path = Carousel;
-			sourceTree = "<group>";
-		};
 		C5FD83702F9516EF0003A500 /* InspirationWall */ = {
 			isa = PBXGroup;
 			children = (
-				C5FD83712F9517010003A500 /* InspirationWallModels.swift */,
 				C5FD83752F9517330003A500 /* InspirationWallView.swift */,
 				C5FD83772F95174A0003A500 /* InspirationWallCards.swift */,
 			);
@@ -624,18 +591,9 @@
 			children = (
 				C5FD83802F9519930003A500 /* BookDetailView.swift */,
 				C5FD83822F9519B60003A500 /* BookDossier.swift */,
-				C5FD83842F9519CE0003A500 /* BookDatePickers.swift */,
 				C5FD83872F9519EB0003A500 /* BookExcerpts.swift */,
 			);
 			path = BookDetail;
-			sourceTree = "<group>";
-		};
-		C5FD83892F9527E80003A500 /* Achievement */ = {
-			isa = PBXGroup;
-			children = (
-				C5FD82C42F90C6150003A500 /* AchievementWallView.swift */,
-			);
-			path = Achievement;
 			sourceTree = "<group>";
 		};
 		C5FD838A2F9527FB0003A500 /* General */ = {
@@ -644,26 +602,6 @@
 				C5FD82C82F90C6150003A500 /* GeneralSettingsView.swift */,
 			);
 			path = General;
-			sourceTree = "<group>";
-		};
-		C5FD838B2F9528570003A500 /* DataPanel */ = {
-			isa = PBXGroup;
-			children = (
-				C5FD83962F952D7F0003A500 /* Sheets */,
-				C5FD838C2F952C1E0003A500 /* DataPanelUI.swift */,
-				C5FD838E2F952C500003A500 /* DataPanelImportLogic.swift */,
-				C5FD83902F952C740003A500 /* DataPanelSystemLogic.swift */,
-				C5FD83922F952C9E0003A500 /* DataPanelSettingsView.swift */,
-			);
-			path = DataPanel;
-			sourceTree = "<group>";
-		};
-		C5FD83962F952D7F0003A500 /* Sheets */ = {
-			isa = PBXGroup;
-			children = (
-				C5FD82C72F90C6150003A500 /* DeleteSelectionSheet.swift */,
-			);
-			path = Sheets;
 			sourceTree = "<group>";
 		};
 		C5FD83972F952F730003A500 /* MobileHome */ = {
@@ -758,6 +696,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		C54819522F9F78FD006D5686 /* LibraryShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C54819602F9F78FD006D5686 /* Build configuration list for PBXNativeTarget "LibraryShareExtension" */;
+			buildPhases = (
+				C548194F2F9F78FD006D5686 /* Sources */,
+				C54819502F9F78FD006D5686 /* Frameworks */,
+				C54819512F9F78FD006D5686 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C54819542F9F78FD006D5686 /* LibraryShareExtension */,
+			);
+			name = LibraryShareExtension;
+			packageProductDependencies = (
+			);
+			productName = LibraryShareExtension;
+			productReference = C54819532F9F78FD006D5686 /* LibraryShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		C5FD820A2F90C3530003A500 /* Library */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C5FD82192F90C3530003A500 /* Build configuration list for PBXNativeTarget "Library" */;
@@ -771,6 +731,7 @@
 			);
 			dependencies = (
 				C5FD82E92F90CC1D0003A500 /* PBXTargetDependency */,
+				C548195E2F9F78FD006D5686 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C5FD820D2F90C3530003A500 /* Library */,
@@ -814,6 +775,9 @@
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					C54819522F9F78FD006D5686 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
 					C5FD820A2F90C3530003A500 = {
 						CreatedOnToolsVersion = 26.4;
 					};
@@ -831,6 +795,9 @@
 			);
 			mainGroup = C5FD82022F90C3530003A500;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C54819212F9E0B3B006D5686 /* XCLocalSwiftPackageReference "SwiftSoup-master" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C5FD820C2F90C3530003A500 /* Products */;
 			projectDirPath = "";
@@ -838,60 +805,23 @@
 			targets = (
 				C5FD820A2F90C3530003A500 /* Library */,
 				C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */,
+				C54819522F9F78FD006D5686 /* LibraryShareExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		C54819512F9F78FD006D5686 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C5FD82092F90C3530003A500 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C5FD82542F90C4560003A500 /* 娱乐至死.jpg in Resources */,
-				C5FD82552F90C4560003A500 /* 茶花女.jpg in Resources */,
-				C5FD82562F90C4560003A500 /* 共产党宣言.jpg in Resources */,
-				C5FD82572F90C4560003A500 /* 君主论.jpg in Resources */,
-				C5FD82582F90C4560003A500 /* 贫穷的本质.jpg in Resources */,
-				C5FD82592F90C4560003A500 /* 二十四史.jpg in Resources */,
-				C5FD825A2F90C4560003A500 /* 奥德赛.jpg in Resources */,
-				C5FD825B2F90C4560003A500 /* 罪与罚.jpg in Resources */,
-				C5FD825C2F90C4560003A500 /* 撒哈拉的故事.jpg in Resources */,
-				C5FD825D2F90C4560003A500 /* 文明的冲突.webp in Resources */,
-				C5FD825E2F90C4560003A500 /* 人类简史：从动物到上帝.jpg in Resources */,
-				C5FD825F2F90C4560003A500 /* Assets.xcassets in Resources */,
-				C5FD82602F90C4560003A500 /* 呐喊.jpg in Resources */,
-				C5FD82612F90C4560003A500 /* 局外人.jpg in Resources */,
-				C5FD82622F90C4560003A500 /* 万历十五年.jpg in Resources */,
-				C5FD82632F90C4560003A500 /* 江城.jpg in Resources */,
-				C5FD82642F90C4560003A500 /* 你当像鸟飞往你的山.jpg in Resources */,
-				C5FD82652F90C4560003A500 /* 如何阅读一本书.jpg in Resources */,
-				C5FD82662F90C4560003A500 /* 朝花夕拾.jpg in Resources */,
-				C5FD82672F90C4560003A500 /* 明朝那些事儿.jpg in Resources */,
-				C5FD82682F90C4560003A500 /* 霍乱时期的爱情.jpg in Resources */,
-				C5FD82692F90C4560003A500 /* 忏悔录.jpg in Resources */,
-				C5FD826A2F90C4560003A500 /* 乌合之众.jpg in Resources */,
-				C5FD826B2F90C4560003A500 /* 资本论.jpg in Resources */,
-				C5FD826C2F90C4560003A500 /* 法律的悖论.jpg in Resources */,
-				C5FD826D2F90C4560003A500 /* 杀死一只知更鸟.jpg in Resources */,
-				C5FD826E2F90C4560003A500 /* 月亮与六便士.jpg in Resources */,
-				C5FD826F2F90C4560003A500 /* 三体.jpg in Resources */,
-				C5FD82702F90C4560003A500 /* 百年孤独.jpg in Resources */,
-				C5FD82712F90C4560003A500 /* 一个人的朝圣.jpg in Resources */,
-				C5FD82722F90C4560003A500 /* 活着.jpg in Resources */,
-				C5FD82732F90C4560003A500 /* 人性的弱点.jpg in Resources */,
-				C5FD82742F90C4560003A500 /* 美的历程.jpg in Resources */,
-				C5FD82752F90C4560003A500 /* 悉达多.jpg in Resources */,
-				C5FD82762F90C4560003A500 /* 追风筝的人.jpg in Resources */,
-				C5FD82772F90C4560003A500 /* 沉默的大多数.jpg in Resources */,
-				C5FD82782F90C4560003A500 /* 论美国的民主.jpg in Resources */,
-				C5FD82792F90C4560003A500 /* 毛泽东选集.jpg in Resources */,
-				C5FD827A2F90C4560003A500 /* 艺术的故事.jpg in Resources */,
-				C5FD827B2F90C4560003A500 /* 理想国.jpg in Resources */,
-				C5FD827C2F90C4560003A500 /* 挪威的森林.jpg in Resources */,
-				C5FD827D2F90C4560003A500 /* 第一性原理.jpg in Resources */,
-				C5FD827E2F90C4560003A500 /* 国富论.jpg in Resources */,
-				C5FD827F2F90C4560003A500 /* 一个人的朝圣2：奎妮的情歌.jpg in Resources */,
-				C5FD82802F90C4560003A500 /* 飘.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -905,86 +835,98 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		C548194F2F9F78FD006D5686 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C54819662F9F793F006D5686 /* DataModels.swift in Sources */,
+				C54819652F9F7938006D5686 /* AppleBooksParser.swift in Sources */,
+				C54819672F9F7A4B006D5686 /* SharedDatabase.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C5FD82072F90C3530003A500 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C54818F12F97C47F006D5686 /* DataStructs.swift in Sources */,
 				C5FD83C32F9536DF0003A500 /* MobileSettingsComponents.swift in Sources */,
+				C54819002F9A7190006D5686 /* Animations.swift in Sources */,
 				C5FD839D2F952FA50003A500 /* MobileFocusTimerCard.swift in Sources */,
 				C5FD83AE2F95336D0003A500 /* MobileInspirationWallView.swift in Sources */,
 				C5FD83BB2F9535C80003A500 /* MobileBookDetailView.swift in Sources */,
 				C5FD83A72F9530240003A500 /* MobileKnowledgeSpectrumCard.swift in Sources */,
 				C5FD83162F9342350003A500 /* MobileManualLogSheet.swift in Sources */,
+				C548194E2F9F78A2006D5686 /* AppleBooksParser.swift in Sources */,
 				C5FD82842F90C4830003A500 /* PreviewData.swift in Sources */,
+				C54819312F9F38C6006D5686 /* AboutSettingsView.swift in Sources */,
 				C5FD837E2F9518D50003A500 /* MonthlyRecordView.swift in Sources */,
-				C5FD83932F952C9E0003A500 /* DataPanelSettingsView.swift in Sources */,
+				C54819062F9B6875006D5686 /* AppNotifications.swift in Sources */,
+				C54819082F9B775B006D5686 /* VisualEngines.swift in Sources */,
 				C5FD82CC2F90C6150003A500 /* SettingsComponents.swift in Sources */,
 				C5FD83882F9519EB0003A500 /* BookExcerpts.swift in Sources */,
 				C5FD839B2F952F930003A500 /* MobileHeroCards.swift in Sources */,
-				C5FD82CD2F90C6150003A500 /* DeleteSelectionSheet.swift in Sources */,
 				C5FD83BD2F9535DD0003A500 /* MobileBookDetailComponents.swift in Sources */,
-				C5FD838F2F952C500003A500 /* DataPanelImportLogic.swift in Sources */,
+				C548191C2F9CBD48006D5686 /* InkGalleryView.swift in Sources */,
+				C54819042F9B684C006D5686 /* AppFormatters.swift in Sources */,
 				C5FD83A92F9530530003A500 /* MobileMomentumChartCard.swift in Sources */,
 				C5FD83812F9519930003A500 /* BookDetailView.swift in Sources */,
-				C5FD836F2F9516590003A500 /* CoverFlowCard.swift in Sources */,
+				C548190E2F9C463D006D5686 /* CloudSearchSpotlightView.swift in Sources */,
 				C5FD83BF2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift in Sources */,
 				C5FD83B02F9533810003A500 /* MobileInspirationCards.swift in Sources */,
 				C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */,
-				C5FD82D02F90C6150003A500 /* AchievementWallView.swift in Sources */,
+				C548191E2F9DABBE006D5686 /* SnippetEditorSheet.swift in Sources */,
 				C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */,
 				C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */,
 				C5FD83272F934C250003A500 /* AmbientGlowBackground.swift in Sources */,
 				C5FD83762F9517330003A500 /* InspirationWallView.swift in Sources */,
-				C5FD838D2F952C1E0003A500 /* DataPanelUI.swift in Sources */,
-				C5FD83722F9517010003A500 /* InspirationWallModels.swift in Sources */,
 				C5FD83282F934C250003A500 /* LocalCoverView.swift in Sources */,
-				C5FD83852F9519CE0003A500 /* BookDatePickers.swift in Sources */,
+				C54819152F9C6093006D5686 /* DiscoveryEngine.swift in Sources */,
 				C5FD83292F934C250003A500 /* Background.swift in Sources */,
 				C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */,
 				C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */,
+				C54819022F9B67EC006D5686 /* AppConstants.swift in Sources */,
 				C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */,
-				C5FD828D2F90C4BB0003A500 /* AppleBooksDBUtils.swift in Sources */,
 				C5FD82BF2F90C5CB0003A500 /* MobileBookEditorSheet.swift in Sources */,
 				C5FD83662F95152A0003A500 /* BookCard.swift in Sources */,
 				C5FD82C02F90C5CB0003A500 /* MobileAddExcerptSheet.swift in Sources */,
 				C5FD836A2F95156D0003A500 /* GalleryView.swift in Sources */,
-				C5FD830F2F92890E0003A500 /* ReadingTimerManager.swift in Sources */,
-				C5FD83912F952C740003A500 /* DataPanelSystemLogic.swift in Sources */,
-				C5FD828E2F90C4BB0003A500 /* SyncEngine.swift in Sources */,
 				C5FD83B62F9534E20003A500 /* MobileYearlyTimelineCards.swift in Sources */,
-				C5FD828F2F90C4BB0003A500 /* ImportDTO.swift in Sources */,
 				C5FD839F2F952FC40003A500 /* MobileDataDashboards.swift in Sources */,
+				C54818FE2F9A66D4006D5686 /* Buttons.swift in Sources */,
 				C5FD82B72F90C5AD0003A500 /* MobileSettingsView.swift in Sources */,
 				C5FD835C2F9513770003A500 /* QueueBookshelf.swift in Sources */,
 				C5FD83682F9515500003A500 /* MiniInventoryBar.swift in Sources */,
-				C5FD836D2F9516410003A500 /* CarouselView.swift in Sources */,
 				C5FD83592F95135F0003A500 /* ResonanceWave.swift in Sources */,
 				C5FD837B2F9518440003A500 /* YearlyTimelineView.swift in Sources */,
 				C5FD83632F9513B80003A500 /* HomeView.swift in Sources */,
-				C5FD82902F90C4BB0003A500 /* DataExportService.swift in Sources */,
 				C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */,
 				C5FD83B32F9534AF0003A500 /* MobileMonthlyRecordComponents.swift in Sources */,
 				C5FD83AC2F95335C0003A500 /* MobileInspirationModels.swift in Sources */,
 				C5FD83782F95174A0003A500 /* InspirationWallCards.swift in Sources */,
-				C5FD83492F93D8A40003A500 /* LiveActivityIntent.swift in Sources */,
 				C5FD83A52F9530090003A500 /* MobileYearlyHeatmapCard.swift in Sources */,
-				C5FD82922F90C4BB0003A500 /* AppleBooksImporter.swift in Sources */,
 				C5FD82822F90C47D0003A500 /* DataModels.swift in Sources */,
 				C5FD83992F952F7C0003A500 /* MobileHomeView.swift in Sources */,
 				C5FD83572F95134E0003A500 /* HeatmapRibbon.swift in Sources */,
 				C5FD82AA2F90C5640003A500 /* BookEditorSheet.swift in Sources */,
-				C5FD82AB2F90C5640003A500 /* AddContentSheet.swift in Sources */,
+				C5FD82AB2F90C5640003A500 /* ContentEditorSheet.swift in Sources */,
 				C5FD83A32F952FFE0003A500 /* MobileQueueCarouselCard.swift in Sources */,
 				C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */,
+				C54819122F9C52C3006D5686 /* UniversalCloudSearchComponents.swift in Sources */,
 				C5FD82BA2F90C5B70003A500 /* MobileYearlyTimelineView.swift in Sources */,
 				C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */,
+				C54819362F9F54D3006D5686 /* KindleParser.swift in Sources */,
 				C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */,
 				C5FD82BB2F90C5B70003A500 /* MobileMonthlyRecordView.swift in Sources */,
-				C5FD831F2F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */,
-				C5FD83502F9513210003A500 /* FocusTimer.swift in Sources */,
+				C5FD83502F9513210003A500 /* AmbientClock.swift in Sources */,
+				C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */,
 				C5FD83C12F9536B50003A500 /* MobileArchiveHostView.swift in Sources */,
+				C54819332F9F54A9006D5686 /* WeChatReadingParser.swift in Sources */,
+				C548190C2F9C44EA006D5686 /* CloudSearchEngine.swift in Sources */,
 				C5FD82B02F90C59F0003A500 /* MobileCarouselView.swift in Sources */,
+				C54819172F9C6137006D5686 /* DiscoveryView.swift in Sources */,
 				C5FD82B12F90C59F0003A500 /* MobileGalleryView.swift in Sources */,
+				C548192E2F9F38AC006D5686 /* DataSettingsView.swift in Sources */,
 				C5FD83832F9519B60003A500 /* BookDossier.swift in Sources */,
 				C5FD83602F9513870003A500 /* KnowledgeSpectrum.swift in Sources */,
 				C5FD83A12F952FEC0003A500 /* MobileManualLogCard.swift in Sources */,
@@ -996,17 +938,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				C5FD82FC2F90CD2E0003A500 /* DataModels.swift in Sources */,
-				C5FD834A2F93D8A40003A500 /* LiveActivityIntent.swift in Sources */,
+				C54818F22F97C840006D5686 /* DataStructs.swift in Sources */,
 				C5FD82FA2F90CD1F0003A500 /* SharedDatabase.swift in Sources */,
 				C5FD82FB2F90CD290003A500 /* PreviewData.swift in Sources */,
-				C5FD83202F934BFB0003A500 /* ReadingTimerAttributes.swift in Sources */,
-				C5FD83102F92890E0003A500 /* ReadingTimerManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		C548195E2F9F78FD006D5686 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C54819522F9F78FD006D5686 /* LibraryShareExtension */;
+			targetProxy = C548195D2F9F78FD006D5686 /* PBXContainerItemProxy */;
+		};
 		C5FD82E92F90CC1D0003A500 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
@@ -1015,11 +960,82 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		C54819612F9F78FD006D5686 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LibraryShareExtension/LibraryShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L8T28YW2UK;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LibraryShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LibraryShareExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library.LibraryShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C54819622F9F78FD006D5686 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LibraryShareExtension/LibraryShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L8T28YW2UK;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LibraryShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LibraryShareExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library.LibraryShareExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		C5FD821A2F90C3530003A500 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Library/Library.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1078,6 +1094,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Library/Library.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1338,6 +1355,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		C54819602F9F78FD006D5686 /* Build configuration list for PBXNativeTarget "LibraryShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C54819612F9F78FD006D5686 /* Debug */,
+				C54819622F9F78FD006D5686 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C5FD82062F90C3530003A500 /* Build configuration list for PBXProject "Library" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1366,6 +1392,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C54819212F9E0B3B006D5686 /* XCLocalSwiftPackageReference "SwiftSoup-master" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "SwiftSoup-master";
+		};
+/* End XCLocalSwiftPackageReference section */
 	};
 	rootObject = C5FD82032F90C3530003A500 /* Project object */;
 }

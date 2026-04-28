@@ -1,64 +1,64 @@
 #if os(macOS)
-import SwiftUI
-import SwiftData
 import AppKit
+import CoreImage
+import SwiftData
+import SwiftUI
 
 // MARK: - ✨ 书籍详情主容器
 
 /// macOS 端专属的书籍全景详情页。
-///
-/// **架构职责：**
-/// 作为详情页的根视图 (Root View)，它不负责具体的业务 UI 渲染，而是专注于：
-/// 1. **全屏转场与背景**：提供带有打断手势（点击空白处退出）的纯净毛玻璃遮罩。
-/// 2. **路由与弹窗枢纽**：集中管理所有的 Sheet 弹窗（添加摘录、添加笔记、编辑书籍信息）以及危险操作警告（删除书籍）。
-/// 3. **上下文注入**：将全局的 `modelContext` 环境向下分发，并持有状态栏的全局数据变更。
 struct BookDetailView: View {
-    /// 当前正在查看的书籍实体。
     let book: Book
-    /// 承接外层画廊的共享动画标识符。
-    let namespace: Namespace.ID
-    
-    /// 绑定的触发动画的封面 ID。
-    @Binding var activeCoverID: String
-    /// 绑定的选书状态。置为 `nil` 即可触发优雅的退出动画。
     @Binding var selectedBook: Book?
-    
     @Environment(\.modelContext) private var modelContext
     
-    // MARK: - 弹窗与交互状态
+    // ✨ 状态上提：外层控制编辑和删除的弹出
+    @Binding var showEditSheet: Bool
+    @Binding var showDeleteAlert: Bool
     
     @State private var showAddExcerptSheet = false
     @State private var showAddNoteSheet = false
     @State private var isDeleteMode = false
     
-    @State private var showEditSheet = false
-    @State private var showDeleteAlert = false
+    /// ✨ 接收异步提取的封面主题色
+    @State private var themeColor: Color? = nil
     
     var body: some View {
-        ZStack {
-            // ================= 1. 纯净毛玻璃背景 =================
-            Rectangle()
-                .fill(.regularMaterial)
-                .ignoresSafeArea()
-            
-            // 细微的系统遮罩层，增加立体感 (替代手动的 isDark 判断)
-            Color(nsColor: .windowBackgroundColor).opacity(0.4)
-                .ignoresSafeArea()
+        ZStack(alignment: .top) {
+            // ================= 1. 沉浸式专属液态背景 =================
+            // 🛑 核心修复：调用全局流体画幕，它的实体底板会完美遮挡背后的列表，
+            // 同时它的网格渐变会继续为详情页的玻璃组件提供流动折射光源！
+            AmbientFluidCanvas()
+                .contentShape(Rectangle()) // 确保整面墙都能接收点击
                 .onTapGesture {
-                    // 点击空白处返回，享受右滑出退场动画
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { selectedBook = nil }
                 }
+            
+            // ✨ 专属光晕：提取封面主色调，叠加在流动极光之上，形成从顶部倾泻而下的柔和折射光源
+            if let themeColor {
+                LinearGradient(
+                    colors: [
+                        themeColor.opacity(0.35),
+                        themeColor.opacity(0.1),
+                        .clear
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+                .transition(.opacity)
+                .allowsHitTesting(false) // 让点击穿透到下层的返回热区
+            }
             
             // ================= 2. 全局无界内容区 =================
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 80) {
-                    // 👆 上大模块：重构后的优雅书籍看板
+                    // 👆 上大模块
                     BookDossierView(book: book)
                         .zIndex(1)
-                                                                                                                                                                        
-                    // 👇 下大模块：摘要和笔记
+                    
+                    // 👇 下大模块
                     VStack(spacing: 30) {
-                        // 标题与控制按钮
                         VStack(spacing: 16) {
                             HStack(alignment: .center) {
                                 Text("思考的痕迹")
@@ -68,37 +68,34 @@ struct BookDetailView: View {
                                 Spacer()
                                 
                                 HStack(spacing: 12) {
-                                    Button(action: {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isDeleteMode.toggle() }
-                                    }) {
-                                        Label(isDeleteMode ? "完成" : "管理", systemImage: isDeleteMode ? "checkmark" : "trash")
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .tint(isDeleteMode ? .blue : .gray)
-                                    .controlSize(.large)
+                                    ProminentActionButton(
+                                        title: isDeleteMode ? "完成" : "管理",
+                                        systemImage: isDeleteMode ? "checkmark" : "trash",
+                                        tintColor: isDeleteMode ? .blue : .gray,
+                                        action: { withAnimation(.spring()) { isDeleteMode.toggle() } }
+                                    )
+                                    .glassEffect(isDeleteMode ? .regular.tint(.blue).interactive() : .regular.interactive(), in: .capsule)
                                     
-                                    Button(action: {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { showAddNoteSheet = true }
-                                    }) {
-                                        Label("笔记", systemImage: "square.and.pencil")
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .tint(.purple)
-                                    .controlSize(.large)
+                                    ProminentActionButton(
+                                        title: "笔记",
+                                        systemImage: "square.and.pencil",
+                                        tintColor: .purple,
+                                        action: { showAddNoteSheet = true }
+                                    )
+                                    .glassEffect(.regular.tint(.purple).interactive(), in: .capsule)
                                     
-                                    Button(action: {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { showAddExcerptSheet = true }
-                                    }) {
-                                        Label("摘录", systemImage: "quote.opening")
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .tint(.indigo)
-                                    .controlSize(.large)
+                                    ProminentActionButton(
+                                        title: "摘录",
+                                        systemImage: "quote.opening",
+                                        tintColor: .indigo,
+                                        action: { showAddExcerptSheet = true }
+                                    )
+                                    .glassEffect(.regular.tint(.indigo).interactive(), in: .capsule)
                                 }
                             }
                             Divider()
                         }
-                            
+                        
                         BookExcerptsView(
                             book: book,
                             isDeleteMode: isDeleteMode,
@@ -110,58 +107,120 @@ struct BookDetailView: View {
                 .padding(.horizontal, 60)
                 .padding(.bottom, 100)
                 .padding(.top, 100)
+                .frame(maxWidth: .infinity)
             }
-            .ignoresSafeArea(edges: .top)
-            
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             // ================= 3. 弹窗引擎池 =================
             .sheet(isPresented: $showAddExcerptSheet) {
-                AddContentSheet(isPresented: $showAddExcerptSheet, book: book, mode: .excerpt)
+                ContentEditorSheet(isPresented: $showAddExcerptSheet, book: book, mode: .excerpt)
             }
             .sheet(isPresented: $showAddNoteSheet) {
-                AddContentSheet(isPresented: $showAddNoteSheet, book: book, mode: .note)
+                ContentEditorSheet(isPresented: $showAddNoteSheet, book: book, mode: .note)
             }
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                Button(action: { withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { showEditSheet = true } }) {
-                    Image(systemName: "pencil")
-                }
-                .help("编辑书籍信息")
-                
-                Button(action: { showDeleteAlert = true }) {
-                    Image(systemName: "trash").foregroundStyle(Color.red)
-                }
-                .help("彻底删除书籍")
-            }
+        // ✨ 当进入详情页或封面变化时，激活主题色嗅探引擎
+        .task(id: book.coverData) {
+            await extractThemeColor()
         }
-        .sheet(isPresented: $showEditSheet) { BookEditorSheet(isPresented: $showEditSheet, bookToEdit: book) }
+        .sheet(isPresented: $showEditSheet) {
+            BookEditorSheet(isPresented: $showEditSheet, bookToEdit: book)
+        }
         .alert("删除书籍", isPresented: $showDeleteAlert) {
             Button("取消", role: .cancel) {}
             Button("确认删除", role: .destructive) {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { selectedBook = nil }
-                // 延迟一点执行删除，让返回动画播完
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { modelContext.delete(book) }
+                // 1. 立即清空选中状态（触发详情页关闭动画）
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                    selectedBook = nil
+                }
+                
+                // 2. 延迟执行删除（等待关闭动画完成），并强制同步
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    modelContext.delete(book)
+                    
+                    do {
+                        // ✨ 核心操作：强制持久化到磁盘，确保画廊读取的是最新状态
+                        try modelContext.save()
+                        
+                        // ✨ 核心操作：发送全局信号，告诉画廊“该干活了”
+                        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
+                        
+                        print("✅ 书籍已成功从磁盘删除并通知画廊")
+                    } catch {
+                        print("❌ 删除保存失败: \(error.localizedDescription)")
+                    }
+                }
             }
-        } message: {
-            Text("确定要删除《\(book.title ?? "未知")》吗？相关的读书笔记也会一并清除。")
         }
     }
     
-    /// 执行物理销毁记录操作。
-    ///
-    /// - Parameter item: 包装了 `Excerpt` 或 `Note` 的抽象枚举项。
-    private func deleteRecord(_ item: RecordItem) {
-        withAnimation(.spring()) {
-            switch item {
-            case .excerpt(let excerpt): modelContext.delete(excerpt)
-            case .note(let note): modelContext.delete(note)
+    // MARK: - ✨ 封面色彩提取引擎
+    
+    private func extractThemeColor() async {
+        guard let data = book.coverData, let ciImage = CIImage(data: data) else {
+            await MainActor.run { themeColor = nil }
+            return
+        }
+        
+        let extentVector = CIVector(x: ciImage.extent.origin.x, y: ciImage.extent.origin.y, z: ciImage.extent.size.width, w: ciImage.extent.size.height)
+        guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: ciImage, kCIInputExtentKey: extentVector]),
+              let outputImage = filter.outputImage
+        else {
+            return
+        }
+        
+        var bitmap = [UInt8](repeating: 0, count: 4)
+        let context = CIContext(options: [.workingColorSpace: kCFNull!])
+        context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
+        
+        await MainActor.run {
+            withAnimation(.easeInOut(duration: 0.8)) {
+                self.themeColor = Color(red: Double(bitmap[0]) / 255.0, green: Double(bitmap[1]) / 255.0, blue: Double(bitmap[2]) / 255.0)
             }
         }
-        let excerptCount = book.excerpts?.count ?? 0
-        let noteCount = book.notes?.count ?? 0
-        if (excerptCount + noteCount) <= 1 {
+    }
+    
+    // MARK: - 记录销毁逻辑 (✨ 升级为单一模型 BookAnnotation)
+    
+    private func deleteRecord(_ item: BookAnnotation) {
+        withAnimation(.spring()) {
+            // 直接删除该实体，无需再走 switch 缝合逻辑
+            modelContext.delete(item)
+        }
+        
+        // 统计这本树下所有的批注数量（合并后的表）
+        let totalCount = book.annotations?.count ?? 0
+        if totalCount <= 1 {
             withAnimation { isDeleteMode = false }
         }
     }
+}
+
+// MARK: - ✨ 预览装配
+
+struct BookDetailPreviewWrapper: View {
+    @Query var books: [Book]
+    @State private var selectedBook: Book?
+    @State private var showEditSheet = false
+    @State private var showDeleteAlert = false
+    
+    var body: some View {
+        if let book = books.first {
+            BookDetailView(
+                book: book,
+                selectedBook: $selectedBook,
+                showEditSheet: $showEditSheet,
+                showDeleteAlert: $showDeleteAlert
+            )
+            .frame(width: 1000, height: 800)
+            .onAppear { selectedBook = book }
+        } else {
+            Text("加载假数据中...")
+        }
+    }
+}
+
+#Preview("全景：书籍详情主页面") {
+    BookDetailPreviewWrapper()
+        .modelContainer(PreviewData.shared)
 }
 #endif

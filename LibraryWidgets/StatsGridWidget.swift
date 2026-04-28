@@ -2,9 +2,6 @@ import SwiftData
 import SwiftUI
 import WidgetKit
 
-// MARK: - 1. 专属数据模型
-
-/// 小号四环统计盘实体。
 struct StatsGridEntry: TimelineEntry {
     let date: Date
     let weekCount: Int
@@ -17,9 +14,6 @@ struct StatsGridEntry: TimelineEntry {
     let libraryTotal: Int
 }
 
-// MARK: - 2. 专属数据引擎 (真实读取 SwiftData)
-
-/// 为小号四环提供数据源。
 struct StatsGridProvider: TimelineProvider {
     func placeholder(in context: Context) -> StatsGridEntry { mockEntry() }
     
@@ -39,45 +33,57 @@ struct StatsGridProvider: TimelineProvider {
     private func fetchRealData() async -> StatsGridEntry {
         let context = SharedDatabase.shared.container.mainContext
         do {
-            let allBooks = try context.fetch(FetchDescriptor<Book>())
-            let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
-            
-            let configDesc = FetchDescriptor<UserConfig>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
-            let globalConfig = (try? context.fetch(configDesc))?.first ?? UserConfig()
-            
-            let calendar = Calendar.current; let today = Date()
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
             let currentYear = calendar.component(.year, from: today)
             let currentMonth = calendar.component(.month, from: today)
 
-            var tempCalendar = calendar; tempCalendar.firstWeekday = 2; var tempWeekCount = 0
-            if let startOfWeek = tempCalendar.date(from: tempCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) {
-                for i in 0 ..< 7 {
-                    if let dayDate = tempCalendar.date(byAdding: .day, value: i, to: startOfWeek) {
-                        if allRecords.contains(where: { tempCalendar.isDate($0.date ?? Date.distantPast, inSameDayAs: dayDate) }) { tempWeekCount += 1 }
+            // 配置提取
+            var configDesc = FetchDescriptor<UserConfig>(sortBy: [SortDescriptor(\.updatedAt, order: .reverse)])
+            configDesc.fetchLimit = 1
+            let globalConfig = (try? context.fetch(configDesc))?.first ?? UserConfig()
+
+            // ✨ 性能优化：单次遍历搞定书籍统计
+            let allBooks = try context.fetch(FetchDescriptor<Book>())
+            var yearlyCount = 0
+            var libraryRead = 0
+            for book in allBooks {
+                if book.status == .finished {
+                    libraryRead += 1
+                    if let eTime = book.endTime, calendar.component(.year, from: eTime) == currentYear {
+                        yearlyCount += 1
                     }
                 }
             }
+            let libraryTotal = allBooks.count
 
-            let thisMonthRecords = allRecords.filter {
-                let safeDate = $0.date ?? Date.distantPast
-                return calendar.component(.year, from: safeDate) == currentYear && calendar.component(.month, from: safeDate) == currentMonth
+            // ✨ 性能优化：单次遍历搞定本周、本月打卡天数统计 (绝对不嵌套使用 contains/filter)
+            let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
+            var tempCalendar = calendar
+            tempCalendar.firstWeekday = 2
+            let startOfWeek = tempCalendar.date(from: tempCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) ?? today
+
+            var weekDaysSet = Set<Int>()
+            var monthDaysSet = Set<Int>()
+
+            for record in allRecords {
+                let recDate = calendar.startOfDay(for: record.date)
+                // 算本周
+                if recDate >= startOfWeek && recDate <= today {
+                    weekDaysSet.insert(calendar.ordinality(of: .day, in: .era, for: recDate) ?? 0)
+                }
+                // 算本月
+                if calendar.component(.year, from: recDate) == currentYear && calendar.component(.month, from: recDate) == currentMonth {
+                    monthDaysSet.insert(calendar.component(.day, from: recDate))
+                }
             }
-            let monthlyDays = Set(thisMonthRecords.map { calendar.component(.day, from: $0.date ?? Date.distantPast) }).count
-
-            let yearlyCount = allBooks.filter { $0.status == .finished && calendar.component(.year, from: $0.endTime ?? today) == currentYear }.count
-            let totalFinishedCount = allBooks.filter { $0.status == .finished }.count
-            let totalLibraryCount = allBooks.count
 
             return StatsGridEntry(
                 date: today,
-                weekCount: tempWeekCount,
-                weekTarget: 7,
-                monthlyDays: monthlyDays,
-                monthTarget: 30,
-                yearlyCount: yearlyCount,
-                yearTarget: globalConfig.yearlyBookGoal,
-                libraryRead: totalFinishedCount,
-                libraryTotal: totalLibraryCount
+                weekCount: weekDaysSet.count, weekTarget: 7,
+                monthlyDays: monthDaysSet.count, monthTarget: 30,
+                yearlyCount: yearlyCount, yearTarget: globalConfig.yearlyBookGoal,
+                libraryRead: libraryRead, libraryTotal: libraryTotal
             )
         } catch {
             return mockEntry()
@@ -89,9 +95,6 @@ struct StatsGridProvider: TimelineProvider {
     }
 }
 
-// MARK: - 3. UI 视图
-
-/// 小号 (`.systemSmall`) 阅读仪表盘展现形式。
 struct StatsGridWidgetView: View {
     var entry: StatsGridEntry
     
@@ -106,14 +109,10 @@ struct StatsGridWidgetView: View {
                 PureRingMetric(current: entry.libraryRead, target: entry.libraryTotal, color: .indigo, icon: "books.vertical.fill")
             }
         }
-        // ✨ 核心修复：复用扩展的自适应背景
         .containerBackground(Color.adaptiveWidgetBackground, for: .widget)
     }
 }
 
-// MARK: - 专属子组件：无字纯粹放大圆环
-
-/// 在极度受限的小号尺寸内使用无文字说明的粗体微缩圆环。
 private struct PureRingMetric: View {
     let current: Int
     let target: Int
@@ -125,9 +124,7 @@ private struct PureRingMetric: View {
         let progress = min(Double(current) / safeTarget, 1.0)
 
         ZStack {
-            Circle()
-                .stroke(color.opacity(0.15), lineWidth: 6.0)
-            
+            Circle().stroke(color.opacity(0.15), lineWidth: 6.0)
             Circle()
                 .trim(from: 0, to: max(progress, 0.001))
                 .stroke(color.gradient, style: StrokeStyle(lineWidth: 6.0, lineCap: .round))
@@ -142,9 +139,6 @@ private struct PureRingMetric: View {
     }
 }
 
-// MARK: - 4. 组件注册入口
-
-/// 小号四环仪表盘系统注册。
 struct StatsGridWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "StatsGridWidget", provider: StatsGridProvider()) { entry in
@@ -154,10 +148,4 @@ struct StatsGridWidget: Widget {
         .description("展示四个维度的纯粹阅读动能圆环。")
         .supportedFamilies([.systemSmall])
     }
-}
-
-#Preview("阅读仪表盘", as: .systemSmall) {
-    StatsGridWidget()
-} timeline: {
-    StatsGridEntry(date: Date(), weekCount: 5, weekTarget: 7, monthlyDays: 21, monthTarget: 30, yearlyCount: 12, yearTarget: 50, libraryRead: 45, libraryTotal: 120)
 }

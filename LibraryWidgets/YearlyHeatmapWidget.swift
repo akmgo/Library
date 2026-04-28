@@ -2,34 +2,21 @@ import SwiftData
 import SwiftUI
 import WidgetKit
 
-// 引入特定平台的图像框架
-#if os(macOS)
-import AppKit
-#else
-import UIKit
-#endif
-
-// MARK: - 数据模型
-
-/// 热力图数据实体
 struct HeatmapColumnData: Identifiable { let id: Int; let days: [HeatmapDayData] }
 struct HeatmapDayData: Identifiable { let id = UUID(); let intensity: Double; let isFuture: Bool }
 
-/// 中号热力图时间线包裹器。
 struct HeatmapEntry: TimelineEntry {
     let date: Date
     let columns: [HeatmapColumnData]
+    let isEmpty: Bool // ✨ 标记是否完全没有数据
 }
 
-// MARK: - 数据提供者
-
-/// 计算矩阵式打卡深浅图块的数据引擎。
 struct HeatmapProvider: TimelineProvider {
     func placeholder(in context: Context) -> HeatmapEntry {
-        // 占位符展示 22 列随机热力图
         HeatmapEntry(
             date: Date(),
-            columns: (0..<22).map { i in HeatmapColumnData(id: i, days: (0..<7).map { _ in HeatmapDayData(intensity: Double.random(in: 0...1), isFuture: false) }) }
+            columns: (0..<22).map { i in HeatmapColumnData(id: i, days: (0..<7).map { _ in HeatmapDayData(intensity: Double.random(in: 0...1), isFuture: false) }) },
+            isEmpty: false
         )
     }
 
@@ -49,22 +36,25 @@ struct HeatmapProvider: TimelineProvider {
     private func fetchRealData() -> HeatmapEntry {
         let dbContext = SharedDatabase.shared.container.mainContext
         do {
-            let allRecords = try dbContext.fetch(FetchDescriptor<ReadingRecord>())
-            var cal = Calendar.current; cal.firstWeekday = 2; let today = cal.startOfDay(for: Date())
-
-            // 1. 汇总每天的阅读时长
-            var dailyDurations: [Date: TimeInterval] = [:]
-            for record in allRecords {
-                guard let validDate = record.date else { continue }
-                dailyDurations[cal.startOfDay(for: validDate), default: 0] += record.readingDuration
-            }
+            var cal = Calendar.current
+            cal.firstWeekday = 2
+            let today = cal.startOfDay(for: Date())
             
-            // 2. 构建 22 周 (中尺寸组件最佳视觉比例) 热力图矩阵
             let columnsCount = 22
             let daysToSubtract = ((cal.component(.weekday, from: today) + 5) % 7)
             let currentWeekStart = cal.date(byAdding: .day, value: -daysToSubtract, to: today)!
             let startDate = cal.date(byAdding: .weekOfYear, value: -(columnsCount - 1), to: currentWeekStart)!
 
+            let descriptor = FetchDescriptor<ReadingRecord>(
+                predicate: #Predicate { $0.date >= startDate }
+            )
+            let recentRecords = try dbContext.fetch(descriptor)
+
+            var dailyDurations: [Date: TimeInterval] = [:]
+            for record in recentRecords {
+                dailyDurations[cal.startOfDay(for: record.date), default: 0] += record.readingDuration
+            }
+            
             var cols: [HeatmapColumnData] = []
             for weekOffset in 0..<columnsCount {
                 var days: [HeatmapDayData] = []
@@ -72,47 +62,57 @@ struct HeatmapProvider: TimelineProvider {
                     let date = cal.date(byAdding: .day, value: weekOffset * 7 + dayOffset, to: startDate)!
                     let duration = dailyDurations[date] ?? 0
                     let isFuture = date > today
-                    // 动态上色：根据时长加深颜色
                     let intensity = isFuture ? 0.0 : (duration > 0 ? min((duration / 3600.0) * 0.7 + 0.3, 1.0) : 0.0)
                     days.append(HeatmapDayData(intensity: intensity, isFuture: isFuture))
                 }
                 cols.append(HeatmapColumnData(id: weekOffset, days: days))
             }
             
-            return HeatmapEntry(date: Date(), columns: cols)
+            return HeatmapEntry(date: Date(), columns: cols, isEmpty: recentRecords.isEmpty)
         } catch {
-            return HeatmapEntry(date: Date(), columns: [])
+            return HeatmapEntry(date: Date(), columns: [], isEmpty: true)
         }
     }
 }
 
-// MARK: - 极简纯粹的热力图视图
-
-/// 采用 `GeometryReader` 自动缩放的中号打卡密度图表。
 struct HeatmapWidgetView: View {
     var entry: HeatmapProvider.Entry
 
     var body: some View {
         GeometryReader { geo in
-            // 动态计算方块尺寸：列数默认 22，间距 3.5
             let columns: CGFloat = CGFloat(entry.columns.isEmpty ? 22 : entry.columns.count)
             let spacing: CGFloat = 3.5
             let squareSize = (geo.size.width - (columns - 1) * spacing) / columns
             
-            HStack(spacing: spacing) {
-                ForEach(entry.columns) { column in
-                    VStack(spacing: spacing) {
-                        ForEach(column.days) { day in
-                            let baseColor = day.intensity > 0 ? Color.indigo.opacity(day.intensity) : Color.secondary.opacity(0.12)
-                            
-                            RoundedRectangle(cornerRadius: squareSize * 0.25, style: .continuous)
-                                .fill(day.isFuture ? Color.clear : baseColor)
-                                .frame(width: squareSize, height: squareSize)
+            ZStack {
+                HStack(spacing: spacing) {
+                    ForEach(entry.columns) { column in
+                        VStack(spacing: spacing) {
+                            ForEach(column.days) { day in
+                                let baseColor = day.intensity > 0 ? Color.indigo.opacity(day.intensity) : Color.secondary.opacity(0.12)
+                                
+                                RoundedRectangle(cornerRadius: squareSize * 0.25, style: .continuous)
+                                    .fill(day.isFuture ? Color.clear : baseColor)
+                                    .frame(width: squareSize, height: squareSize)
+                            }
                         }
                     }
                 }
+                .opacity(entry.isEmpty ? 0.2 : 1.0) // 如果没有数据，图表变暗淡做背景
+                
+                // ✨ UI优化：极致优雅的空状态
+                if entry.isEmpty {
+                    VStack(spacing: 6) {
+                        Image(systemName: "books.vertical")
+                            .font(.system(size: 20))
+                            .foregroundColor(.secondary)
+                        Text("去沉淀点滴时间")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
-            // 利用 alignment: .center 确保整个矩阵在可用空间内绝对居中
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
         .containerBackground(for: .widget) {
@@ -125,19 +125,14 @@ struct HeatmapWidgetView: View {
     }
 }
 
-// MARK: - 注册组件
-
-/// 中号热力图组件系统注册配置。
 struct YearlyHeatmapWidget: Widget {
     let kind: String = "YearlyHeatmapWidget"
-    
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: HeatmapProvider()) { entry in
             HeatmapWidgetView(entry: entry)
         }
         .configurationDisplayName("打卡密度")
         .description("在桌面上回顾你纯粹的阅读热力图。")
-        // ✨ 改回最完美的中号尺寸
         .supportedFamilies([.systemMedium])
     }
 }

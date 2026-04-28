@@ -1,15 +1,6 @@
 #if os(macOS)
 import SwiftUI
 
-// MARK: - 撒花通知扩展
-public extension Notification.Name {
-    /// 全局触发庆祝撒花动画的通知标识符。
-    ///
-    /// 通过 `NotificationCenter.default.post(name: .triggerConfetti, object: nil)`
-    /// 可以在应用的任何地方唤起撒花动画。
-    static let triggerConfetti = Notification.Name("triggerConfetti")
-}
-
 // MARK: - 撒花动画组件
 
 /// 全局庆祝撒花粒子动画层 (仅限 macOS)。

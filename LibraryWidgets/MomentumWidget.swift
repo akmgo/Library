@@ -3,39 +3,27 @@ import SwiftData
 import SwiftUI
 import WidgetKit
 
-// 引入特定平台的图像框架
 #if os(macOS)
 import AppKit
 #else
 import UIKit
 #endif
 
-// MARK: - 新增内部数据结构，方便图表绑定日期
-
-/// 单日阅读数据的结构体，用于 Swift Charts 数据绑定。
 struct DailyReading: Identifiable {
     let date: Date
     let minutes: Double
-    var id: Date {
-        date
-    }
+    var id: Date { date }
 }
 
-// MARK: - 动能数据模型
-
-/// 中号 14 天平滑面积动能图模型。
 struct MomentumEntry: TimelineEntry {
     let date: Date
-    let dailyData: [DailyReading] // ✨ 改用带日期的数据组
+    let dailyData: [DailyReading]
     let totalDays: Int
     let totalMinutes: Int
     let maxMinutes: Int
     let avgMinutes: Int
 }
 
-// MARK: - 数据提供者
-
-/// 负责为中号动能折线组件提供长达两周的时间轴数据的提供引擎。
 struct MomentumProvider: TimelineProvider {
     func placeholder(in context: Context) -> MomentumEntry {
         let cal = Calendar.current
@@ -62,16 +50,19 @@ struct MomentumProvider: TimelineProvider {
     private func fetchRealData() -> MomentumEntry {
         let dbContext = SharedDatabase.shared.container.mainContext
         do {
-            let allRecords = try dbContext.fetch(FetchDescriptor<ReadingRecord>())
             let cal = Calendar.current
             let today = cal.startOfDay(for: Date())
             let startDate = cal.date(byAdding: .day, value: -13, to: today)!
 
+            let descriptor = FetchDescriptor<ReadingRecord>(
+                predicate: #Predicate { $0.date >= startDate }
+            )
+            let recentRecords = try dbContext.fetch(descriptor)
+
             var dailyMap: [Date: Double] = [:]
-            for record in allRecords {
-                guard let validDate = record.date else { continue }
-                let recordDay = cal.startOfDay(for: validDate)
-                if recordDay >= startDate && recordDay <= today {
+            for record in recentRecords {
+                let recordDay = cal.startOfDay(for: record.date)
+                if recordDay <= today {
                     dailyMap[recordDay, default: 0] += (record.readingDuration / 60.0)
                 }
             }
@@ -94,12 +85,7 @@ struct MomentumProvider: TimelineProvider {
             let avgMin = daysRead > 0 ? (totalMin / Double(daysRead)) : 0.0
 
             return MomentumEntry(
-                date: Date(),
-                dailyData: last14DaysData,
-                totalDays: daysRead,
-                totalMinutes: Int(totalMin),
-                maxMinutes: Int(maxMin),
-                avgMinutes: Int(avgMin)
+                date: Date(), dailyData: last14DaysData, totalDays: daysRead, totalMinutes: Int(totalMin), maxMinutes: Int(maxMin), avgMinutes: Int(avgMin)
             )
         } catch {
             return MomentumEntry(date: Date(), dailyData: [], totalDays: 0, totalMinutes: 0, maxMinutes: 0, avgMinutes: 0)
@@ -107,15 +93,11 @@ struct MomentumProvider: TimelineProvider {
     }
 }
 
-// MARK: - 极简动能视图
-
-/// 中尺寸 (`.systemMedium`) 包含 `Swift Charts` 面积图的视图。
 struct MomentumWidgetView: View {
     var entry: MomentumProvider.Entry
 
     var body: some View {
         VStack(spacing: 0) {
-            // ================= 上半部：四大横排核心指标 =================
             HStack(alignment: .center, spacing: 0) {
                 MomentumStat(title: "阅读天数", value: "\(entry.totalDays)", unit: "天")
                 Spacer(minLength: 5)
@@ -129,41 +111,38 @@ struct MomentumWidgetView: View {
 
             Spacer(minLength: 0)
 
-            // ================= 下半部：扁平流体动能图 =================
             Chart {
                 ForEach(entry.dailyData) { item in
-                    // 渐变面积图
                     AreaMark(
                         x: .value("Day", item.date),
                         y: .value("Minutes", item.minutes)
                     )
                     .interpolationMethod(.catmullRom)
+                    // ✨ UI优化：更换为更通透的高级渐变
                     .foregroundStyle(LinearGradient(
-                        colors: [Color.blue.opacity(0.4), Color.blue.opacity(0.0)],
+                        colors: [Color.indigo.opacity(0.4), Color.cyan.opacity(0.05), .clear],
                         startPoint: .top, endPoint: .bottom
                     ))
 
-                    // 顶部线条
                     LineMark(
                         x: .value("Day", item.date),
                         y: .value("Minutes", item.minutes)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Color.blue)
+                    // ✨ UI优化：线条也使用渐变色
+                    .foregroundStyle(LinearGradient(colors: [.indigo, .cyan], startPoint: .leading, endPoint: .trailing))
                     .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
                 }
             }
             .chartYAxis(.hidden)
-            // 保留了优雅的横坐标，改为显示具体的日期数字
             .chartXAxis {
                 AxisMarks(values: .stride(by: .day, count: 2)) { _ in
                     AxisValueLabel(format: .dateTime.day())
                         .font(.system(size: 9, weight: .bold))
-                        // ✨ 明确告诉编译器这是 Color.secondary
                         .foregroundStyle(Color.secondary)
                 }
             }
-            .frame(height: 80) // 稍微加高 5 像素给文字留出空间
+            .frame(height: 80)
         }
         .containerBackground(for: .widget) {
             #if os(macOS)
@@ -175,7 +154,6 @@ struct MomentumWidgetView: View {
     }
 }
 
-/// 子组件：紧凑型微数据块，供折线动能图表上方数据摘要使用。
 private struct MomentumStat: View {
     let title: String
     let value: String
@@ -190,6 +168,7 @@ private struct MomentumStat: View {
             HStack(alignment: .firstTextBaseline, spacing: 1) {
                 Text(value)
                     .font(.system(size: 18, weight: .heavy, design: .rounded))
+                    .monospacedDigit() // ✨ UI优化：防止数字跳动导致的面板闪烁
                     .foregroundColor(.primary)
                 Text(unit)
                     .font(.system(size: 9, weight: .bold))
@@ -199,9 +178,6 @@ private struct MomentumStat: View {
     }
 }
 
-// MARK: - 注册组件
-
-/// 中号动能趋势折线图小组件注册入口。
 struct MomentumWidget: Widget {
     let kind: String = "MomentumWidget"
     var body: some WidgetConfiguration {

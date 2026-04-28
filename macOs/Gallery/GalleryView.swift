@@ -1,221 +1,317 @@
 #if os(macOS)
-
-import Charts
+import AppKit
 import SwiftData
 import SwiftUI
 
-// MARK: - 画廊全局配置
+// MARK: - 🎛️ 离散式网格缩放引擎
 
-/// 统一管理画廊视图布局尺寸的常量集合。
-///
-/// 使用无 case 的 `enum` 作为纯粹的命名空间，防止被意外实例化。
-/// 集中管理封面的宽高和网格间距，确保整个应用中的画廊比例严格一致。
-public enum GalleryConfig {
-    /// 封面的标准渲染宽度
-    public static let coverWidth: CGFloat = 200
-    /// 封面的标准渲染高度
-    public static let coverHeight: CGFloat = 300
-    /// 网格项之间的水平间距
-    public static let horizontalSpacing: CGFloat = 32
-    /// 网格项之间的垂直排版间距
-    public static let verticalSpacing: CGFloat = 40
+enum GalleryGridScale: Double, CaseIterable {
+    case small = 0.0; case medium = 1.0; case large = 2.0; case extraLarge = 3.0
+    var width: CGFloat {
+        switch self { case .small: 120; case .medium: 160; case .large: 200; case .extraLarge: 260 }
+    }
+
+    var hSpacing: CGFloat {
+        switch self { case .small: 20; case .medium: 24; case .large: 32; case .extraLarge: 40 }
+    }
+
+    var vSpacing: CGFloat {
+        switch self { case .small: 24; case .medium: 32; case .large: 40; case .extraLarge: 50 }
+    }
+
+    var titleFont: CGFloat {
+        switch self { case .small: 12; case .medium: 13; case .large: 15; case .extraLarge: 18 }
+    }
+
+    var subFont: CGFloat {
+        switch self { case .small: 10; case .medium: 11; case .large: 13; case .extraLarge: 15 }
+    }
+
+    var uiScale: CGFloat {
+        switch self { case .small: 0.75; case .medium: 0.85; case .large: 1.0; case .extraLarge: 1.2 }
+    }
 }
 
-// MARK: - 核心全景画廊视图
+enum GallerySortType: String, CaseIterable, Identifiable, CustomStringConvertible {
+    case newest = "最近添加"; case oldest = "最早添加"; case titleAsc = "书名 (A-Z)"
+    var id: String {
+        rawValue
+    }
 
-/// macOS 端专属的全景画廊视图 (Archive Gallery)。
-///
-/// **视觉与架构设计：**
-/// 该视图采用了“底层瀑布流 + 顶层悬浮磨砂 Header”的双层 Z 轴布局。
-/// 支持按照“全部”、“想读”、“待读”、“已读”进行分类筛选，并带有平滑的元素增删过滤动画。
-///
-/// - 注意: 为了兼容 macOS 独特的红绿灯窗口控制区，顶部的 Header 设置了特定的 `.padding(.top, 45)`。
+    var description: String {
+        rawValue
+    }
+}
+
+enum ArchiveFilterTab: String, CaseIterable, CustomStringConvertible {
+    case all = "全部书籍"; case wantToRead = "想读书籍"; case unread = "待读书籍"
+    case reading = "在读书籍"; case finished = "已读书籍"; case abandoned = "弃读书籍"
+    var description: String {
+        rawValue
+    }
+
+    var status: BookStatus? {
+        switch self {
+        case .all: return nil
+        case .wantToRead: return .wantToRead
+        case .unread: return .unread
+        case .reading: return .reading
+        case .finished: return .finished
+        case .abandoned: return .abandoned
+        }
+    }
+}
+
+// MARK: - 🌟 核心全景画廊视图
+
 struct ArchiveGalleryView: View {
-    /// 数据库中所有的书籍源数据。
-    @Query var books: [Book]
-    
-    /// 用于处理封面点击后缩放展开到详情页的共享动画命名空间。
-    let namespace: Namespace.ID
-    
-    /// 向上层双向绑定的选中书籍状态，一旦赋值将触发详情弹窗或转场。
+    @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
     
-    /// 当前正在触发共享动画的封面唯一标识符，用于规避动画过程中的重影问题。
-    @Binding var activeCoverID: String
+    // ✨ 状态上提
+    @Binding var activeTab: ArchiveFilterTab
+    @Binding var searchText: String
+    @Binding var sortType: GallerySortType
+    @Binding var scaleIndex: Double
+    @Binding var isBatchEditMode: Bool
+    @Binding var selectedBooksForBatch: Set<String>
     
-    /// 记录当前用户选中的分类筛选器标签，默认展示全部 ("ALL")。
-    @State private var activeTab: String = "ALL"
-    
-    /// 经过当前 `activeTab` 过滤并排序后，实际驱动瀑布流网格渲染的书籍数组。
     @State private var displayBooks: [Book] = []
+    @State private var inventoryData: (total: Int, points: [InventoryDataPoint]) = (0, [])
+    
+    /// ✨ 终极修复：强制状态驱动首屏动画锁
+    @State private var isEntranceAnimated: Bool = false
+    
+    private var currentScale: GalleryGridScale {
+        GalleryGridScale(rawValue: scaleIndex) ?? .large
+    }
     
     var body: some View {
         GeometryReader { geo in
-            ZStack(alignment: .top) {
-                Color(nsColor: .windowBackgroundColor)
-                    .ignoresSafeArea()
-                                                
-                Circle()
-                    .fill(Color.indigo.opacity(0.08))
-                    .blur(radius: 120)
-                    .frame(width: 800, height: 800)
-                    .offset(x: -200, y: -300)
-                
-                // ================= 1. 底层滚动内容区 =================
-                ScrollView {
-                    gridView(containerWidth: geo.size.width)
-                        .padding(.horizontal, 40)
-                        // 留出原生 Header 的空间
-                        .padding(.top, 140)
-                        .padding(.bottom, 60)
-                }
-                
-                // ================= 2. 顶层悬浮高定玻璃 Header =================
+            // 1. 主体滚动区 (彻底移除外层 ZStack)
+            ScrollView {
+                gridView(containerWidth: geo.size.width)
+                    .padding(.horizontal, 40)
+                    .padding(.top, 140)
+                    .padding(.bottom, isBatchEditMode ? 120 : 60)
+                    // ✨ 视觉极限强化：统一底部的垂直电梯升空
+                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
+                    .offset(y: isEntranceAnimated ? 0 : 150)
+                    .scaleEffect(isEntranceAnimated ? 1.0 : 0.99, anchor: .center)
+                    .animation(.appFluidSpring, value: isEntranceAnimated)
+            }
+            // 2. ✨ 顶部 Header (转化为 overlay，解除 ZStack 层级负担)
+            .overlay(alignment: .top) {
                 VStack(spacing: 0) {
                     HStack(alignment: .center) {
-                        // 左侧标题组 (文字需要靠左对齐)
+                        // 👈 左侧文字区：戏剧性向右滑入
                         VStack(alignment: .leading, spacing: 8) {
                             Text("全景画廊")
                                 .font(.system(size: 32, weight: .heavy, design: .rounded))
                                 .foregroundColor(.primary)
-                                            
                             Text("共收录 \(displayBooks.count) 本图书")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
-                                        
-                        // 水平方向的撑开器
+                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
+                        .offset(x: isEntranceAnimated ? 0 : -200)
+                        
                         Spacer()
-                                                                                                    
-                        // 右侧：引入全新的堆叠条，宽度锁定为 280
-                        MiniInventoryBar(books: books)
-                            .frame(width: 280)
+                        
+                        // 👉 右侧数据区：戏剧性向左滑入
+                        MiniInventoryBar(totalCount: inventoryData.total, dataPoints: inventoryData.points)
+                            .frame(width: 320)
+                            .opacity(isEntranceAnimated ? 1.0 : 0.0)
+                            .offset(x: isEntranceAnimated ? 0 : 200)
                     }
-                    .padding(.horizontal, 40)
-                    .padding(.top, 45) // 完美避开 macOS 左上角的红绿灯
-                    .padding(.bottom, 20)
-                                    
-                    // 补上底部的极简分割线，让玻璃有收边的质感
+                    .padding(.horizontal, 40).padding(.top, 45).padding(.bottom, 20)
+                    // ✨ 统一使用流体弹簧控制内部元素的横向归位
+                    .animation(.appFluidSpring, value: isEntranceAnimated)
+                    
                     Divider().background(Color.primary.opacity(0.05))
                 }
-                // 苹果原生 Mac 顶栏材质
-                .background(
-                    Color.clear
-                        .background(.ultraThinMaterial)
-                        .opacity(0.85)
-                )
+                .background(Color.clear.background(.ultraThinMaterial).opacity(0.85))
                 .ignoresSafeArea(edges: .top)
             }
-            .onAppear { updateDisplayBooks(animate: false) }
-            .onChange(of: books) { _, _ in updateDisplayBooks(animate: true) }
-            .onChange(of: activeTab) { _, _ in updateDisplayBooks(animate: true) }
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                Menu {
-                    Picker(selection: $activeTab, label: EmptyView()) {
-                        Text("全部书籍").tag("ALL")
-                        Text("想读书籍").tag("WANT")
-                        Text("待读书籍").tag("UNREAD")
-                        Text("已读书籍").tag("FINISHED")
+            // 3. ✨ 底部批处理控制栏 (同样转化为 overlay)
+            .overlay(alignment: .bottom) {
+                if isBatchEditMode {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Text("已选择 \(selectedBooksForBatch.count) 本书")
+                                .font(.system(size: 14, weight: .bold))
+                            Spacer()
+                            Button("取消") {
+                                withAnimation(.appSnappy) { isBatchEditMode = false; selectedBooksForBatch.removeAll() }
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 8)
+                            
+                            Button(action: deleteSelectedBooks) {
+                                Text("删除选中项")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 6)
+                                    .background(selectedBooksForBatch.isEmpty ? Color.gray : Color.red)
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(selectedBooksForBatch.isEmpty)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .frame(width: 400)
+                        .background(Color(nsColor: .windowBackgroundColor).opacity(0.9))
+                        .background(.ultraThinMaterial)
+                        .clipShape(Capsule())
+                        .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
+                        .padding(.bottom, 30)
                     }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                } label: {
-                    Image(systemName: activeTab == "ALL" ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
-                        .foregroundColor(activeTab == "ALL" ? .primary : .accentColor)
+                    .transition(.move(edge: .bottom).combined(with: .opacity).animation(.appSnappy))
                 }
-                .menuIndicator(.hidden)
-                .help("分类筛选")
             }
         }
+        .onAppear {
+            // 强制先重刷数据，确保如果是从详情页删完回来的，这里能拿到最新结果
+            refreshGalleryData(animate: false)
+            
+            // 这里的 isEntranceAnimated 逻辑可以保留
+            if !isEntranceAnimated {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation(.appFluidSpring) {
+                        isEntranceAnimated = true
+                    }
+                }
+            }
+        }
+        .onChange(of: activeTab) { _, _ in refreshGalleryData(animate: true) }
+        .onChange(of: searchText) { _, _ in refreshGalleryData(animate: true) }
+        .onChange(of: sortType) { _, _ in refreshGalleryData(animate: true) }
+        // 2. 确保 onReceive 逻辑能够穿透缓存
+        .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
+            print("📡 画廊接收到更新通知，开始重刷数据...")
+            refreshGalleryData(animate: true)
+        }
     }
-    
-    // MARK: - 内部视图构建器
     
     @ViewBuilder
     private func gridView(containerWidth: CGFloat) -> some View {
         if displayBooks.isEmpty {
-            ContentUnavailableView {
-                Label(emptyStateTitle, systemImage: "books.vertical.fill")
-            } description: {
-                Text(emptyStateDescription)
-            }
-            .frame(maxWidth: .infinity, minHeight: 400)
-            .transition(.opacity)
+            ContentUnavailableView { Label("没有找到相关书籍", systemImage: "books.vertical.fill") } description: { Text(searchText.isEmpty ? "试试切换分类或点击添加书籍" : "尝试更换搜索关键词") }
+                .frame(maxWidth: .infinity, minHeight: 400)
         } else {
-            bookGrid(containerWidth: containerWidth)
+            let columns = [GridItem(.adaptive(minimum: currentScale.width, maximum: currentScale.width), spacing: currentScale.hSpacing)]
+            LazyVGrid(columns: columns, spacing: currentScale.vSpacing) {
+                ForEach(displayBooks) { book in
+                    AnimatedCard_Glide(
+                        book: book, activeTab: activeTab.rawValue,
+                        isBatchEditMode: isBatchEditMode, gridScale: currentScale,
+                        selectedBooksForBatch: $selectedBooksForBatch, selectedBook: $selectedBook
+                    )
+                    // ✨ 保留 transition，用于分类切换时单张卡片的动态入场
+                    .transition(.appCardGlide)
+                }
+            }
+            // 过滤、排序时的洗牌动画
+            .animation(.appFluidSpring, value: displayBooks)
+            .animation(.appFluidSpring, value: scaleIndex)
         }
     }
     
-    private var emptyStateTitle: String {
-        switch activeTab {
-        case "WANT": return "心愿单为空"
-        case "UNREAD": return "无待读计划"
-        case "FINISHED": return "暂无已读记录"
-        default: return "书架空空如也"
+    private func deleteSelectedBooks() {
+        for book in displayBooks where selectedBooksForBatch.contains(book.id) {
+            modelContext.delete(book)
         }
+        try? modelContext.save()
+        withAnimation(.appSnappy) { isBatchEditMode = false; selectedBooksForBatch.removeAll() }
+        refreshGalleryData(animate: true)
+        // ✨ 这里使用了全局强类型通知
+        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
     }
-    
-    private var emptyStateDescription: String {
-        switch activeTab {
-        case "WANT": return "遇到感兴趣的书？把它标记为“想读”吧。"
-        case "UNREAD": return "您目前没有正在阅读或计划阅读的书籍。"
-        case "FINISHED": return "还没有读完的书籍，继续努力哦！"
-        default: return "点击右上角的 \"+\" 按钮添加您的第一本书吧。"
-        }
-    }
-    
-    private func bookGrid(containerWidth: CGFloat) -> some View {
-        let columns = [GridItem(.adaptive(minimum: GalleryConfig.coverWidth, maximum: GalleryConfig.coverWidth + 20), spacing: GalleryConfig.horizontalSpacing)]
-        return LazyVGrid(columns: columns, spacing: GalleryConfig.verticalSpacing) {
-            ForEach(displayBooks, id: \.id) { book in buildCard(for: book) }
-        }
-    }
-    
-    private func buildCard(for book: Book) -> some View {
-        GalleryBookCardView(
-            book: book,
-            isFinishedTab: activeTab == "FINISHED",
-            namespace: namespace,
-            activeCoverID: activeCoverID,
-            selectedBook: selectedBook
-        )
-        .onTapGesture {
-            activeCoverID = "gallery-\(book.id ?? "")"
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { selectedBook = book }
-        }
-    }
-    
-    // MARK: - 逻辑处理
-    
-    /// 根据当前的分类标签 (`activeTab`) 重新计算并排序要展示的书籍列表。
-    ///
-    /// - 过滤逻辑：
-    ///   - "WANT": 仅展示标记为想读的书，按书名字典序。
-    ///   - "UNREAD": 展示待读和在读的书，按开始时间倒序。
-    ///   - "FINISHED": 仅展示已读完的书，按结束时间倒序。
-    ///   - "ALL": 展示全量数据，按书名字典序。
-    ///
-    /// - Parameter animate: 是否在刷新列表时附加 `.spring` 弹性动画。
-    private func updateDisplayBooks(animate: Bool = false) {
-        let updateAction = {
-            switch activeTab {
-            case "WANT":
-                displayBooks = books.filter { $0.isWantToRead }.sorted { ($0.title ?? "") < ($1.title ?? "") }
-            case "UNREAD":
-                displayBooks = books.filter { $0.status == .unread || $0.status == .reading }.sorted { ($0.startTime ?? Date.distantPast) > ($1.startTime ?? Date.distantPast) }
-            case "FINISHED":
-                displayBooks = books.filter { $0.status == .finished }.sorted { ($0.endTime ?? Date.distantPast) > ($1.endTime ?? Date.distantPast) }
-            default:
-                displayBooks = books.sorted { ($0.title ?? "") < ($1.title ?? "") }
+}
+
+extension ArchiveGalleryView {
+    private func refreshGalleryData(animate: Bool) {
+        Task { @MainActor in
+            let newStats = fetchInventoryStats()
+            let newBooks = fetchDisplayBooks()
+            
+            // 数据赋值逻辑
+            if animate && self.isEntranceAnimated {
+                // 如果已经完成首屏渲染，说明是在做过滤操作，使用流体动画更新数据
+                withAnimation(.appFluidSpring) {
+                    self.inventoryData = newStats
+                    self.displayBooks = newBooks
+                }
+            } else {
+                // 首屏渲染，无动画秒塞数据
+                self.inventoryData = newStats
+                self.displayBooks = newBooks
+            }
+            
+            // ✨ 终极时序：延长等待确保底层数据被完全排版后，再拉开帷幕，消除任何可能存在的残影！
+            if !self.isEntranceAnimated {
+                try? await Task.sleep(nanoseconds: 60_000_000)
+                withAnimation(.appFluidSpring) {
+                    self.isEntranceAnimated = true
+                }
             }
         }
-        if animate {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { updateAction() }
-        } else {
-            updateAction()
+    }
+    
+    @MainActor
+    private func fetchInventoryStats() -> (total: Int, points: [InventoryDataPoint]) {
+        let desc = FetchDescriptor<Book>(); let allBooks = (try? modelContext.fetch(desc)) ?? []
+        var finished = 0, reading = 0, want = 0, unread = 0, abandoned = 0
+        for b in allBooks {
+            switch b.status { case .finished: finished+=1; case .reading: reading+=1; case .wantToRead: want+=1; case .unread: unread+=1; case .abandoned: abandoned+=1 }
+        }
+        let totalCount = finished + reading + want + unread + abandoned
+        guard totalCount > 0 else { return (0, []) }
+        let rawStats: [(label: String, count: Int, color: Color)] = [("已读", finished, .indigo), ("在读", reading, .blue), ("未读", unread, .gray), ("想读", want, .orange), ("弃读", abandoned, .red)]
+        return (totalCount, rawStats.filter { $0.count > 0 }.map { stat in InventoryDataPoint(label: stat.label, count: stat.count, color: stat.color, percentage: Double(stat.count) / Double(totalCount)) })
+    }
+    
+    @MainActor
+    private func fetchDisplayBooks() -> [Book] {
+        let desc = FetchDescriptor<Book>(); var allBooks = (try? modelContext.fetch(desc)) ?? []
+        if let targetStatus = activeTab.status { allBooks = allBooks.filter { $0.status == targetStatus } }
+        
+        if !searchText.isEmpty {
+            let lower = searchText.lowercased()
+            allBooks = allBooks.filter { $0.title.lowercased().contains(lower) || $0.author.lowercased().contains(lower) || $0.tags.contains { $0.lowercased().contains(lower) } }
+        }
+        
+        switch sortType { case .newest: allBooks.sort(by: { $0.createdAt > $1.createdAt }); case .oldest: allBooks.sort(by: { $0.createdAt < $1.createdAt }); case .titleAsc: allBooks.sort(by: { $0.title < $1.title }) }
+        return allBooks
+    }
+}
+
+#Preview("全景画廊 (完整视图)") {
+    struct GalleryPreviewWrapper: View {
+        @State private var selectedBook: Book? = nil
+        @State private var activeTab: ArchiveFilterTab = .all
+        @State private var searchText: String = ""
+        @State private var sortType: GallerySortType = .newest
+        @State private var scaleIndex: Double = 2.0
+        @State private var isBatchEditMode: Bool = false
+        @State private var selectedBooksForBatch: Set<String> = []
+
+        var body: some View {
+            ArchiveGalleryView(
+                selectedBook: $selectedBook,
+                activeTab: $activeTab,
+                searchText: $searchText,
+                sortType: $sortType,
+                scaleIndex: $scaleIndex,
+                isBatchEditMode: $isBatchEditMode,
+                selectedBooksForBatch: $selectedBooksForBatch
+            )
+            .frame(width: 1000, height: 750)
         }
     }
+    return GalleryPreviewWrapper().modelContainer(PreviewData.shared)
 }
 #endif

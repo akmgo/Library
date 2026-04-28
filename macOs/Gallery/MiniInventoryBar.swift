@@ -1,76 +1,32 @@
 #if os(macOS)
-
 import SwiftUI
-import SwiftData
 
-// MARK: - 迷你库存堆叠条
+// MARK: - 迷你库存堆叠条 (展示型木偶组件)
 
-/// 用于画廊 Header 右侧展示当前全库书籍分布状况的精美微缩组件。
-///
-/// 它会在上方列出核心分类的数据标签，并在下方绘制一根高度仅为 6pt 的彩色断带条形图，
-/// 使得整个书库的完成度比例一目了然。
+/// 用于展示数据分布状况的精美微缩组件。
+/// 完全解耦：不依赖任何数据库模型，仅通过纯数据点驱动。
 struct MiniInventoryBar: View {
-    /// 触发重算的完整书库源数据
-    let books: [Book]
-    
-    /// 执行内部过滤的核心计算属性。
-    ///
-    /// 它通过 `for` 循环互斥地将所有书籍分类到已读、在读、未读和心愿四类中，
-    /// 并过滤掉数量为 0 的项目，最后组装出用于驱动 UI 的结构化元组。
-    ///
-    /// - Returns: 包含总数 (`total`) 与 分段统计清单 (`stats`) 的聚合对象。
-    private var inventoryData: (total: Int, stats: [(label: String, count: Int, color: Color)]) {
-        var finished = 0
-        var reading = 0
-        var want = 0
-        var unread = 0
-        
-        // 互斥排他逻辑
-        for book in books {
-            if book.status == .finished {
-                finished += 1
-            } else if book.status == .reading {
-                reading += 1
-            } else if book.isWantToRead {
-                want += 1
-            } else {
-                unread += 1
-            }
-        }
-        
-        // 过滤掉数量为 0 的项目
-        let filteredStats: [(label: String, count: Int, color: Color)] = [
-            ("已读", finished, .indigo),
-            ("在读", reading, .blue),
-            ("未读", unread, .gray),
-            ("心愿", want, .orange)
-        ].filter { $0.count > 0 }
-        
-        let totalCount = filteredStats.reduce(0) { $0 + $1.count }
-        
-        return (totalCount, filteredStats)
-    }
+    /// 顶部显示的书库总数
+    let totalCount: Int
+    /// 已经计算好颜色、数量和百分比的纯数据点
+    let dataPoints: [InventoryDataPoint]
     
     var body: some View {
-        // 在 body 顶部安全地提取算好的数据
-        let total = inventoryData.total
-        let stats = inventoryData.stats
-        
-        VStack(alignment: .trailing, spacing: 8) { // 整体靠右对齐
-            // 上方：极简的标签与数字
+        VStack(alignment: .trailing, spacing: 8) {
+            // ================= 1. 上方标签与数字 =================
             HStack(spacing: 12) {
-                if total == 0 {
+                if totalCount == 0 {
                     Text("书库为空")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.secondary)
                 } else {
-                    ForEach(stats, id: \.label) { stat in
+                    ForEach(dataPoints) { point in
                         HStack(spacing: 4) {
-                            Circle().fill(stat.color).frame(width: 6, height: 6)
-                            Text("\(stat.count)")
+                            Circle().fill(point.color).frame(width: 6, height: 6)
+                            Text("\(point.count)")
                                 .font(.system(size: 12, weight: .bold, design: .rounded))
                                 .foregroundColor(.primary)
-                            Text(stat.label)
+                            Text(point.label)
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
@@ -78,27 +34,48 @@ struct MiniInventoryBar: View {
                 }
             }
             
-            // 下方：堆叠条形图
+            // ================= 2. 下方堆叠条形图 =================
             GeometryReader { geo in
-                HStack(spacing: 2) { // 间距 2pt，极其锋利
-                    if total == 0 {
+                // 缝隙宽度设定为 2pt
+                let spacing: CGFloat = 2
+                
+                // ✨ 严谨的数学几何计算：算出共有几个间隙，并扣除它们，得到纯粹的"净可用宽度"
+                let gapsCount = CGFloat(max(0, dataPoints.count - 1))
+                let availableWidth = max(0, geo.size.width - (spacing * gapsCount))
+                
+                HStack(spacing: spacing) {
+                    if totalCount == 0 {
                         Rectangle()
                             .fill(Color.secondary.opacity(0.1))
                             .cornerRadius(3)
                     } else {
-                        ForEach(stats, id: \.label) { stat in
-                            // 根据准确的比例计算每一截的宽度
-                            let width = max(0, (CGFloat(stat.count) / CGFloat(total)) * geo.size.width - 2)
+                        ForEach(dataPoints) { point in
                             Rectangle()
-                                .fill(stat.color.opacity(0.8))
-                                .frame(width: width)
+                                .fill(point.color.opacity(0.8))
+                                // 使用净宽度乘以绝对百分比，严丝合缝，绝不溢出！
+                                .frame(width: max(0, availableWidth * point.percentage))
                                 .cornerRadius(3)
                         }
                     }
                 }
             }
-            .frame(height: 6) // 高度只有 6pt，极度克制
+            .frame(height: 6)
         }
     }
+}
+
+// MARK: - 👁️ 预览
+#Preview("迷你库存条 (组件)") {
+    // 在预览里直接手写一份干净的假数据塞进去，连 PreviewData.shared 都不需要了！
+    let mockData = [
+        InventoryDataPoint(label: "已读", count: 42, color: .indigo, percentage: 0.42),
+        InventoryDataPoint(label: "在读", count: 18, color: .blue, percentage: 0.18),
+        InventoryDataPoint(label: "想读", count: 30, color: .orange, percentage: 0.30),
+        InventoryDataPoint(label: "未读", count: 10, color: .gray, percentage: 0.10)
+    ]
+    
+    MiniInventoryBar(totalCount: 100, dataPoints: mockData)
+        .frame(width: 320)
+        .padding(40)
 }
 #endif

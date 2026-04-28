@@ -27,7 +27,7 @@ struct AmbientGlowBackground: View {
             // 2. 封面全屏极度模糊放大
             if let book = book {
                 GeometryReader { geo in
-                    LocalCoverView(coverData: book.coverData, fallbackTitle: "")
+                    LocalCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: "")
                         .scaledToFill()
                         // 强制宽高匹配当前屏幕
                         .frame(width: geo.size.width, height: geo.size.height)

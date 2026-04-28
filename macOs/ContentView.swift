@@ -1,137 +1,216 @@
 #if os(macOS)
-internal import Combine
 import AppKit
 import SwiftData
 import SwiftUI
 
 // MARK: - ✨ 导航与模块枚举
-
-/// 定义 macOS 侧边栏所有顶级导航模块的严格枚举集合。
-///
-/// 作为整个应用的“骨架”，它实现了 `Identifiable` 协议，
-/// 直接用于驱动 SwiftUI 原生 `List(selection:)` 以及右侧内容区的路由切换。
 enum NavigationModule: String, CaseIterable, Identifiable {
     case home = "阅读主页"
+    case discovery = "云海拾贝"
     case gallery = "全景画廊"
-    case roaming3d = "全息书境"
     case inspiration = "灵感碎片"
+    case verses = "墨香画卷"
     case yearly = "年度轨迹"
     case monthly = "月度记录"
 
-    /// 满足 Identifiable 协议，使用其自身的字符串原始值作为唯一 ID。
     var id: String { rawValue }
 
-    /// 为侧边栏列表提供标准化的 SF Symbols 系统图标。
     var systemImage: String {
         switch self {
         case .home: return "house.fill"
+        case .discovery: return "sparkles.tv"
         case .gallery: return "photo.on.rectangle.angled"
-        case .roaming3d: return "cube.transparent.fill"
         case .inspiration: return "quote.bubble.fill"
+        case .verses: return "paintbrush.pointed.fill"
         case .yearly: return "calendar.circle"
         case .monthly: return "chart.bar.doc.horizontal"
         }
     }
 }
 
-// MARK: - ✨ 主视图入口
+// MARK: - 🌌 专属流体底层画幕
+struct AmbientFluidCanvas: View {
+    @State private var phase: Float = 0.0
+    @Environment(\.colorScheme) var colorScheme
 
-/// macOS 版本的应用底层核心容器。
-///
-/// **架构与职责：**
-/// 这是整个 macOS App 启动后看到的第一个视图（Root View）。它的核心职责包括：
-/// 1. **顶层骨架**：利用 `NavigationSplitView` 构建经典的 Mac 应用（左侧边栏 + 右侧主内容区）的两栏布局。
-/// 2. **全局路由流转**：通过监听 `selectedModule` 的状态切换，将渲染流转发至对应的子系统视图。
-/// 3. **统一 Z 轴堆栈管理**：在整个 App 层级之上，管理了书籍详情页 (`BookDetailView`) 的覆盖出场，以及全局庆祝撒花 (`ConfettiView`) 的展示层叠关系。
-/// 4. **外观控制注入**：拦截系统层面的 `NSApp.appearance`，在此处完成基于用户设置的秒级“深/浅/跟随系统”换肤魔法。
-struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.scenePhase) private var scenePhase
-
-    /// 拉取全局配置单例（按更新时间降序取最新），用于获取主题颜色等跨模块偏好。
-    @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
-
-    @ObservedObject private var syncEngine = SyncEngine.shared
-    @Query(filter: #Predicate<Book> { $0.status?.rawValue == "READING" }) var readingBooks: [Book]
-    
-    // UI 统一排版参数 (作为只读变量提供给全局共享)
-    let pagePadding: CGFloat = 30
-    let widgetSpacing: CGFloat = 40
-    let sectionSpacing: CGFloat = 60
-
-    // MARK: 核心流转与路由状态
-    
-    /// 用于处理从各个模块封面点击放大到详情页的共享动画命名空间。
-    @Namespace private var namespace
-    /// 被所有子模块共享。一旦被赋值为特定 `Book`，则触发全局弹层覆盖进入详情页；置为 `nil` 则退回主界面。
-    @State private var selectedBook: Book? = nil
-    /// 辅助 `selectedBook`，记录是由哪一个卡片 ID 触发了详情展开，确保动画回弹时不重影。
-    @State private var activeCoverID: String = ""
-    
-    /// 侧边栏当前高亮选中的子模块，默认落地在首页。
-    @State private var selectedModule: NavigationModule? = .home
-    /// 强制开启双栏模式。
-    @State private var columnVisibility = NavigationSplitViewVisibility.all
-
-    /// 管理右上方“+”号唤起的图书录入表单面板。
-    @State private var showAddModal = false
-
-    /// 💡 编译器极速推导的核心：将 body 拆分为极简的主干
     var body: some View {
         ZStack {
+            Color(nsColor: .windowBackgroundColor).ignoresSafeArea()
+            let baseOp = colorScheme == .dark ? 0.12 : 0.06
+
+            MeshGradient(
+                width: 3, height: 3,
+                points: [
+                    .init(0, 0), .init(0.5, 0), .init(1, 0),
+                    .init(0, 0.5), .init(0.5 + 0.06 * sin(phase), 0.5 + 0.06 * cos(phase)), .init(1, 0.5),
+                    .init(0, 1), .init(0.5, 1), .init(1, 1)
+                ],
+                colors: [
+                    Color.indigo.opacity(baseOp * 1.5), Color.purple.opacity(baseOp * 0.8), Color.teal.opacity(baseOp * 1.2),
+                    Color.blue.opacity(baseOp * 0.9), Color.indigo.opacity(baseOp * 1.1), Color.purple.opacity(baseOp * 0.9),
+                    Color.teal.opacity(baseOp * 1.2), Color.blue.opacity(baseOp * 1.3), Color.indigo.opacity(baseOp * 1.0)
+                ]
+            )
+            .ignoresSafeArea()
+        }
+        .onAppear {
+            withAnimation(.linear(duration: 15).repeatForever(autoreverses: true)) {
+                phase = .pi * 2
+            }
+        }
+    }
+}
+
+// MARK: - ✨ 主视图入口
+struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+
+    // ✨ 核心修复：使用 AppStorage 替代数据库查询，性能更优
+    @AppStorage("appTheme", store: SharedDatabase.shared.sharedDefaults)
+    private var appTheme: String = "system"
+    
+    @AppStorage("defaultStartupTab", store: SharedDatabase.shared.sharedDefaults)
+    private var defaultStartupTab: String = "home"
+
+    @State private var selectedBook: Book? = nil
+    @State private var selectedModule: NavigationModule? = nil // 初始设为 nil，等待 onAppear 赋值
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
+    
+    @State private var showAddModal = false
+    @State private var showAddSnippetModal = false
+
+    @State private var globalSearchText: String = ""
+    @State private var isSearchActive: Bool = false
+
+    @State private var galleryActiveTab: ArchiveFilterTab = .all
+    @State private var gallerySortType: GallerySortType = .newest
+    @State private var galleryScaleIndex: Double = 2.0
+    @State private var galleryIsBatchEditMode: Bool = false
+    @State private var gallerySelectedBooks: Set<String> = []
+
+    @State private var inspirationContentType: InspirationContentType = .all
+    @State private var inspirationSortType: GallerySortType = .newest
+    @State private var inspirationIsRandomRoam: Bool = true
+    @State private var inspirationShuffleTrigger: Int = 0
+    @State private var inspirationIsBatchEditMode: Bool = false
+    @State private var inspirationSelectedSnippets: Set<String> = []
+    
+    @State private var versesActiveCategory: VersesFilterTab = .all
+    @State private var versesSortType: GallerySortType = .newest
+    @State private var versesIsCarouselMode: Bool = false
+    @State private var versesIsBatchEditMode: Bool = false
+    @State private var versesSelectedSnippets: Set<String> = []
+
+    @State private var yearlySelectedYear: Int = Calendar.current.component(.year, from: Date())
+    @State private var yearlyAvailableYears: [Int] = [Calendar.current.component(.year, from: Date())]
+
+    @State private var detailShowEditSheet = false
+    @State private var detailShowDeleteAlert = false
+
+    @State private var showCloudSpotlight = false
+
+    var body: some View {
+        ZStack {
+            AmbientFluidCanvas().zIndex(0)
+
             NavigationSplitView(columnVisibility: $columnVisibility) {
                 sidebarContent
             } detail: {
                 detailContent
             }
+            .zIndex(1)
             .background(WindowTransparentEffect())
-            .sheet(isPresented: $showAddModal) { BookEditorSheet(isPresented: $showAddModal, bookToEdit: nil) }
-            // 模块切换时，安全清理未关闭的书籍详情页
-            .onChange(of: selectedModule) { _, _ in withAnimation { selectedBook = nil } }
-            // 监听外设层通过 Notification 发出的建书指令
-            .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in showAddModal = true }
-            
-            // 全局常驻隐形撒花视图池
-            ConfettiView()
-                .ignoresSafeArea() // 确保粒子穿透顶栏和侧边栏
-        }
-        // ✨ 核心注入：在生命周期起点强制渲染深浅色并校验 CloudKit 冗余配置
-        .onAppear {
-            applyTheme(configs.first?.appTheme ?? "system")
-            pruneDuplicateConfigs(context: modelContext)
+            .background(
+                Button("") {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showCloudSpotlight.toggle()
+                    }
+                }
+                .keyboardShortcut("k", modifiers: .command)
+                .opacity(0)
+            )
+            .overlay {
+                if showCloudSpotlight { CloudSearchSpotlightView(isPresented: $showCloudSpotlight) }
+            }
+
+            ConfettiView().ignoresSafeArea().allowsHitTesting(false).zIndex(2)
         }
         .ignoresSafeArea(edges: .top)
+        .sheet(isPresented: $showAddModal) { BookEditorSheet(isPresented: $showAddModal, bookToEdit: nil) }
+        .sheet(isPresented: $showAddSnippetModal) { SnippetEditorSheet(isPresented: $showAddSnippetModal) }
+        .onChange(of: selectedModule) { _, _ in
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { selectedBook = nil }
+            globalSearchText = ""
+            isSearchActive = false
+            galleryIsBatchEditMode = false
+            inspirationIsBatchEditMode = false
+            versesIsBatchEditMode = false
+            versesSelectedSnippets.removeAll()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
+            showAddModal = true
+        }
+        // ✨ 挂载初始化逻辑
+        .onAppear {
+            applyTheme(appTheme)
+            setupInitialModule()
+        }
+        // ✨ 监听主题切换
+        .onChange(of: appTheme) { _, newTheme in
+            applyTheme(newTheme)
+        }
+        .background(
+            Button("") {
+                if selectedModule == .verses {
+                    showAddSnippetModal = true
+                } else if [.home, .gallery, .inspiration].contains(selectedModule) {
+                    showAddModal = true
+                }
+            }
+            .keyboardShortcut("n", modifiers: .command)
+            .opacity(0)
+        )
     }
     
-    // MARK: - 原生级外观引擎
-    
-    /// 瞬间接管并覆写 macOS 顶层系统的主题外观环境。
-    ///
-    /// - Parameter theme: 用户设置的字符串 ("light", "dark", "system")。
-    /// - 注意：该调用包含对 `NSApp` 的修改，必须推送到 `main` 异步队列防止并发线程阻塞。
+    // MARK: - 辅助逻辑
+
+    /// 解析用户设置，设定 App 启动时的默认板块
+    private func setupInitialModule() {
+        switch defaultStartupTab {
+        case "home": selectedModule = .home
+        case "gallery": selectedModule = .gallery
+        case "monthly": selectedModule = .monthly
+        case "yearly": selectedModule = .yearly
+        case "inspiration": selectedModule = .inspiration
+        case "verses": selectedModule = .verses
+        default: selectedModule = .home
+        }
+    }
+
     private func applyTheme(_ theme: String) {
         DispatchQueue.main.async {
-            switch theme {
-            case "light": NSApp.appearance = NSAppearance(named: .aqua)
-            case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
-            default: NSApp.appearance = nil // 瞬间把控制权还给 macOS 系统，实现自适应
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.3
+                switch theme {
+                case "light": NSApp.appearance = NSAppearance(named: .aqua)
+                case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+                default: NSApp.appearance = nil
+                }
             }
         }
     }
-    
-    // MARK: - 🧩 子视图碎片化：侧边栏
 
-    /// 左侧固定的半透明导航边栏。
     private var sidebarContent: some View {
         List(selection: $selectedModule) {
             Section(header: Text("探索").font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)) {
                 NavigationLink(value: NavigationModule.home) { Label(NavigationModule.home.rawValue, systemImage: NavigationModule.home.systemImage) }
+                NavigationLink(value: NavigationModule.discovery) { Label(NavigationModule.discovery.rawValue, systemImage: NavigationModule.discovery.systemImage) }
                 NavigationLink(value: NavigationModule.gallery) { Label(NavigationModule.gallery.rawValue, systemImage: NavigationModule.gallery.systemImage) }
-                NavigationLink(value: NavigationModule.roaming3d) { Label(NavigationModule.roaming3d.rawValue, systemImage: NavigationModule.roaming3d.systemImage) }
                 NavigationLink(value: NavigationModule.inspiration) { Label(NavigationModule.inspiration.rawValue, systemImage: NavigationModule.inspiration.systemImage) }
             }
 
             Section(header: Text("归档").font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)) {
+                NavigationLink(value: NavigationModule.verses) { Label(NavigationModule.verses.rawValue, systemImage: NavigationModule.verses.systemImage) }
                 NavigationLink(value: NavigationModule.yearly) { Label(NavigationModule.yearly.rawValue, systemImage: NavigationModule.yearly.systemImage) }
                 NavigationLink(value: NavigationModule.monthly) { Label(NavigationModule.monthly.rawValue, systemImage: NavigationModule.monthly.systemImage) }
             }
@@ -140,66 +219,69 @@ struct ContentView: View {
         .font(.system(size: 15, weight: .medium))
         .environment(\.defaultMinListRowHeight, 38)
         .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 260)
-        // 侧边栏底部停靠：今日阅读目标完成度徽章
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
                 Divider()
                 HStack(spacing: 12) {
-                    DailyProgressRingView()
-                        .frame(width: 18, height: 18)
-
-                    Text("今日阅读目标")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-
+                    DailyProgressRingView().frame(width: 18, height: 18)
+                    Text("今日阅读目标").font(.system(size: 12, weight: .medium)).foregroundColor(.secondary)
                     Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color(NSColor.windowBackgroundColor).opacity(0.5))
-                .background(.ultraThinMaterial)
+                }.padding(.horizontal, 16).padding(.vertical, 12)
             }
         }
     }
 
-    // MARK: - 🧩 子视图碎片化：主内容区
-
-    /// 管理基础模块与详情页浮层关系的内容核心容器。
     private var detailContent: some View {
         ZStack(alignment: .top) {
-            // 底层路由墙，执行平滑的淡入淡出过场动画
             mainModuleRouter
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .animation(.easeInOut(duration: 0.3), value: selectedModule)
+                .transition(.opacity.animation(.appSlowFade))
                 .zIndex(0)
 
-            // 若命中选书状态，则渲染并从右侧推入沉浸式的详情页面
             if let book = selectedBook {
-                BookDetailView(book: book, namespace: namespace, activeCoverID: $activeCoverID, selectedBook: $selectedBook)
-                    .id(book.id)
-                    .zIndex(1)
-                    .transition(.move(edge: .trailing))
+                BookDetailView(
+                    book: book,
+                    selectedBook: $selectedBook,
+                    showEditSheet: $detailShowEditSheet,
+                    showDeleteAlert: $detailShowDeleteAlert
+                )
+                .id(book.id)
+                .zIndex(1)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
         .toolbar { globalToolbar }
+        .animation(.appFluidSpring, value: selectedBook)
     }
 
-    // MARK: - 🧩 子视图碎片化：模块路由
-
-    /// 一个纯净的 `@ViewBuilder` 交换机，依据当前的 `selectedModule` 下发对应的视图组件。
     @ViewBuilder
     private var mainModuleRouter: some View {
         switch selectedModule {
         case .home:
-            FluidLibraryHomeView(namespace: namespace, selectedBook: $selectedBook, activeCoverID: $activeCoverID)
+            FluidLibraryHomeView(selectedBook: $selectedBook)
+        case .discovery:
+            DiscoveryView()
         case .gallery:
-            ArchiveGalleryView(namespace: namespace, selectedBook: $selectedBook, activeCoverID: $activeCoverID)
-        case .roaming3d:
-            CarouselWidget(namespace: namespace, selectedBook: $selectedBook, activeCoverID: $activeCoverID)
+            ArchiveGalleryView(
+                selectedBook: $selectedBook, activeTab: $galleryActiveTab, searchText: $globalSearchText, sortType: $gallerySortType,
+                scaleIndex: $galleryScaleIndex, isBatchEditMode: $galleryIsBatchEditMode, selectedBooksForBatch: $gallerySelectedBooks
+            )
         case .inspiration:
-            InspirationWallView()
+            InspirationWallView(
+                selectedBook: $selectedBook, contentType: $inspirationContentType, sortType: $inspirationSortType, isRandomRoam: $inspirationIsRandomRoam,
+                searchText: $globalSearchText, shuffleTrigger: $inspirationShuffleTrigger, isBatchEditMode: $inspirationIsBatchEditMode, selectedSnippetsForBatch: $inspirationSelectedSnippets
+            )
+        case .verses:
+            InkGalleryView(
+                activeCategory: $versesActiveCategory,
+                searchText: $globalSearchText,
+                sortType: $versesSortType,
+                isCarouselMode: $versesIsCarouselMode,
+                isBatchEditMode: $versesIsBatchEditMode,
+                selectedSnippetsForBatch: $versesSelectedSnippets
+            )
         case .yearly:
-            YearlyTimelineView(namespace: namespace, selectedBook: $selectedBook, activeCoverID: $activeCoverID)
+            YearlyTimelineView(selectedBook: $selectedBook, selectedYear: $yearlySelectedYear, availableYears: $yearlyAvailableYears)
         case .monthly:
             MonthlyRecordView()
         case .none:
@@ -207,51 +289,90 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - 🧩 子视图碎片化：全局工具栏
-
-    /// macOS 原生顶部 Toolbar 的按钮组合装配中心。
-    ///
-    /// 该构建器具备上下文感知能力：
-    /// - 若处于详情页，会渲染左上角的"返回"按钮。
-    /// - 若处于 `home` 并未进入详情页，会提供右上角的"+"号按钮，以支持图书手动录入操作。
+    // MARK: - 🧩 全局统一静态工具栏
     @ToolbarContentBuilder
     private var globalToolbar: some ToolbarContent {
-        ToolbarItem(placement: .navigation) {
-            if selectedBook != nil {
-                Button(action: { withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { selectedBook = nil } }) {
-                    Image(systemName: "chevron.left")
-                    Text("返回")
+        if selectedBook != nil {
+            ToolbarItem(placement: .navigation) {
+                GlobalBackButton { withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { selectedBook = nil } }
+            }
+            ToolbarItem { Spacer() }
+            ToolbarItem {
+                ControlGroup {
+                    Button(action: { withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { detailShowEditSheet = true } }) { Image(systemName: "square.and.pencil").font(.system(size: 15)) }.help("编辑")
+                    Button(action: { detailShowDeleteAlert = true }) { Image(systemName: "trash").font(.system(size: 15)) }.help("删除")
                 }
             }
-        }
+        } else {
+            ToolbarItem { Spacer() }
 
-        // 这个隐形的弹簧会把左侧和右侧的组件死死顶到两边！
-        ToolbarItem(placement: .principal) {
-            Spacer()
-        }
+            // 各模块专属菜单
+            if selectedModule == .gallery {
+                ToolbarItem { GridScaleMenuButton(scaleIndex: $galleryScaleIndex) }
+            } else if selectedModule == .inspiration {
+                ToolbarItem { RoamModeMenuButton(isRandom: $inspirationIsRandomRoam) { inspirationShuffleTrigger += 1 } }
+            } else if selectedModule == .yearly {
+                ToolbarItem { YearSelectorMenuButton(selectedYear: $yearlySelectedYear, availableYears: yearlyAvailableYears, onSelect: { year in yearlySelectedYear = year }) }
+            }
 
-        if selectedModule == .home && selectedBook == nil {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { showAddModal = true }) {
-                    Image(systemName: "plus")
+            // 过滤与批处理
+            if selectedModule == .gallery {
+                ToolbarItem {
+                    ControlGroup {
+                        FilterMenuButton(selection: $galleryActiveTab, options: ArchiveFilterTab.allCases, activeIcon: "line.3.horizontal.decrease.circle.fill", inactiveIcon: "line.3.horizontal.decrease", isFiltered: galleryActiveTab != .all)
+                        BatchEditToggleButton(isEditing: $galleryIsBatchEditMode) { withAnimation(.appSnappy) { galleryIsBatchEditMode.toggle(); gallerySelectedBooks.removeAll() } }
+                        SortMenuButton(selection: $gallerySortType, options: GallerySortType.allCases)
+                    }
                 }
-                .help("新建图书")
+            } else if selectedModule == .inspiration {
+                ToolbarItem {
+                    ControlGroup {
+                        FilterMenuButton(selection: $inspirationContentType, options: InspirationContentType.allCases, activeIcon: "line.3.horizontal.decrease.circle.fill", inactiveIcon: "line.3.horizontal.decrease", isFiltered: inspirationContentType != .all)
+                        BatchEditToggleButton(isEditing: $inspirationIsBatchEditMode) { withAnimation(.appSnappy) { inspirationIsBatchEditMode.toggle(); inspirationSelectedSnippets.removeAll() } }
+                        SortMenuButton(selection: $inspirationSortType, options: GallerySortType.allCases)
+                    }
+                }
+            } else if selectedModule == .verses {
+                ToolbarItem {
+                    ControlGroup {
+                        FilterMenuButton(selection: $versesActiveCategory, options: VersesFilterTab.allCases, activeIcon: "line.3.horizontal.decrease.circle.fill", inactiveIcon: "line.3.horizontal.decrease", isFiltered: versesActiveCategory != .all)
+                        DisplayModeToggleButton(isCarousel: $versesIsCarouselMode)
+                        BatchEditToggleButton(isEditing: $versesIsBatchEditMode) { withAnimation(.appSnappy) { versesIsBatchEditMode.toggle(); versesSelectedSnippets.removeAll() } }
+                        SortMenuButton(selection: $versesSortType, options: GallerySortType.allCases)
+                    }
+                }
+            }
+
+            // 新增按钮
+            if [.home, .gallery, .inspiration, .verses].contains(selectedModule) {
+                ToolbarItem {
+                    ControlGroup {
+                        Button(action: {
+                            if selectedModule == .verses { showAddSnippetModal = true } else { NotificationCenter.default.post(name: .showAddBookModal, object: nil) }
+                        }) { Image(systemName: "plus").font(.system(size: 16)) }.help(selectedModule == .verses ? "新增笔墨" : "添加书籍")
+                    }
+                }
+            }
+
+            // 激活全局搜索栏
+            if [.gallery, .inspiration, .verses].contains(selectedModule) {
+                ToolbarItem {
+                    ControlGroup {
+                        ExpandableSearchItem(searchText: $globalSearchText, isActive: $isSearchActive)
+                    }
+                }
             }
         }
     }
 }
 
-// MARK: - macOS 底层窗口透明特效
-
-/// 提供 macOS 顶栏透明化效果的 `NSViewRepresentable` 桥接组件。
-///
-/// 它可以深入系统渲染层，获取宿主 `window`，并将其样式设置为 `.fullSizeContentView`
-/// 且 `titlebarAppearsTransparent = true`。这是让整个 App 界面完全通透，背景可以深入侵入顶栏区域的基础魔法。
 struct WindowTransparentEffect: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
         DispatchQueue.main.async {
             if let window = view.window {
+                window.backgroundColor = .clear
+                window.isOpaque = false
                 window.titlebarAppearsTransparent = true
                 window.styleMask.insert(.fullSizeContentView)
             }

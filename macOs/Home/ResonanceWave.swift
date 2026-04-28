@@ -1,6 +1,5 @@
 #if os(macOS)
 import SwiftUI
-import SwiftData
 internal import Combine
 
 // MARK: - 🌊 思想共鸣跑马灯
@@ -8,31 +7,83 @@ internal import Combine
 /// 在界面底部水平排列的、呈现单行极简诗意摘录的跑马灯组件。
 /// 内部包含一个 `Timer.publish`，每隔 20 秒会自动触发轮播动画。
 struct FluidResonanceWaveChart: View {
-    let allExcerpts: [Excerpt]
+    // 1. 接收纯数据数组，不再认识 SwiftData 的 Excerpt
+    let excerpts: [ResonanceDataPoint]
+    
     @State private var curIdx: Int = 0
     let timer = Timer.publish(every: 20, on: .main, in: .common).autoconnect()
     
-    var excerpt: Excerpt {
-        if allExcerpts.isEmpty { return .init(content: "思想的留白，去阅读中遇见自己。") }
-        if allExcerpts.indices.contains(curIdx) { return allExcerpts[curIdx] } else { return allExcerpts.first! }
+    // 2. 安全的计算属性，返回纯 Struct
+    var currentExcerpt: ResonanceDataPoint {
+        if excerpts.isEmpty {
+            return ResonanceDataPoint(content: "思想的留白，去阅读中遇见自己。", source: "系统寄语")
+        }
+        if excerpts.indices.contains(curIdx) {
+            return excerpts[curIdx]
+        } else {
+            return excerpts.first!
+        }
     }
     
     var body: some View {
-        GroupBox {
+        // ✨ 核心重构：抛弃 GroupBox，换上原生的液态玻璃舱
+        VStack(alignment: .leading, spacing: 16) {
+            // 头部 Label
+            HStack {
+                Text("思想共鸣")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Image(systemName: "quote.bubble.fill")
+                    .foregroundColor(.indigo)
+            }
+            
+            // 内容区
             VStack(alignment: .leading, spacing: 16) {
+                
                 Spacer(minLength: 0)
-                Text(excerpt.content ?? "").font(.system(size: 16, weight: .medium, design: .serif)).lineSpacing(10).foregroundColor(.primary.opacity(0.85)).lineLimit(8).id(curIdx).transition(.opacity.combined(with: .blurReplace))
+                
+                Text(currentExcerpt.content)
+                    .font(.system(size: 16, weight: .medium, design: .serif))
+                    .lineSpacing(10)
+                    .foregroundColor(.primary.opacity(0.85))
+                    .lineLimit(8)
+                    // 核心动画锚点
+                    .id(curIdx)
+                    .transition(.opacity.combined(with: .blurReplace))
+                
                 Spacer(minLength: 0)
-                HStack { Spacer(); Text("—— \(excerpt.book?.title ?? "札记")").font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundColor(.secondary) }
+                
+                HStack {
+                    Spacer()
+                    Text("—— \(currentExcerpt.source)")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundColor(.secondary)
+                }
             }
             .frame(maxHeight: .infinity)
-        } label: {
-            HStack { Text("思想共鸣").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundColor(.primary); Spacer(); Image(systemName: "quote.bubble.fill").foregroundColor(.indigo) }
         }
-        .groupBoxStyle(NativeWidgetGroupBoxStyle())
+        .padding(24) // 撑开内部空间
+        .glassEffect(in: .rect(cornerRadius: 24.0)) // ✨ 注入极致通透的液态玻璃外壳
         .onHover { h in if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
-        .onTapGesture { withAnimation(.spring()) { if !allExcerpts.isEmpty { curIdx = (curIdx + 1) % allExcerpts.count } } }
-        .onReceive(timer) { _ in guard !allExcerpts.isEmpty else { return }; withAnimation(.spring()) { curIdx = (curIdx + 1) % allExcerpts.count } }
+        .onTapGesture { switchExcerpt() }
+        .onReceive(timer) { _ in switchExcerpt() }
+    }
+    
+    // 3. 将轮播逻辑提取出来，保持代码整洁
+    private func switchExcerpt() {
+        guard !excerpts.isEmpty else { return }
+        withAnimation(.spring(duration: 0.8)) {
+            curIdx = (curIdx + 1) % excerpts.count
+        }
     }
 }
 #endif
+
+#Preview {
+    FluidResonanceWaveChart(excerpts: PreviewData.mockResonanceData)
+        .padding()
+        .frame(width: 400, height: 300)
+}
