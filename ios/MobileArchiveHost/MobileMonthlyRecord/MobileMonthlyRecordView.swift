@@ -1,216 +1,216 @@
 #if os(iOS)
-import SwiftData
 import SwiftUI
+import SwiftData
+import Charts
 
-// MARK: - 数据模型与滚动监听器
+// MARK: - 🗓️ 核心月度记录视图 (原生秒开版)
 
-struct MonthSection: Identifiable {
-    let id: String; let year: Int; let month: Int; let days: [Date?]
-}
-
-struct ScrollBoundsKey: PreferenceKey {
-    static var defaultValue: [String: CGRect] = [:]
-    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
-        value.merge(nextValue(), uniquingKeysWith: { $1 })
-    }
-}
-
-// MARK: - 🗓️ 月度记录主视图
-
-/// iOS 端的按月打卡热力图及记录大盘。
-///
-/// **交互与架构：**
-/// 该视图构建了一个前后跨越 25 个月的“无缝无限滚动视图”。
-/// 顶部悬浮的玻璃 Header 会通过底层的 `ScrollBoundsKey` 实时嗅探当前位于屏幕中央的月份，
-/// 从而动态刷新顶部的年月标题以及月度趋势曲线图。
 struct MobileMonthlyRecordView: View {
-    let initialMonthTitle: String
-    @Query var allRecords: [ReadingRecord]
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     
-    @State private var currentDate: Date
-    @State private var slideDirection: AnyTransition = .opacity
-    let daysOfWeek = ["一", "二", "三", "四", "五", "六", "日"]
-    
-    @State private var cachedRecordsDict: [Date: ReadingRecord] = [:]
+    // 缓存数据源
+    @State private var cachedRecordsDict: [Date: TimeInterval] = [:]
     @State private var cachedSections: [MonthSection] = []
     
-    @State private var visibleYear: Int = Calendar.current.component(.year, from: Date())
-    @State private var visibleMonth: Int = Calendar.current.component(.month, from: Date())
-    
-    init(monthTitle: String, records: [ReadingRecord] = []) {
-        self.initialMonthTitle = monthTitle
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy年M月"
-        let date = formatter.date(from: monthTitle) ?? Date()
-        _currentDate = State(initialValue: date)
-    }
-    
-    private var currentMonthRecords: [ReadingRecord] {
-        let cal = Calendar.current
-        return allRecords.filter { cal.isDate($0.date ?? Date.distantPast, equalTo: currentDate, toGranularity: .month) }
-    }
-    
-    private var recordsDictionary: [String: ReadingRecord] {
-        let formatter = DateFormatter(); formatter.dateFormat = "yyyy-MM-dd"
-        var dict = [String: ReadingRecord]()
-        for record in currentMonthRecords {
-            let key = formatter.string(from: record.date ?? Date.distantPast)
-            if dict[key] == nil { dict[key] = record }
-        }
-        return dict
-    }
-    
-    var totalDuration: TimeInterval { currentMonthRecords.reduce(0) { $0 + ($1.readingDuration) } }
-    var daysCount: Int { recordsDictionary.keys.count }
+    let daysOfWeek = ["一", "二", "三", "四", "五", "六", "日"]
     
     var body: some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 7)
-        let daysInMonth = extractDaysInMonth(for: currentDate)
-        let dateFormatter: DateFormatter = { let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"; return df }()
-        
-        return ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 24) {
-                // ================= 1. 顶部控制台 =================
-                HStack(alignment: .center) {
-                    Text(formattedYearMonth(currentDate))
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundColor(.primary)
-                        .id("title-\(formattedYearMonth(currentDate))")
-                        .transition(slideDirection)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 12) {
-                        monthButton(icon: "chevron.left") { changeMonth(by: -1) }
-                        monthButton(icon: "chevron.right") { changeMonth(by: 1) }
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVStack(spacing: 32, pinnedViews: [.sectionHeaders]) {
+                    ForEach(cachedSections) { section in
+                        Section(header: monthSectionHeader(section)) {
+                            monthGrid(section: section)
+                        }
+                        .id(section.id)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                
-                // ================= 2. 月度高定统计面板 =================
-                HStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("专注时长").font(.system(size: 13, weight: .bold)).foregroundColor(.secondary)
-                        let totalMinutes = Int(totalDuration / 60)
-                        if totalMinutes >= 60 {
-                            HStack(alignment: .lastTextBaseline, spacing: 2) {
-                                Text("\(totalMinutes / 60)").font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundColor(.indigo).contentTransition(.numericText())
-                                Text("时").font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
-                                Text("\(totalMinutes % 60)").font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundColor(.indigo).contentTransition(.numericText())
-                                Text("分").font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
-                            }
-                        } else {
-                            HStack(alignment: .lastTextBaseline, spacing: 2) {
-                                Text("\(totalMinutes)").font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundColor(.indigo).contentTransition(.numericText())
-                                Text("分钟").font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Divider().frame(height: 36).opacity(0.5)
-                    
-                    VStack(alignment: .trailing, spacing: 6) {
-                        Text("打卡天数").font(.system(size: 13, weight: .bold)).foregroundColor(.secondary)
-                        HStack(alignment: .lastTextBaseline, spacing: 2) {
-                            Text("\(daysCount)").font(.system(size: 28, weight: .heavy, design: .rounded)).foregroundColor(.teal).contentTransition(.numericText())
-                            Text("天").font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                .padding(20)
-                .background(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.8).background(.ultraThinMaterial))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(color: Color.black.opacity(0.05), radius: 10, y: 4)
-                .padding(.horizontal, 20)
-                
-                // ================= 3. 移动端日历网格 (支持左右滑动) =================
-                VStack(spacing: 16) {
-                    HStack(spacing: 0) {
-                        ForEach(daysOfWeek, id: \.self) { day in
-                            Text(day).font(.system(size: 13, weight: .bold)).foregroundColor(.secondary.opacity(0.6)).frame(maxWidth: .infinity)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(0..<daysInMonth.count, id: \.self) { index in
-                            if let date = daysInMonth[index] {
-                                let dayString = dateFormatter.string(from: date)
-                                let dayRecord = recordsDictionary[dayString]
-                                MobileDayCardView(date: date, record: dayRecord)
-                            } else {
-                                Color.clear.aspectRatio(0.7, contentMode: .fit)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .id(formattedYearMonth(currentDate))
-                    .transition(slideDirection)
-                    // ✨ 加入手势：左右滑动丝滑切换月份
-                    .gesture(
-                        DragGesture()
-                            .onEnded { value in
-                                let threshold: CGFloat = 40
-                                if value.translation.width < -threshold { changeMonth(by: 1) }
-                                else if value.translation.width > threshold { changeMonth(by: -1) }
-                            }
-                    )
+                .padding(.horizontal, 16)
+                // 因为没有了悬浮 Header，顶部留白可以大大缩减，更紧凑
+                .padding(.top, 8)
+                .padding(.bottom, 100)
+            }
+            // 完全摒弃 opacity 和 offset 动画，原生直出
+            .onAppear {
+                buildDataAndScroll(proxy: proxy)
+            }
+        }
+    }
+    
+    // MARK: - ✨ UI 组件模块
+    
+    private func monthSectionHeader(_ section: MonthSection) -> some View {
+        HStack(alignment: .lastTextBaseline) {
+            Text("\(String(section.year))年")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(.secondary)
+            Text("\(section.month)月")
+                .font(.system(size: 24, weight: .black, design: .rounded))
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            // 计算该月总时长
+            let totalMins = section.days.compactMap { d -> Int? in
+                guard let date = d, let duration = cachedRecordsDict[Calendar.current.startOfDay(for: date)] else { return nil }
+                return Int(duration / 60)
+            }.reduce(0, +)
+            
+            if totalMins > 0 {
+                Text("\(totalMins / 60)h \(totalMins % 60)m")
+                    .font(.system(size: 12, weight: .heavy, design: .monospaced))
+                    .foregroundColor(.indigo)
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(Color.indigo.opacity(0.1))
+                    .clipShape(Capsule())
+            }
+        }
+        .padding(.vertical, 12)
+        .background(AppColors.primaryBackground(for: colorScheme)) // 吸顶时不透明
+    }
+    
+    private func monthGrid(section: MonthSection) -> some View {
+        VStack(spacing: 12) {
+            // 星期表头
+            HStack(spacing: 0) {
+                ForEach(daysOfWeek, id: \.self) { day in
+                    Text(day).font(.system(size: 11, weight: .bold)).foregroundColor(.secondary.opacity(0.5)).frame(maxWidth: .infinity)
                 }
             }
-            .padding(.bottom, 60)
-        }
-        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("月度梳理")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-    
-    // MARK: - 内部控制方法
-    
-    private func monthButton(icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .light); impact.impactOccurred()
-            action()
-        }) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .bold))
-                .frame(width: 36, height: 36)
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .foregroundColor(.primary)
-                .clipShape(Circle())
-                .shadow(color: Color.black.opacity(0.05), radius: 4, y: 2)
-        }
-        .buttonStyle(.plain)
-    }
-    
-    private func formattedYearMonth(_ date: Date) -> String {
-        let formatter = DateFormatter(); formatter.dateFormat = "yyyy年M月"; return formatter.string(from: date)
-    }
-    
-    private func changeMonth(by value: Int) {
-        let moveInEdge: Edge = value > 0 ? .trailing : .leading
-        let moveOutEdge: Edge = value > 0 ? .leading : .trailing
-        slideDirection = .asymmetric(insertion: .move(edge: moveInEdge).combined(with: .opacity), removal: .move(edge: moveOutEdge).combined(with: .opacity))
-        
-        if let newDate = Calendar.current.date(byAdding: .month, value: value, to: currentDate) {
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { currentDate = newDate }
+            
+            let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(0..<section.days.count, id: \.self) { index in
+                    if let date = section.days[index] {
+                        MobileDayCardView(
+                            date: date,
+                            duration: cachedRecordsDict[Calendar.current.startOfDay(for: date)]
+                        )
+                    } else {
+                        Color.clear.frame(height: 70)
+                    }
+                }
+            }
         }
     }
     
-    private func extractDaysInMonth(for date: Date) -> [Date?] {
-        let calendar = Calendar.current; var days = [Date?]()
-        guard let monthInterval = calendar.dateInterval(of: .month, for: date),
-              let firstDayOfMonth = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: monthInterval.start) else { return [] }
-        // 修正周一为第一天
-        var component = calendar.component(.weekday, from: firstDayOfMonth) - 2
-        if component < 0 { component += 7 }
-        
-        for _ in 0..<component { days.append(nil) }
-        let range = calendar.range(of: .day, in: .month, for: firstDayOfMonth)!
-        for i in 0..<range.count { if let dayDate = calendar.date(byAdding: .day, value: i, to: firstDayOfMonth) { days.append(dayDate) } }
+    // MARK: - ⚙️ 数据引擎 (瞬间加载与定位)
+    
+    private func buildDataAndScroll(proxy: ScrollViewProxy) {
+        Task { @MainActor in
+            let calendar = Calendar.current
+            let records = (try? modelContext.fetch(FetchDescriptor<ReadingSession>())) ?? []
+            
+            var dict = [Date: TimeInterval]()
+            for r in records { dict[calendar.startOfDay(for: r.date), default: 0] += r.duration }
+            self.cachedRecordsDict = dict
+            
+            // 动态推算展示区间（从最早的一条记录开始，一直到下个月）
+            let today = Date()
+            let earliestDate = records.map { $0.date }.min() ?? calendar.date(byAdding: .month, value: -6, to: today)!
+            
+            var currentMonthDate = calendar.date(from: calendar.dateComponents([.year, .month], from: earliestDate))!
+            let endMonthDate = calendar.date(byAdding: .month, value: 1, to: calendar.date(from: calendar.dateComponents([.year, .month], from: today))!)!
+            
+            var sections = [MonthSection]()
+            
+            while currentMonthDate <= endMonthDate {
+                let year = calendar.component(.year, from: currentMonthDate)
+                let month = calendar.component(.month, from: currentMonthDate)
+                sections.append(MonthSection(
+                    id: String(format: "%d-%02d", year, month),
+                    year: year, month: month,
+                    days: extractDays(for: currentMonthDate)
+                ))
+                // 推进到下一个月
+                currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate)!
+            }
+            self.cachedSections = sections
+            
+            // 先获取当前月的 ID
+            let currentID = String(format: "%d-%02d", calendar.component(.year, from: today), calendar.component(.month, from: today))
+            
+            // 给 SwiftUI 一个极短的运行周期来挂载刚刚赋值的 sections 视图树
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            
+            // ✨ 原生直出：瞬间、无动画地把当前月份卡在屏幕最顶部 (anchor: .top)
+            proxy.scrollTo(currentID, anchor: .top)
+        }
+    }
+    
+    private func extractDays(for date: Date) -> [Date?] {
+        let cal = Calendar.current
+        guard let range = cal.range(of: .day, in: .month, for: date),
+              let firstDay = cal.date(from: cal.dateComponents([.year, .month], from: date)) else { return [] }
+        let weekday = cal.component(.weekday, from: firstDay)
+        let offset = (weekday + 5) % 7
+        var days: [Date?] = Array(repeating: nil, count: offset)
+        for i in 0..<range.count { days.append(cal.date(byAdding: .day, value: i, to: firstDay)) }
         return days
     }
+}
+
+// MARK: - ✨ 单日卡片 (精准应用 VisualEngines)
+
+struct MobileDayCardView: View {
+    let date: Date
+    let duration: TimeInterval?
+    @Environment(\.colorScheme) private var colorScheme
+    
+    @State private var isPressed = false
+    
+    var body: some View {
+        let cal = Calendar.current
+        let isToday = cal.isDateInToday(date)
+        let mins = Int((duration ?? 0) / 60)
+        
+        ZStack {
+            // 底板
+            RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
+                .fill(duration != nil ? AppColors.secondaryBackground(for: colorScheme) : Color.secondary.opacity(0.04))
+            
+            // ✨ 视觉引擎：热力柱渲染
+            if duration != nil, mins > 0 {
+                VStack(spacing: 0) {
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(VisualEngines.ReadingHeatmap.gradient(for: mins))
+                        // 移动端高度适配：在 Mac 规范基础上乘以 0.8
+                        .frame(height: VisualEngines.ReadingHeatmap.height(for: mins) * 0.8)
+                        .padding(4)
+                        .shadow(color: VisualEngines.ReadingHeatmap.shadowColor(for: mins).opacity(0.3), radius: 4, y: 2)
+                }
+            }
+            
+            // 日期数字
+            VStack {
+                HStack {
+                    ZStack {
+                        if isToday { Circle().fill(Color.red).frame(width: 18, height: 18) }
+                        Text("\(cal.component(.day, from: date))")
+                            .font(.system(size: 12, weight: isToday ? .bold : .medium, design: .rounded))
+                            .foregroundColor(isToday ? .white : (duration != nil ? .primary : .secondary.opacity(0.4)))
+                    }
+                    Spacer()
+                }
+                Spacer()
+            }
+            .padding(6)
+        }
+        .frame(height: 72)
+        .scaleEffect(isPressed ? 0.9 : 1.0)
+        .onTapGesture {
+            if duration != nil {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                withAnimation(.spring()) { isPressed = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { withAnimation { isPressed = false } }
+            }
+        }
+    }
+}
+
+private struct MonthSection: Identifiable {
+    let id: String; let year: Int; let month: Int; let days: [Date?]
 }
 #endif

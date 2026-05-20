@@ -164,10 +164,14 @@ struct InkGalleryView: View {
                         }
                     }
                 }
+                // ✨✨✨ 核心修复 1：扁平化图层
+                // 强制要求 GPU 在离屏缓冲区把卡片画好，然后再一起做 3D 旋转和模糊。这能直接斩断组件内部由于时序错乱导致的闪屏！
+                .compositingGroup()
+                
                 // ✨✨✨ Deep Float 核心修饰符：视觉极限强化
                 
-                // 1. 深度模糊：远处的模糊，近处的清晰 (人眼聚焦仿真)
-                .blur(radius: isEntranceAnimated ? 0 : 15)
+                // 1. 深度模糊：略微调低初始模糊强度，减轻 GPU 瞬间压力
+                .blur(radius: isEntranceAnimated ? 0 : 10)
                 
                 // 2. 基础透明度
                 .opacity(isEntranceAnimated ? 1.0 : 0.0)
@@ -178,9 +182,9 @@ struct InkGalleryView: View {
                 // 4. 垂直位移：从屏幕大半个高度升起
                 .offset(y: isEntranceAnimated ? 0 : geo.size.height / 1.8)
                 
-                // 5. 🌟 3D 视角透视：最强视效！卡片从仰视 20 度翻转归位
+                // 5. 🌟 3D 视角透视：稍微降低初始旋转角度，防止材质由于大角度形变而黑屏
                 .rotation3DEffect(
-                    .degrees(isEntranceAnimated ? 0 : 20),
+                    .degrees(isEntranceAnimated ? 0 : 10),
                     axis: (x: 1, y: 0, z: 0), // 绕 X 轴旋转
                     anchor: .bottom, // 以底部为转轴
                     perspective: 0.3 // 增强透视感
@@ -229,8 +233,6 @@ struct InkGalleryView: View {
                 .ignoresSafeArea(edges: .top)
                 .frame(maxHeight: .infinity, alignment: .top)
                 
-                // ... (底部批处理控制台及其他逻辑保持原样) ...
-                
                 // ================= 底部批处理控制台 =================
                 if isBatchEditMode {
                     VStack {
@@ -277,7 +279,6 @@ struct InkGalleryView: View {
             }
         }
         .onAppear {
-            // ✨ 这里去除了写死的延迟动画，完全交由 refreshData 的内部时序来控制，与书库完全对齐
             refreshData(animate: false)
         }
         .onChange(of: activeCategory) { _, _ in refreshData(animate: true) }
@@ -456,94 +457,98 @@ struct DailySnippetCardView: View {
     }
     
     var body: some View {
-            ZStack(alignment: .bottom) {
-                // ================= 📝 核心排版容器 =================
-                VStack(alignment: .center, spacing: 0) {
-                    if [.poetry, .lyric, .prose].contains(snippet.category) {
-                        titleAndAuthor
-                    }
-                    
-                    switch snippet.category {
-                    case .poetry:
-                        Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.center).frame(maxWidth: .infinity, alignment: .center)
-                    case .lyric, .prose:
-                        Text(indentedContent).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                    case .quote:
-                        Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 24)
-                        HStack { Spacer(); Text("—— \(snippet.author)").font(.system(size: 14, weight: .medium, design: .serif)).foregroundColor(.secondary) }
-                    case .movie:
-                        Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 24)
-                        HStack { Spacer(); Text("—— \(snippet.author)（\(snippet.title)）").font(.system(size: 14, weight: .medium, design: .serif)).foregroundColor(.secondary) }
-                    case .web:
-                        Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
-                    }
+        ZStack(alignment: .bottom) {
+            // ================= 📝 核心排版容器 =================
+            VStack(alignment: .center, spacing: 0) {
+                if [.poetry, .lyric, .prose].contains(snippet.category) {
+                    titleAndAuthor
                 }
-                .padding(.horizontal, 32)
-                .padding(.vertical, 40)
-                .frame(maxWidth: .infinity)
                 
-                // ✨ 探测魔法：强制 SwiftUI 计算出文本完整的理想高度
-                .fixedSize(horizontal: false, vertical: true)
-                .background(
-                    GeometryReader { geo in
-                        Color.clear.preference(key: SnippetHeightPreferenceKey.self, value: geo.size.height)
-                    }
-                )
-                
-                // 🔒 智能拦截：控制最大高度
-                .frame(height: isTruncated ? maxHeight : nil, alignment: .top)
-                
-                // ✨✨✨ 核心修复：使用纯正的 Alpha 遮罩，让文字自然羽化消失，不产生任何实色黑影
-                .mask {
-                    if isTruncated {
-                        LinearGradient(
-                            stops: [
-                                .init(color: .black, location: 0.0),
-                                .init(color: .black, location: 0.75), // 顶部 75% 保持完全不透明
-                                .init(color: .clear, location: 1.0)   // 底部 25% 逐渐羽化为完全透明
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    } else {
-                        Color.black
-                    }
+                switch snippet.category {
+                case .poetry:
+                    Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.center).frame(maxWidth: .infinity, alignment: .center)
+                case .lyric, .prose:
+                    Text(indentedContent).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                case .quote:
+                    Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 24)
+                    HStack { Spacer(); Text("—— \(snippet.author)").font(.system(size: 14, weight: .medium, design: .serif)).foregroundColor(.secondary) }
+                case .movie:
+                    Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 24)
+                    HStack { Spacer(); Text("—— \(snippet.author)（\(snippet.title)）").font(.system(size: 14, weight: .medium, design: .serif)).foregroundColor(.secondary) }
+                case .web:
+                    Text(snippet.content).font(.system(size: 18, weight: .regular, design: .serif)).lineSpacing(14).foregroundColor(.primary.opacity(0.85)).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .clipped()
-                
-                // ================= 🌟 展开按钮 =================
+            }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 40)
+            .frame(maxWidth: .infinity)
+            
+            // ✨ 探测魔法：强制 SwiftUI 计算出文本完整的理想高度
+            .fixedSize(horizontal: false, vertical: true)
+            .background(
+                GeometryReader { geo in
+                    Color.clear.preference(key: SnippetHeightPreferenceKey.self, value: geo.size.height)
+                }
+            )
+            
+            // 🔒 智能拦截：控制最大高度
+            .frame(height: isTruncated ? maxHeight : nil, alignment: .top)
+            
+            // 使用纯正的 Alpha 遮罩，让文字自然羽化消失
+            .mask {
                 if isTruncated {
-                    // 移除了那个多余的渐变方块，只保留干干净净的按钮
-                    Button(action: onExpand) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.up.backward.and.arrow.down.forward")
-                            Text("全屏沉浸阅读")
-                        }
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16).padding(.vertical, 8)
-                        .background(snippet.category.themeColor.opacity(0.9))
-                        .clipShape(Capsule())
-                        .shadow(color: .black.opacity(0.2), radius: 6, y: 3)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.bottom, 24)
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0.0),
+                            .init(color: .black, location: 0.75), // 顶部 75% 保持完全不透明
+                            .init(color: .clear, location: 1.0)   // 底部 25% 逐渐羽化为完全透明
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                } else {
+                    Color.black
                 }
             }
-            .overlay(alignment: .topTrailing) {
-                Text(snippet.category.displayName).font(.system(size: 11, weight: .bold)).foregroundColor(snippet.category.themeColor).padding(.horizontal, 10).padding(.vertical, 4).background(snippet.category.themeColor.opacity(0.15)).clipShape(Capsule()).padding([.top, .trailing], 16)
+            .clipped()
+            
+            // ================= 🌟 展开按钮 =================
+            if isTruncated {
+                Button(action: onExpand) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.backward.and.arrow.down.forward")
+                        Text("全屏沉浸阅读")
+                    }
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16).padding(.vertical, 8)
+                    .background(snippet.category.themeColor.opacity(0.9))
+                    .clipShape(Capsule())
+                    .shadow(color: .black.opacity(0.2), radius: 6, y: 3)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 24)
             }
-            .onPreferenceChange(SnippetHeightPreferenceKey.self) { h in
-                if abs(naturalHeight - h) > 1 { naturalHeight = h }
-            }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(.ultraThinMaterial))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.primary.opacity(isHovered ? 0.15 : 0.05), lineWidth: 1))
-            .shadow(color: Color.black.opacity(0.06), radius: isHovered ? 16 : 8, y: isHovered ? 8 : 4)
-            .scaleEffect(isHovered ? 1.01 : 1.0)
-            .animation(.appSnappy, value: isHovered)
-            .onHover { isHovered = $0 }
-            .onTapGesture(count: 2, perform: onEdit)
         }
+        .overlay(alignment: .topTrailing) {
+            Text(snippet.category.displayName).font(.system(size: 11, weight: .bold)).foregroundColor(snippet.category.themeColor).padding(.horizontal, 10).padding(.vertical, 4).background(snippet.category.themeColor.opacity(0.15)).clipShape(Capsule()).padding([.top, .trailing], 16)
+        }
+        .onPreferenceChange(SnippetHeightPreferenceKey.self) { h in
+            if abs(naturalHeight - h) > 1 { naturalHeight = h }
+        }
+        // ✨✨✨ 核心修复 2：抛弃了极其耗能且容易闪黑的 .ultraThinMaterial 毛玻璃
+        // 采用 macOS 原生的卡片基础色 (controlBackgroundColor)，既完美兼容明/暗色模式，又绝对不会在切换时闪黑！
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.85))
+        )
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.primary.opacity(isHovered ? 0.15 : 0.05), lineWidth: 1))
+        .shadow(color: Color.black.opacity(0.06), radius: isHovered ? 16 : 8, y: isHovered ? 8 : 4)
+        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .animation(.appSnappy, value: isHovered)
+        .onHover { isHovered = $0 }
+        .onTapGesture(count: 2, perform: onEdit)
+    }
 }
 
 // MARK: - 📖 4. 极致沉浸：全屏阅读视图 (自适应全宽版)
@@ -615,7 +620,6 @@ struct SnippetFullscreenReadingView: View {
                         .padding(.top, 60)
                     }
                 }
-                // ✨ 核心修改：解除了 800 像素的死板封印，改为宽裕的左右 120 间距
                 .padding(.horizontal, 120)
                 .padding(.bottom, 150)
                 .frame(maxWidth: .infinity)

@@ -16,8 +16,9 @@ enum InspirationSortMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+// ✨ 核心修改 1：DTO 增加 bookAuthor 字段
 struct InspirationSnippet: Identifiable, Hashable {
-    let id: String; let content: String; let date: Date; let bookTitle: String; let bookID: String; let isNote: Bool; let coverData: Data?
+    let id: String; let content: String; let date: Date; let bookTitle: String; let bookAuthor: String; let bookID: String; let isNote: Bool; let coverData: Data?
 }
 
 // MARK: - ✨ 灵感画廊 (核心视图)
@@ -36,7 +37,6 @@ struct InspirationWallView: View {
     
     @State private var shuffledSnippets: [InspirationSnippet] = []
     
-    // ✨ 核心重构：直接对接统一后的 BookAnnotation
     @State private var recordToEdit: BookAnnotation? = nil
     @State private var bookForEdit: Book? = nil
     
@@ -48,9 +48,9 @@ struct InspirationWallView: View {
     }
     
     var body: some View {
-        let totalCharacters = shuffledSnippets.reduce(0) { $0 + $1.content.count }
+        let totalSnippetCharacters = shuffledSnippets.reduce(0) { $0 + $1.content.count }
         let uniqueBooksCount = Set(shuffledSnippets.map { $0.bookTitle }).count
-        let formattedKCount = String(format: "%.1f", Double(totalCharacters) / 1000.0)
+        let formattedKCount = String(format: "%.1f", Double(totalSnippetCharacters) / 1000.0)
         
         GeometryReader { geo in
             ScrollView(.vertical, showsIndicators: false) {
@@ -79,8 +79,8 @@ struct InspirationWallView: View {
                         HStack(spacing: 32) {
                             VStack(alignment: .trailing, spacing: 2) {
                                 HStack(alignment: .lastTextBaseline, spacing: 4) {
-                                    Text(totalCharacters > 1000 ? formattedKCount : "\(totalCharacters)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
-                                    Text(totalCharacters > 1000 ? "k" : "").font(.system(size: 14, weight: .bold)).foregroundColor(.indigo)
+                                    Text(totalSnippetCharacters > 1000 ? formattedKCount : "\(totalSnippetCharacters)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
+                                    Text(totalSnippetCharacters > 1000 ? "k" : "").font(.system(size: 14, weight: .bold)).foregroundColor(.indigo)
                                 }
                                 Text("字沉淀").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary.opacity(0.8))
                             }
@@ -191,15 +191,30 @@ struct InspirationWallView: View {
                 HStack(alignment: .top, spacing: 40) {
                     VStack(alignment: .leading, spacing: 16) {
                         if let coverData = snippets.first?.coverData {
-                            LocalCoverView(coverID: snippets.first?.bookID ?? "", coverData: coverData, fallbackTitle: bookTitle)
+                            BookCoverView(coverID: snippets.first?.bookID ?? "", coverData: coverData, fallbackTitle: bookTitle)
                                 .frame(width: 140, height: 210).clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                 .shadow(color: Color.black.opacity(0.12), radius: 8, y: 4).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
                         } else {
                             RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.secondary.opacity(0.1)).frame(width: 140, height: 210)
                         }
+                        
+                        // ✨ 核心修改 2：书名与作者的上下排版
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(bookTitle).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundColor(.primary)
-                            Text("\(snippets.count) 条灵感").font(.system(size: 12, weight: .semibold)).foregroundColor(.secondary).padding(.horizontal, 8).padding(.vertical, 4).background(Color.secondary.opacity(0.1)).clipShape(Capsule())
+                            Text(bookTitle)
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(.primary)
+                            
+                            Text(snippets.first?.bookAuthor ?? "佚名")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                            
+                            Text("\(snippets.count) 条灵感")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 8).padding(.vertical, 4)
+                                .background(Color.secondary.opacity(0.1)).clipShape(Capsule())
+                                .padding(.top, 4) // 增加呼吸感
                         }
                     }.frame(width: 140)
                     
@@ -273,7 +288,6 @@ extension InspirationWallView {
     @MainActor
     private func triggerEdit(for snippet: InspirationSnippet) {
         let targetID = snippet.id
-        // ✨ 一次性查询，无需双边判定
         if let target = try? modelContext.fetch(FetchDescriptor<BookAnnotation>(predicate: #Predicate { $0.id == targetID })).first {
             self.bookForEdit = target.book
             self.recordToEdit = target
@@ -304,7 +318,6 @@ extension InspirationWallView {
         var results: [InspirationSnippet] = []
         let lowerSearch = searchText.lowercased()
         
-        // ✨ 一次性抓取单表数据进行判定，性能极大提升
         let allAnnotations = (try? modelContext.fetch(FetchDescriptor<BookAnnotation>())) ?? []
         
         for a in allAnnotations {
@@ -312,11 +325,15 @@ extension InspirationWallView {
             if contentType == .note && a.type != .note { continue }
             
             let safeTitle = a.book?.title ?? "未知书籍"
+            // ✨ 核心修改 3：抓取作者信息
+            let safeAuthor = a.book?.author ?? "佚名"
+            
             if !searchText.isEmpty {
                 guard a.content.lowercased().contains(lowerSearch) || safeTitle.lowercased().contains(lowerSearch) else { continue }
             }
             
-            results.append(InspirationSnippet(id: a.id, content: a.content, date: a.createdAt, bookTitle: safeTitle, bookID: a.book?.id ?? "", isNote: a.isNote, coverData: a.book?.coverData))
+            // 注入 DTO
+            results.append(InspirationSnippet(id: a.id, content: a.content, date: a.createdAt, bookTitle: safeTitle, bookAuthor: safeAuthor, bookID: a.book?.id ?? "", isNote: a.isNote, coverData: a.book?.coverData))
         }
         
         switch sortType {
@@ -332,7 +349,6 @@ extension InspirationWallView {
     @MainActor
     private func deleteSnippet(snippet: InspirationSnippet) {
         let targetID = snippet.id
-        // ✨ 单表删除逻辑
         if let target = try? modelContext.fetch(FetchDescriptor<BookAnnotation>(predicate: #Predicate { $0.id == targetID })).first {
             modelContext.delete(target)
         }
@@ -359,32 +375,5 @@ extension InspirationWallView {
             withAnimation(.appFluidSpring) { selectedBook = book }
         }
     }
-}
-
-#Preview("灵感画廊 (完整视图)") {
-    struct InspirationPreviewWrapper: View {
-        @State private var selectedBook: Book? = nil
-        @State private var contentType: InspirationContentType = .all
-        @State private var sortType: GallerySortType = .newest
-        @State private var isRandomRoam: Bool = true
-        @State private var searchText: String = ""
-        @State private var shuffleTrigger: Int = 0
-        @State private var isBatchEditMode: Bool = false
-        @State private var selectedSnippetsForBatch: Set<String> = []
-
-        var body: some View {
-            InspirationWallView(
-                selectedBook: $selectedBook,
-                contentType: $contentType,
-                sortType: $sortType,
-                isRandomRoam: $isRandomRoam,
-                searchText: $searchText,
-                shuffleTrigger: $shuffleTrigger,
-                isBatchEditMode: $isBatchEditMode,
-                selectedSnippetsForBatch: $selectedSnippetsForBatch
-            ).frame(width: 1000, height: 750)
-        }
-    }
-    return InspirationPreviewWrapper().modelContainer(PreviewData.shared)
 }
 #endif

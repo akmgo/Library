@@ -70,8 +70,4 @@ struct SettingsView: View {
     }
 }
 
-#Preview("系统设置全景") {
-    SettingsView()
-        .modelContainer(PreviewData.shared)
-}
 #endif

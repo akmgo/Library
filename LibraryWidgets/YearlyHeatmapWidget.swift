@@ -45,14 +45,14 @@ struct HeatmapProvider: TimelineProvider {
             let currentWeekStart = cal.date(byAdding: .day, value: -daysToSubtract, to: today)!
             let startDate = cal.date(byAdding: .weekOfYear, value: -(columnsCount - 1), to: currentWeekStart)!
 
-            let descriptor = FetchDescriptor<ReadingRecord>(
+            let descriptor = FetchDescriptor<ReadingSession>(
                 predicate: #Predicate { $0.date >= startDate }
             )
             let recentRecords = try dbContext.fetch(descriptor)
 
             var dailyDurations: [Date: TimeInterval] = [:]
             for record in recentRecords {
-                dailyDurations[cal.startOfDay(for: record.date), default: 0] += record.readingDuration
+                dailyDurations[cal.startOfDay(for: record.date), default: 0] += record.duration
             }
             
             var cols: [HeatmapColumnData] = []

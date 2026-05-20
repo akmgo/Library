@@ -3,14 +3,14 @@ import SwiftUI
 import SwiftData
 
 // MARK: - ✨ 过滤器枚举
-enum RecordFilter: String, CaseIterable {
+enum AnnotationFilter: String, CaseIterable {
     case all = "全部"
     case excerpts = "摘录"
     case notes = "笔记"
 }
 
 // MARK: - ✨ 双列瀑布流碎片渲染引擎
-struct BookExcerptsView: View {
+struct BookExcerpts: View {
     let book: Book
     let isDeleteMode: Bool
     
@@ -20,7 +20,7 @@ struct BookExcerptsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var itemToEdit: BookAnnotation? = nil
     
-    @State private var currentFilter: RecordFilter = .all
+    @State private var currentFilter: AnnotationFilter = .all
     
     // ✨ 核心重构：从单表中一次性取出，自带时间排序，不再需要人造缝合！
     private var allRecords: [BookAnnotation] {
@@ -60,12 +60,12 @@ struct BookExcerptsView: View {
             }
             
             if filteredRecords.isEmpty {
-                EmptyStateView()
+                BookExcerptsEmptyStateView()
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
             } else {
                 WaterfallLayout(columns: 2, spacing: 24) {
                     ForEach(filteredRecords) { item in
-                        RecordCardWrapper(
+                        AnnotationCardWrapper(
                             item: item,
                             isDeleteMode: isDeleteMode,
                             onDelete: { onDelete(item) },
@@ -168,7 +168,7 @@ struct WaterfallLayout: Layout {
 }
 
 // MARK: - 内部视图组件
-struct RecordCardWrapper: View {
+struct AnnotationCardWrapper: View {
     let item: BookAnnotation
     let isDeleteMode: Bool
     let onDelete: () -> Void
@@ -269,7 +269,7 @@ struct NoteCardView: View {
     }
 }
 
-struct EmptyStateView: View {
+struct BookExcerptsEmptyStateView: View {
     var body: some View {
         VStack(spacing: 12) {
             Text("没有任何思考的痕迹").font(.system(size: 16, weight: .bold)).foregroundColor(.secondary)
@@ -284,7 +284,7 @@ struct BookExcerptsPreviewWrapper: View {
     var body: some View {
         if let book = books.first {
             ScrollView {
-                BookExcerptsView(
+                BookExcerpts(
                     book: book,
                     isDeleteMode: false,
                     onDelete: { _ in }
@@ -296,8 +296,4 @@ struct BookExcerptsPreviewWrapper: View {
     }
 }
 
-#Preview("模块：摘录与笔记双列流") {
-    BookExcerptsPreviewWrapper()
-        .modelContainer(PreviewData.shared)
-}
 #endif

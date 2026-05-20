@@ -27,7 +27,7 @@ struct MonthlyRecordView: View {
     
     let daysOfWeek = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
     
-    @State private var cachedRecordsDict: [Date: ReadingRecord] = [:]
+    @State private var cachedRecordsDict: [Date: TimeInterval] = [:]
     @State private var cachedSections: [MonthSection] = []
     
     @State private var visibleYear: Int = Calendar.current.component(.year, from: Date())
@@ -38,7 +38,7 @@ struct MonthlyRecordView: View {
     
     var body: some View {
         GeometryReader { mainGeo in
-            // ================= 1. 底层无缝连续滚动区 (彻底移除外层 ZStack 与底层背景) =================
+            // ================= 1. 底层无缝连续滚动区 =================
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
                     ZStack {
@@ -59,8 +59,6 @@ struct MonthlyRecordView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
-                // ✨ 核心修复：将动画修饰符挂载在 ScrollView 的最外层！
-                // 保证 ScrollView 内部的坐标系绝对静止，让 scrollTo 能 100% 精准锁定屏幕中央！
                 .opacity(isEntranceAnimated ? 1.0 : 0.0)
                 .offset(y: isEntranceAnimated ? 0 : 200)
                 .scaleEffect(isEntranceAnimated ? 1.0 : 0.98, anchor: .center)
@@ -94,7 +92,7 @@ struct MonthlyRecordView: View {
                     }
                 }
             }
-            // ================= 2. 顶层悬浮玻璃 Header (转化为 overlay) =================
+            // ================= 2. 顶层悬浮玻璃 Header =================
             .overlay(alignment: .top) {
                 VStack(spacing: 0) {
                     HStack(alignment: .center) {
@@ -163,7 +161,6 @@ struct MonthlyRecordView: View {
             isEntranceAnimated = false
             self.buildContinuousData(animate: false)
         }
-        // ✨ 这里使用了全局强类型通知
         .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
             self.buildContinuousData(animate: true)
         }
@@ -174,11 +171,11 @@ struct MonthlyRecordView: View {
     private func buildContinuousData(animate: Bool) {
         Task { @MainActor in
             let calendar = Calendar.current
-            let allRecords = (try? modelContext.fetch(FetchDescriptor<ReadingRecord>())) ?? []
+            let allRecords = (try? modelContext.fetch(FetchDescriptor<ReadingSession>())) ?? []
             
-            var dict = [Date: ReadingRecord]()
+            var dict = [Date: TimeInterval]()
             for record in allRecords {
-                dict[calendar.startOfDay(for: record.date)] = record
+                dict[calendar.startOfDay(for: record.date), default: 0] += record.duration
             }
             
             let today = Date()
@@ -210,16 +207,10 @@ struct MonthlyRecordView: View {
             }
             
             if !self.isEntranceAnimated {
-                // 1. 等待排版框架初步建立
                 try? await Task.sleep(nanoseconds: 30_000_000)
-                
-                // 2. 发送滚动指令（此刻内部坐标系统稳定且准确）
                 NotificationCenter.default.post(name: .scrollToToday, object: nil)
-                
-                // 3. 确保定格在当月，彻底停稳
                 try? await Task.sleep(nanoseconds: 80_000_000)
                 
-                // 4. 起飞！
                 withAnimation(.appFluidSpring) {
                     self.isEntranceAnimated = true
                 }
@@ -253,12 +244,12 @@ struct MonthlyRecordView: View {
 
 private struct MonthGridSection: View {
     let section: MonthSection
-    let recordsDict: [Date: ReadingRecord]
+    let recordsDict: [Date: TimeInterval]
     
     private var monthTotalMinutes: Int {
         section.days.compactMap { d -> Int? in
-            guard let date = d, let record = recordsDict[Calendar.current.startOfDay(for: date)] else { return nil }
-            return Int(record.readingDuration / 60)
+            guard let date = d, let duration = recordsDict[Calendar.current.startOfDay(for: date)] else { return nil }
+            return Int(duration / 60)
         }.reduce(0, +)
     }
     
@@ -287,7 +278,7 @@ private struct MonthGridSection: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(0..<section.days.count, id: \.self) { index in
                     if let date = section.days[index] {
-                        DayCardView(date: date, record: recordsDict[Calendar.current.startOfDay(for: date)])
+                        DayCardView(date: date, duration: recordsDict[Calendar.current.startOfDay(for: date)])
                     } else {
                         Color.clear.frame(height: 110)
                     }
@@ -302,7 +293,7 @@ private struct MonthGridSection: View {
 private struct MonthlySparklineView: View {
     let year: Int
     let month: Int
-    let recordsDict: [Date: ReadingRecord]
+    let recordsDict: [Date: TimeInterval]
     
     @State private var chartData: [(day: Int, minutes: Double)] = []
     
@@ -344,9 +335,9 @@ private struct MonthlySparklineView: View {
         for day in range {
             comps.day = day
             if let date = cal.date(from: comps),
-               let record = recordsDict[cal.startOfDay(for: date)]
+               let duration = recordsDict[cal.startOfDay(for: date)]
             {
-                data.append((day, record.readingDuration / 60.0))
+                data.append((day, duration / 60.0))
             } else {
                 data.append((day, 0))
             }
@@ -359,20 +350,19 @@ private struct MonthlySparklineView: View {
 
 private struct DayCardView: View {
     let date: Date
-    let record: ReadingRecord?
+    let duration: TimeInterval?
     
     @State private var isHovered = false
     
     var body: some View {
         let calendar = Calendar.current
         let isToday = calendar.isDateInToday(date)
-        let hasRead = record != nil
+        let hasRead = duration != nil
         let dateString = "\(calendar.component(.day, from: date))"
         
-        let totalSeconds = Int(record?.readingDuration ?? 0)
+        let totalSeconds = Int(duration ?? 0)
         let dailyMinutes = totalSeconds > 0 ? max(1, totalSeconds / 60) : 0
         let isCelebration = dailyMinutes > 50
-        let bookTitle = record?.book?.title
         
         ZStack {
             Rectangle()
@@ -413,16 +403,7 @@ private struct DayCardView: View {
                 Spacer()
             }
             
-            if hasRead, let title = bookTitle {
-                Text(title)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.primary.opacity(0.8))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 12)
-                    .offset(y: 4)
-            }
-            
+            // ✨ 删除了展示书名的部分，让界面保持极简的热力图效果
         }
         .frame(height: 110)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -454,9 +435,4 @@ extension Notification.Name {
     static let scrollToToday = Notification.Name("scrollToToday")
 }
 
-#Preview("月度记录") {
-    MonthlyRecordView()
-        .frame(width: 1000, height: 750)
-        .modelContainer(PreviewData.shared)
-}
 #endif

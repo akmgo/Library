@@ -71,7 +71,7 @@ struct DashboardProvider: TimelineProvider {
             for book in allBooks {
                 if book.status == .finished {
                     totalFinishedCount += 1
-                    if let endTime = book.endTime, calendar.component(.year, from: endTime) == currentYear {
+                    if let finishDate = book.finishDate, calendar.component(.year, from: finishDate) == currentYear {
                         yearlyCount += 1
                     }
                 }
@@ -79,7 +79,7 @@ struct DashboardProvider: TimelineProvider {
             let totalLibraryCount = allBooks.count
 
             // ✨ 优化 3：单次遍历完成记录统计，拒绝在循环中使用 filter/contains
-            let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
+            let allRecords = try context.fetch(FetchDescriptor<ReadingSession>())
             
             var tempCalendar = calendar
             tempCalendar.firstWeekday = 2 // 周一为每周第一天
@@ -93,7 +93,7 @@ struct DashboardProvider: TimelineProvider {
                 let recDate = calendar.startOfDay(for: record.date)
                 
                 // 1. 今日时长
-                if recDate == today { todaySeconds += record.readingDuration }
+                if recDate == today { todaySeconds += record.duration }
                 
                 // 2. 本周打卡天数
                 if recDate >= startOfWeek && recDate <= today {
@@ -114,10 +114,10 @@ struct DashboardProvider: TimelineProvider {
                 totalFinished: totalFinishedCount,
                 totalBooksInLibrary: totalLibraryCount,
                 todayMinutes: Int(todaySeconds / 60),
-                dailyGoal: globalConfig.dailyReadingGoal,
+                dailyGoal: globalConfig.dailyMinutesGoal,
                 weekTarget: 7,
                 monthTarget: 30,
-                yearTarget: globalConfig.yearlyBookGoal
+                yearTarget: globalConfig.yearlyBooksGoal
             )
         } catch {
             return DashboardEntry(date: Date(), weekCount: 0, monthlyDays: 0, yearlyCount: 0, totalFinished: 0, totalBooksInLibrary: 0, todayMinutes: 0, dailyGoal: 30, weekTarget: 7, monthTarget: 30, yearTarget: 50)

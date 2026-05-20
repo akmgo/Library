@@ -2,23 +2,25 @@
 import AppKit
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - ✨ 导航与模块枚举
+
 enum NavigationModule: String, CaseIterable, Identifiable {
     case home = "阅读主页"
-    case discovery = "云海拾贝"
     case gallery = "全景画廊"
     case inspiration = "灵感碎片"
     case verses = "墨香画卷"
     case yearly = "年度轨迹"
     case monthly = "月度记录"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var systemImage: String {
         switch self {
         case .home: return "house.fill"
-        case .discovery: return "sparkles.tv"
         case .gallery: return "photo.on.rectangle.angled"
         case .inspiration: return "quote.bubble.fill"
         case .verses: return "paintbrush.pointed.fill"
@@ -28,61 +30,31 @@ enum NavigationModule: String, CaseIterable, Identifiable {
     }
 }
 
-// MARK: - 🌌 专属流体底层画幕
-struct AmbientFluidCanvas: View {
-    @State private var phase: Float = 0.0
-    @Environment(\.colorScheme) var colorScheme
-
-    var body: some View {
-        ZStack {
-            Color(nsColor: .windowBackgroundColor).ignoresSafeArea()
-            let baseOp = colorScheme == .dark ? 0.12 : 0.06
-
-            MeshGradient(
-                width: 3, height: 3,
-                points: [
-                    .init(0, 0), .init(0.5, 0), .init(1, 0),
-                    .init(0, 0.5), .init(0.5 + 0.06 * sin(phase), 0.5 + 0.06 * cos(phase)), .init(1, 0.5),
-                    .init(0, 1), .init(0.5, 1), .init(1, 1)
-                ],
-                colors: [
-                    Color.indigo.opacity(baseOp * 1.5), Color.purple.opacity(baseOp * 0.8), Color.teal.opacity(baseOp * 1.2),
-                    Color.blue.opacity(baseOp * 0.9), Color.indigo.opacity(baseOp * 1.1), Color.purple.opacity(baseOp * 0.9),
-                    Color.teal.opacity(baseOp * 1.2), Color.blue.opacity(baseOp * 1.3), Color.indigo.opacity(baseOp * 1.0)
-                ]
-            )
-            .ignoresSafeArea()
-        }
-        .onAppear {
-            withAnimation(.linear(duration: 15).repeatForever(autoreverses: true)) {
-                phase = .pi * 2
-            }
-        }
-    }
-}
-
 // MARK: - ✨ 主视图入口
-struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
 
-    // ✨ 核心修复：使用 AppStorage 替代数据库查询，性能更优
+struct ContentView: View {
+    /// 获取刚才导入的书籍
+    @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
+
+    @Environment(\.openWindow) private var openWindow // ✨ 召唤新窗口的魔法棒
+
     @AppStorage("appTheme", store: SharedDatabase.shared.sharedDefaults)
     private var appTheme: String = "system"
-    
-    @AppStorage("defaultStartupTab", store: SharedDatabase.shared.sharedDefaults)
-    private var defaultStartupTab: String = "home"
 
     @State private var selectedBook: Book? = nil
-    @State private var selectedModule: NavigationModule? = nil // 初始设为 nil，等待 onAppear 赋值
+    @State private var selectedModule: NavigationModule? = .home
     @State private var columnVisibility = NavigationSplitViewVisibility.all
-    
+
     @State private var showAddModal = false
     @State private var showAddSnippetModal = false
 
     @State private var globalSearchText: String = ""
     @State private var isSearchActive: Bool = false
 
-    @State private var galleryActiveTab: ArchiveFilterTab = .all
+    @State private var galleryActiveTab: GalleryFilterTab = .all
     @State private var gallerySortType: GallerySortType = .newest
     @State private var galleryScaleIndex: Double = 2.0
     @State private var galleryIsBatchEditMode: Bool = false
@@ -94,7 +66,7 @@ struct ContentView: View {
     @State private var inspirationShuffleTrigger: Int = 0
     @State private var inspirationIsBatchEditMode: Bool = false
     @State private var inspirationSelectedSnippets: Set<String> = []
-    
+
     @State private var versesActiveCategory: VersesFilterTab = .all
     @State private var versesSortType: GallerySortType = .newest
     @State private var versesIsCarouselMode: Bool = false
@@ -108,10 +80,14 @@ struct ContentView: View {
     @State private var detailShowDeleteAlert = false
 
     @State private var showCloudSpotlight = false
+    
+    @State private var showOPDSBrowser = false
 
     var body: some View {
         ZStack {
-            AmbientFluidCanvas().zIndex(0)
+            AppColors.primaryBackground(for: colorScheme)
+                .ignoresSafeArea()
+                .zIndex(0)
 
             NavigationSplitView(columnVisibility: $columnVisibility) {
                 sidebarContent
@@ -119,19 +95,7 @@ struct ContentView: View {
                 detailContent
             }
             .zIndex(1)
-            .background(WindowTransparentEffect())
-            .background(
-                Button("") {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showCloudSpotlight.toggle()
-                    }
-                }
-                .keyboardShortcut("k", modifiers: .command)
-                .opacity(0)
-            )
-            .overlay {
-                if showCloudSpotlight { CloudSearchSpotlightView(isPresented: $showCloudSpotlight) }
-            }
+            .background(AppColors.primaryBackground(for: colorScheme))
 
             ConfettiView().ignoresSafeArea().allowsHitTesting(false).zIndex(2)
         }
@@ -150,12 +114,9 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
             showAddModal = true
         }
-        // ✨ 挂载初始化逻辑
         .onAppear {
             applyTheme(appTheme)
-            setupInitialModule()
         }
-        // ✨ 监听主题切换
         .onChange(of: appTheme) { _, newTheme in
             applyTheme(newTheme)
         }
@@ -170,21 +131,6 @@ struct ContentView: View {
             .keyboardShortcut("n", modifiers: .command)
             .opacity(0)
         )
-    }
-    
-    // MARK: - 辅助逻辑
-
-    /// 解析用户设置，设定 App 启动时的默认板块
-    private func setupInitialModule() {
-        switch defaultStartupTab {
-        case "home": selectedModule = .home
-        case "gallery": selectedModule = .gallery
-        case "monthly": selectedModule = .monthly
-        case "yearly": selectedModule = .yearly
-        case "inspiration": selectedModule = .inspiration
-        case "verses": selectedModule = .verses
-        default: selectedModule = .home
-        }
     }
 
     private func applyTheme(_ theme: String) {
@@ -204,7 +150,6 @@ struct ContentView: View {
         List(selection: $selectedModule) {
             Section(header: Text("探索").font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)) {
                 NavigationLink(value: NavigationModule.home) { Label(NavigationModule.home.rawValue, systemImage: NavigationModule.home.systemImage) }
-                NavigationLink(value: NavigationModule.discovery) { Label(NavigationModule.discovery.rawValue, systemImage: NavigationModule.discovery.systemImage) }
                 NavigationLink(value: NavigationModule.gallery) { Label(NavigationModule.gallery.rawValue, systemImage: NavigationModule.gallery.systemImage) }
                 NavigationLink(value: NavigationModule.inspiration) { Label(NavigationModule.inspiration.rawValue, systemImage: NavigationModule.inspiration.systemImage) }
             }
@@ -258,11 +203,9 @@ struct ContentView: View {
     private var mainModuleRouter: some View {
         switch selectedModule {
         case .home:
-            FluidLibraryHomeView(selectedBook: $selectedBook)
-        case .discovery:
-            DiscoveryView()
+            HomeView(selectedBook: $selectedBook)
         case .gallery:
-            ArchiveGalleryView(
+            GalleryView(
                 selectedBook: $selectedBook, activeTab: $galleryActiveTab, searchText: $globalSearchText, sortType: $gallerySortType,
                 scaleIndex: $galleryScaleIndex, isBatchEditMode: $galleryIsBatchEditMode, selectedBooksForBatch: $gallerySelectedBooks
             )
@@ -290,6 +233,7 @@ struct ContentView: View {
     }
 
     // MARK: - 🧩 全局统一静态工具栏
+
     @ToolbarContentBuilder
     private var globalToolbar: some ToolbarContent {
         if selectedBook != nil {
@@ -319,7 +263,7 @@ struct ContentView: View {
             if selectedModule == .gallery {
                 ToolbarItem {
                     ControlGroup {
-                        FilterMenuButton(selection: $galleryActiveTab, options: ArchiveFilterTab.allCases, activeIcon: "line.3.horizontal.decrease.circle.fill", inactiveIcon: "line.3.horizontal.decrease", isFiltered: galleryActiveTab != .all)
+                        FilterMenuButton(selection: $galleryActiveTab, options: GalleryFilterTab.allCases, activeIcon: "line.3.horizontal.decrease.circle.fill", inactiveIcon: "line.3.horizontal.decrease", isFiltered: galleryActiveTab != .all)
                         BatchEditToggleButton(isEditing: $galleryIsBatchEditMode) { withAnimation(.appSnappy) { galleryIsBatchEditMode.toggle(); gallerySelectedBooks.removeAll() } }
                         SortMenuButton(selection: $gallerySortType, options: GallerySortType.allCases)
                     }
@@ -379,6 +323,7 @@ struct WindowTransparentEffect: NSViewRepresentable {
         }
         return view
     }
+
     func updateNSView(_ nsView: NSView, context: Context) {}
 }
 #endif

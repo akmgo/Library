@@ -1,6 +1,4 @@
 #if os(macOS)
-import AppKit
-import CoreImage
 import SwiftData
 import SwiftUI
 
@@ -11,6 +9,7 @@ struct BookDetailView: View {
     let book: Book
     @Binding var selectedBook: Book?
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     
     // ✨ 状态上提：外层控制编辑和删除的弹出
     @Binding var showEditSheet: Bool
@@ -20,41 +19,20 @@ struct BookDetailView: View {
     @State private var showAddNoteSheet = false
     @State private var isDeleteMode = false
     
-    /// ✨ 接收异步提取的封面主题色
-    @State private var themeColor: Color? = nil
-    
     var body: some View {
         ZStack(alignment: .top) {
-            // ================= 1. 沉浸式专属液态背景 =================
-            // 🛑 核心修复：调用全局流体画幕，它的实体底板会完美遮挡背后的列表，
-            // 同时它的网格渐变会继续为详情页的玻璃组件提供流动折射光源！
-            AmbientFluidCanvas()
-                .contentShape(Rectangle()) // 确保整面墙都能接收点击
+            AppColors.primaryBackground(for: colorScheme)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
                 .onTapGesture {
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { selectedBook = nil }
                 }
-            
-            // ✨ 专属光晕：提取封面主色调，叠加在流动极光之上，形成从顶部倾泻而下的柔和折射光源
-            if let themeColor {
-                LinearGradient(
-                    colors: [
-                        themeColor.opacity(0.35),
-                        themeColor.opacity(0.1),
-                        .clear
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                .transition(.opacity)
-                .allowsHitTesting(false) // 让点击穿透到下层的返回热区
-            }
             
             // ================= 2. 全局无界内容区 =================
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 80) {
                     // 👆 上大模块
-                    BookDossierView(book: book)
+                    BookDossier(book: book)
                         .zIndex(1)
                     
                     // 👇 下大模块
@@ -96,7 +74,7 @@ struct BookDetailView: View {
                             Divider()
                         }
                         
-                        BookExcerptsView(
+                        BookExcerpts(
                             book: book,
                             isDeleteMode: isDeleteMode,
                             onDelete: { itemToDelete in deleteRecord(itemToDelete) }
@@ -118,10 +96,6 @@ struct BookDetailView: View {
                 ContentEditorSheet(isPresented: $showAddNoteSheet, book: book, mode: .note)
             }
         }
-        // ✨ 当进入详情页或封面变化时，激活主题色嗅探引擎
-        .task(id: book.coverData) {
-            await extractThemeColor()
-        }
         .sheet(isPresented: $showEditSheet) {
             BookEditorSheet(isPresented: $showEditSheet, bookToEdit: book)
         }
@@ -135,46 +109,21 @@ struct BookDetailView: View {
                 
                 // 2. 延迟执行删除（等待关闭动画完成），并强制同步
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    modelContext.delete(book)
-                    
+                    // ✨ 核心操作：调用 LocalBookManager 进行物理超度
+                    LocalBookManager.shared.deleteBook(book, context: modelContext)
+                            
                     do {
                         // ✨ 核心操作：强制持久化到磁盘，确保画廊读取的是最新状态
                         try modelContext.save()
-                        
+                                
                         // ✨ 核心操作：发送全局信号，告诉画廊“该干活了”
                         NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
-                        
-                        print("✅ 书籍已成功从磁盘删除并通知画廊")
+                                
+                        print("✅ 书籍及物理文件已彻底销毁并通知画廊")
                     } catch {
                         print("❌ 删除保存失败: \(error.localizedDescription)")
                     }
                 }
-            }
-        }
-    }
-    
-    // MARK: - ✨ 封面色彩提取引擎
-    
-    private func extractThemeColor() async {
-        guard let data = book.coverData, let ciImage = CIImage(data: data) else {
-            await MainActor.run { themeColor = nil }
-            return
-        }
-        
-        let extentVector = CIVector(x: ciImage.extent.origin.x, y: ciImage.extent.origin.y, z: ciImage.extent.size.width, w: ciImage.extent.size.height)
-        guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: ciImage, kCIInputExtentKey: extentVector]),
-              let outputImage = filter.outputImage
-        else {
-            return
-        }
-        
-        var bitmap = [UInt8](repeating: 0, count: 4)
-        let context = CIContext(options: [.workingColorSpace: kCFNull!])
-        context.render(outputImage, toBitmap: &bitmap, rowBytes: 4, bounds: CGRect(x: 0, y: 0, width: 1, height: 1), format: .RGBA8, colorSpace: nil)
-        
-        await MainActor.run {
-            withAnimation(.easeInOut(duration: 0.8)) {
-                self.themeColor = Color(red: Double(bitmap[0]) / 255.0, green: Double(bitmap[1]) / 255.0, blue: Double(bitmap[2]) / 255.0)
             }
         }
     }
@@ -217,10 +166,5 @@ struct BookDetailPreviewWrapper: View {
             Text("加载假数据中...")
         }
     }
-}
-
-#Preview("全景：书籍详情主页面") {
-    BookDetailPreviewWrapper()
-        .modelContainer(PreviewData.shared)
 }
 #endif

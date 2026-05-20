@@ -5,7 +5,7 @@ import AppKit
 
 // MARK: - ✨ 书籍核心信息档案板 (主视图)
 
-struct BookDossierView: View {
+struct BookDossier: View {
     @Bindable var book: Book
     @Namespace private var animationNamespace
     
@@ -99,7 +99,7 @@ struct InteractiveCoverView: View {
                         y: isHovering ? -normalizedY * 15 + 20 : 15
                     )
                 
-                LocalCoverView(coverID: coverID, coverData: coverData, fallbackTitle: fallbackTitle)
+                BookCoverView(coverID: coverID, coverData: coverData, fallbackTitle: fallbackTitle)
                     .frame(width: size.width, height: size.height)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
@@ -237,13 +237,16 @@ struct BookStatusPicker: View {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
             book.status = newStatus
             let now = Date()
+            
             if newStatus == .reading {
-                if book.startTime == nil { book.startTime = now }
+                if book.startDate == nil { book.startDate = now }
             } else if newStatus == .finished {
-                if book.startTime == nil { book.startTime = now }
-                if book.endTime == nil { book.endTime = now }
+                if book.startDate == nil { book.startDate = now }
+                // ✨ 恢复逻辑：切换到已读时，自动填充结束日期为当天
+                if book.finishDate == nil { book.finishDate = now }
             }
         }
+        
         if willFinish && !wasFinished {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 NotificationCenter.default.post(name: Notification.Name.triggerConfetti, object: nil)
@@ -264,17 +267,17 @@ struct BookDatePickers: View {
                 .foregroundColor(.mint)
             
             HStack(spacing: 16) {
-                if book.status == .unread || book.status == .wantToRead {
+                if book.status == .unread || book.status == .planned {
                     Text("等待翻开第一页...")
                         .font(.system(size: 14, weight: .medium, design: .serif)).italic()
                         .foregroundColor(.secondary)
                         .frame(height: 56)
                     Spacer()
                 } else {
-                    AdvancedDatePickerButton(icon: "play.fill", title: "开始", date: $book.startTime)
-                    AdvancedDatePickerButton(icon: "flag.fill", title: "结束", date: $book.endTime, isDisabled: book.status != .finished)
+                    AdvancedDatePickerButton(icon: "play.fill", title: "开始", date: $book.startDate)
+                    AdvancedDatePickerButton(icon: "flag.fill", title: "结束", date: $book.finishDate, isDisabled: book.status != .finished)
                     
-                    if book.status == .finished, let start = book.startTime, let end = book.endTime {
+                    if book.status == .finished, let start = book.startDate, let end = book.finishDate {
                         let diff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: start), to: Calendar.current.startOfDay(for: end)).day ?? 0
                         let days = max(1, diff + 1)
                         
@@ -429,15 +432,11 @@ struct BookDossierPreviewWrapper: View {
     @Query var books: [Book]
     var body: some View {
         if let book = books.first {
-            BookDossierView(book: book)
+            BookDossier(book: book)
                 .padding()
                 .frame(width: 900)
         }
     }
 }
 
-#Preview("模块：顶部看板区") {
-    BookDossierPreviewWrapper()
-        .modelContainer(PreviewData.shared)
-}
 #endif

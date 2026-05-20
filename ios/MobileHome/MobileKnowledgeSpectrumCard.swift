@@ -1,57 +1,75 @@
 #if os(iOS)
 import SwiftUI
-import SwiftData
 
-// MARK: - 🧠 知识图谱条带
+// MARK: - 🧠 知识基因图谱 (纯粹渲染版)
 
-/// 提取已读书籍偏好标签，构建可视化的知识结构光谱。
-///
-/// **数据特征：**
-/// 该组件只会扫描 `status == .finished` 的书籍。通过聚合这些书籍身上的 `tags` 集合，
-/// 提取出频率最高的 4 个标签，并在 UI 层以不同宽度的彩色 `Capsule` 展示个人的读书知识图谱。
 struct MobileKnowledgeSpectrumCard: View {
-    let readBooks: [Book]
-    
-    @State private var spectrumData: [(name: String, value: Double, color: Color)] = []
-    let palette: [Color] = [.purple, .indigo, .teal, .orange, .blue]
+    // ✨ 彻底干掉 @State 和 process()，直接接收统一的 SpectrumDataPoint 数组
+    let dataPoints: [SpectrumDataPoint]
     
     var body: some View {
         GroupBox {
-            VStack(spacing: 16) {
-                if spectrumData.isEmpty {
-                    Text("缺乏数据建立图谱")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .frame(minHeight: 60)
+            VStack(alignment: .leading, spacing: 16) {
+                if dataPoints.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "chart.pie")
+                            .font(.system(size: 24))
+                            .foregroundColor(.secondary.opacity(0.4))
+                        Text("缺乏数据")
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 80)
                 } else {
-                    // 光谱条形图
-                    GeometryReader { geo in
-                        HStack(spacing: 2) {
-                            ForEach(spectrumData, id: \.name) { item in
-                                Rectangle()
-                                    .fill(item.color.gradient)
-                                    .frame(width: max(geo.size.width * CGFloat(item.value / 100.0) - 2, 0))
+                    // 🌈 光谱彩带渲染区
+                    VStack(spacing: 24) {
+                        GeometryReader { geo in
+                            let spacing: CGFloat = 4
+                            let gapsCount = CGFloat(max(0, dataPoints.count - 1))
+                            let availableWidth = max(0, geo.size.width - (spacing * gapsCount))
+                            
+                            HStack(spacing: spacing) {
+                                ForEach(dataPoints, id: \.tagName) { point in
+                                    Rectangle()
+                                        .fill(point.color.gradient)
+                                        .frame(width: availableWidth * (point.percentage / 100.0))
+                                }
+                            }
+                            .clipShape(Capsule())
+                        }
+                        .frame(height: 16)
+                        
+                        // 🏷️ 底部图例标签区
+                        HStack(spacing: 0) {
+                            ForEach(dataPoints, id: \.tagName) { point in
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .fill(point.color)
+                                        .frame(width: 10, height: 10)
+                                    
+                                    // ✨ 修复：将文字部分的 VStack 改为居中对齐，并稍微增加一点间距
+                                    VStack(alignment: .center, spacing: 2) {
+                                        Text(point.tagName)
+                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                            .foregroundColor(.primary)
+                                            .lineLimit(1)
+                                        Text("\(Int(point.percentage))%")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .fixedSize()
+                                Spacer(minLength: 0)
                             }
                         }
-                        .clipShape(Capsule())
-                    }.frame(height: 12)
-                    
-                    // 下方色块文字图例
-                    HStack(spacing: 16) {
-                        ForEach(spectrumData, id: \.name) { item in
-                            HStack(spacing: 4) {
-                                Circle().fill(item.color).frame(width: 8, height: 8)
-                                Text(item.name).font(.system(size: 11, weight: .bold))
-                            }
-                        }
-                        Spacer()
+                        .padding(.horizontal, 2)
                     }
                 }
             }
             .padding(.top, 8)
         } label: {
             HStack {
-                Text("知识图谱")
+                Text("知识基因")
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                 Spacer()
@@ -59,39 +77,6 @@ struct MobileKnowledgeSpectrumCard: View {
                     .foregroundColor(.purple)
             }
         }
-        .onAppear { process() }
-        .onChange(of: readBooks) { _, _ in process() }
-    }
-    
-    // MARK: - 标签频率统计算法
-    
-    private func process() {
-        var counts: [String: Double] = [:]
-        var total = 0.0
-        
-        for book in readBooks {
-            for tag in book.tags ?? [] {
-                let c = tag.trimmingCharacters(in: .whitespaces)
-                if !c.isEmpty {
-                    counts[c, default: 0] += 1
-                    total += 1
-                }
-            }
-        }
-        
-        guard total > 0 else {
-            spectrumData = []
-            return
-        }
-        
-        // 提取最高频的前 4 个标签并计算百分比，附着独立色彩
-        spectrumData = counts
-            .sorted { $0.value > $1.value }
-            .prefix(4)
-            .enumerated()
-            .map {
-                ($0.element.key, ($0.element.value / total) * 100.0, palette[$0.offset % palette.count])
-            }
     }
 }
 #endif

@@ -6,7 +6,7 @@ internal import Combine
 
 /// 在界面底部水平排列的、呈现单行极简诗意摘录的跑马灯组件。
 /// 内部包含一个 `Timer.publish`，每隔 20 秒会自动触发轮播动画。
-struct FluidResonanceWaveChart: View {
+struct ResonanceWave: View {
     // 1. 接收纯数据数组，不再认识 SwiftData 的 Excerpt
     let excerpts: [ResonanceDataPoint]
     
@@ -27,7 +27,7 @@ struct FluidResonanceWaveChart: View {
     
     var body: some View {
         // ✨ 核心重构：抛弃 GroupBox，换上原生的液态玻璃舱
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: AppSpacing.m) {
             // 头部 Label
             HStack {
                 Text("思想共鸣")
@@ -41,7 +41,7 @@ struct FluidResonanceWaveChart: View {
             }
             
             // 内容区
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
                 
                 Spacer(minLength: 0)
                 
@@ -65,8 +65,8 @@ struct FluidResonanceWaveChart: View {
             }
             .frame(maxHeight: .infinity)
         }
-        .padding(24) // 撑开内部空间
-        .glassEffect(in: .rect(cornerRadius: 24.0)) // ✨ 注入极致通透的液态玻璃外壳
+        .padding(AppSpacing.xl)
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
         .onHover { h in if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
         .onTapGesture { switchExcerpt() }
         .onReceive(timer) { _ in switchExcerpt() }
@@ -80,10 +80,5 @@ struct FluidResonanceWaveChart: View {
         }
     }
 }
-#endif
 
-#Preview {
-    FluidResonanceWaveChart(excerpts: PreviewData.mockResonanceData)
-        .padding()
-        .frame(width: 400, height: 300)
-}
+#endif

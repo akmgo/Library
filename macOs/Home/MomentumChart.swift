@@ -4,7 +4,7 @@ import SwiftUI
 
 // MARK: - 📈 无界动能柱状图 (智能空状态版)
 
-struct FluidMomentumChart: View {
+struct MomentumChart: View {
     let dataPoints: [MomentumDataPoint]
     let totalMinutes: Int
     
@@ -82,8 +82,6 @@ struct FluidMomentumChart: View {
         }
     }
 }
-#endif
 
-#Preview {
-    FluidMomentumChart(dataPoints: PreviewData.mockMomentumChartData.points, totalMinutes: PreviewData.mockMomentumChartData.total)
-}
+
+#endif

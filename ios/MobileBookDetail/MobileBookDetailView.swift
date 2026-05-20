@@ -7,30 +7,26 @@ import SwiftUI
 /// iOS 端专属的书籍全景详情页。
 ///
 /// **架构职责：**
-/// 作为详情页的根视图 (Root View)，它负责：
 /// 1. 统筹整个页面的纵向滚动布局与底层色彩。
-/// 2. 集中管理所有的 Sheet 弹窗（添加摘录、添加笔记、编辑书籍信息）以及危险操作警告（删除书籍）。
+/// 2. 集中管理所有的 Sheet 弹窗以及危险操作警告。
 /// 3. 为内部的所有子组件下发 `book` 实体与当前的 `isDeleteMode` 删除锁定状态。
 struct MobileBookDetailView: View {
     let book: Book
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     
     // 弹窗与控制状态
     @State private var showDeleteAlert = false
     @State private var showAddExcerptSheet = false
     @State private var showEditSheet = false
-    @State private var showMaxWantToReadAlert = false
+    @State private var showMaxPlannedAlert = false
     
     @State private var isDeleteMode = false
     @Namespace private var animationNamespace
     
     var body: some View {
-        let safeTitle = book.title ?? "未知书名"
-        let safeAuthor = book.author ?? "未知作者"
-        let safeStatus = book.status ?? .unread
-        
         ZStack {
             // ================= 1. 全局无界内容区 =================
             ScrollView(.vertical, showsIndicators: false) {
@@ -41,44 +37,46 @@ struct MobileBookDetailView: View {
                         
                         // --- 上：左右分栏 (左封面，右信息) ---
                         HStack(alignment: .top, spacing: 16) {
-                            // 左侧：封面
-                            LocalCoverView(coverData: book.coverData, fallbackTitle: safeTitle)
+                            // 左侧：封面 (✨ 补齐了 coverID 缓存钩子)
+                            BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
                                 .frame(width: 120, height: 180)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .shadow(color: Color.black.opacity(0.15), radius: 12, y: 6) // 🍏 系统原生轻阴影
+                                .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
+                                .shadow(color: Color.black.opacity(0.15), radius: 12, y: 6)
                             
                             // 右侧：紧凑型档案信息
                             VStack(alignment: .leading, spacing: 0) {
                                 // 书名、作者与想读按钮
                                 VStack(alignment: .leading, spacing: 4) {
                                     HStack(alignment: .top) {
-                                        Text(safeTitle)
+                                        Text(book.title)
                                             .font(.system(size: 18, weight: .bold, design: .rounded))
                                             .foregroundColor(.primary)
                                             .lineLimit(2)
                                         Spacer(minLength: 4)
-                                        if safeStatus == .unread {
-                                            MobileWantToReadToggle(book: book, showMaxAlert: $showMaxWantToReadAlert)
+                                        
+                                        // ✨ “想读”本质上是一种特殊的 unread 状态，这里包容它
+                                        if book.status == .unread || book.status == .planned {
+                                            MobilePlannedStatusToggle(book: book, showMaxAlert: $showMaxPlannedAlert)
                                                 .offset(y: -4)
                                         }
                                     }
-                                    Text(safeAuthor)
+                                    Text(book.author)
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.secondary)
                                         .lineLimit(1)
                                 }
                                 
-                                Spacer() // 弹性撑开
+                                Spacer()
                                 
                                 // 状态切换器
                                 MobileCompactStatusPicker(book: book, animationNamespace: animationNamespace)
                                 
-                                Spacer() // 弹性撑开
+                                Spacer()
                                 
                                 // 阅读日期与历时
                                 MobileCompactDatePickers(book: book)
                                 
-                                Spacer() // 弹性撑开
+                                Spacer()
                                 
                                 // 个人评价
                                 MobileCompactRatingView(book: book)
@@ -91,8 +89,8 @@ struct MobileBookDetailView: View {
                         MobileCompactTagsView(book: book)
                     }
                     .padding(20)
-                    .background(Color(uiColor: .secondarySystemGroupedBackground)) // 🍏 原生卡片色
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .background(AppColors.secondaryBackground(for: colorScheme))
+                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
                     
@@ -120,7 +118,7 @@ struct MobileBookDetailView: View {
                                         .font(.system(size: 12, weight: .bold))
                                         .foregroundColor(isDeleteMode ? .white : .primary)
                                         .padding(.horizontal, 12).padding(.vertical, 6)
-                                        .background(isDeleteMode ? Color.red : Color.secondary.opacity(0.1)) // 原生红底 / 灰底
+                                        .background(isDeleteMode ? Color.red : Color.secondary.opacity(0.1))
                                         .clipShape(Capsule())
                                 }
                                 
@@ -131,7 +129,7 @@ struct MobileBookDetailView: View {
                                     }
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 12).padding(.vertical, 6)
-                                    .background(Color.indigo) // 🍏 系统原生靛蓝色
+                                    .background(Color.indigo)
                                     .clipShape(Capsule())
                                 }
                             }
@@ -147,7 +145,7 @@ struct MobileBookDetailView: View {
                 .padding(.bottom, 80)
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground)) // 🍏 全局系统灰底
+        .background(AppColors.primaryBackground(for: colorScheme))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -168,28 +166,26 @@ struct MobileBookDetailView: View {
                 modelContext.delete(book)
                 dismiss() // 返回上一级画廊
             }
-        } message: { Text("确定要删除《\(safeTitle)》吗？相关的读书笔记也会一并清除。") }
-        .alert("席位已满", isPresented: $showMaxWantToReadAlert) {
+        } message: { Text("确定要删除《\(book.title)》吗？相关的读书笔记也会一并清除。") }
+        .alert("席位已满", isPresented: $showMaxPlannedAlert) {
             Button("知道啦", role: .cancel) {}
         } message: { Text("主页“想读焦点”最多同时放置 4 本书。请先取消其他的想读状态吧！") }
         .sheet(isPresented: $showAddExcerptSheet) { MobileAddExcerptSheet(book: book) }
-        .sheet(isPresented: $showEditSheet) { MobileBookEditorSheet(book: book) }
+        .sheet(isPresented: $showEditSheet) { MobileBookEditorSheet() }
     }
     
     // MARK: - 内部业务控制
     
     /// 执行摘录与笔记物理销毁。
-    private func deleteRecord(_ item: MobileRecordItem) {
+    /// ✨ 修复：适配单表大一统，直接接收 BookAnnotation 进行操作
+    private func deleteRecord(_ item: BookAnnotation) {
         withAnimation(.spring()) {
-            switch item {
-            case .excerpt(let excerpt): modelContext.delete(excerpt)
-            case .note(let note): modelContext.delete(note)
-            }
+            modelContext.delete(item)
         }
-        let excerptCount = book.excerpts?.count ?? 0
-        let noteCount = book.notes?.count ?? 0
+        
+        let count = book.annotations?.count ?? 0
         // 若删完最后一条，自动切回普通模式
-        if (excerptCount + noteCount) <= 1 {
+        if count <= 1 {
             withAnimation { isDeleteMode = false }
         }
     }

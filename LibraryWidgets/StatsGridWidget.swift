@@ -50,7 +50,7 @@ struct StatsGridProvider: TimelineProvider {
             for book in allBooks {
                 if book.status == .finished {
                     libraryRead += 1
-                    if let eTime = book.endTime, calendar.component(.year, from: eTime) == currentYear {
+                    if let eTime = book.finishDate, calendar.component(.year, from: eTime) == currentYear {
                         yearlyCount += 1
                     }
                 }
@@ -58,7 +58,7 @@ struct StatsGridProvider: TimelineProvider {
             let libraryTotal = allBooks.count
 
             // ✨ 性能优化：单次遍历搞定本周、本月打卡天数统计 (绝对不嵌套使用 contains/filter)
-            let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
+            let allRecords = try context.fetch(FetchDescriptor<ReadingSession>())
             var tempCalendar = calendar
             tempCalendar.firstWeekday = 2
             let startOfWeek = tempCalendar.date(from: tempCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) ?? today
@@ -82,7 +82,7 @@ struct StatsGridProvider: TimelineProvider {
                 date: today,
                 weekCount: weekDaysSet.count, weekTarget: 7,
                 monthlyDays: monthDaysSet.count, monthTarget: 30,
-                yearlyCount: yearlyCount, yearTarget: globalConfig.yearlyBookGoal,
+                yearlyCount: yearlyCount, yearTarget: globalConfig.yearlyBooksGoal,
                 libraryRead: libraryRead, libraryTotal: libraryTotal
             )
         } catch {

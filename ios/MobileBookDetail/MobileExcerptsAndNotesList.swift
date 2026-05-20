@@ -2,50 +2,28 @@
 import SwiftData
 import SwiftUI
 
-// MARK: - 全局抽象数据流模型
-
-/// 用于抹平底层 `Excerpt` (摘录) 和 `Note` (笔记) 不同表结构的包装器载体。
-enum MobileRecordItem: Identifiable {
-    case excerpt(Excerpt)
-    case note(Note)
-    
-    var id: String {
-        switch self {
-        case .excerpt(let e): return "excerpt-\(e.id ?? UUID().uuidString)"
-        case .note(let n): return "note-\(n.id ?? UUID().uuidString)"
-        }
-    }
-    
-    var date: Date {
-        switch self {
-        case .excerpt(let e): return e.createdAt ?? Date.distantPast
-        case .note(let n): return n.createdAt ?? Date.distantPast
-        }
-    }
-}
-
-// MARK: - 🧩 混合列表渲染引擎 (全面拥抱原生 Markdown)
+// MARK: - 🧩 混合列表渲染引擎 (全面拥抱大一统注解模型)
 
 /// 并列交织渲染书籍关联的所有碎片记录的双列瀑布流容器。
 ///
 /// **逻辑与交互：**
-/// 该视图会将所有拉取到的数据整合、依照时间倒序排列，然后通过数学模取 (`offset % 2`) 的方法强行平分到左右两侧 `VStack`。
-/// 它接收上级组件下放的 `isDeleteMode`，可对所有子卡片呈现可删除红点样式。
+/// 彻底废弃了曾经繁琐的 Excerpt 和 Note 双表异构拼装。
+/// 如今直接从 book 实体中提取统一的 `annotations` 进行倒序排列渲染。
 struct MobileExcerptsAndNotesList: View {
     let book: Book
     let isDeleteMode: Bool
     
     /// 当用户点击红色 "X" 按钮时触发的业务上移执行闭包。
-    let onDelete: (MobileRecordItem) -> Void
+    /// ✨ 修复：传出参数统一更改为原生的 BookAnnotation
+    let onDelete: (BookAnnotation) -> Void
     
-    private var mixedRecords: [MobileRecordItem] {
-        let excerpts = (book.excerpts ?? []).map { MobileRecordItem.excerpt($0) }
-        let notes = (book.notes ?? []).map { MobileRecordItem.note($0) }
-        return (excerpts + notes).sorted { $0.date > $1.date }
+    // ✨ 极简提取：由于单表合并，现在只需要一句话就能完成排序
+    private var sortedAnnotations: [BookAnnotation] {
+        (book.annotations ?? []).sorted { $0.createdAt > $1.createdAt }
     }
     
     var body: some View {
-        if mixedRecords.isEmpty {
+        if sortedAnnotations.isEmpty {
             VStack(spacing: 12) {
                 Image(systemName: "leaf").font(.system(size: 32)).foregroundColor(Color.gray.opacity(0.5))
                 Text("暂无记录，写下你的感悟吧").font(.system(size: 14)).foregroundColor(.secondary)
@@ -53,8 +31,10 @@ struct MobileExcerptsAndNotesList: View {
             .padding(.vertical, 60)
         } else {
             LazyVStack(spacing: 16) {
-                ForEach(mixedRecords) { item in
-                    MobileRecordCardWrapper(item: item, isDeleteMode: isDeleteMode) { onDelete(item) }
+                ForEach(sortedAnnotations) { annotation in
+                    MobileAnnotationCardWrapper(annotation: annotation, isDeleteMode: isDeleteMode) {
+                        onDelete(annotation)
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -65,17 +45,19 @@ struct MobileExcerptsAndNotesList: View {
 // MARK: - 📱 卡片包装器与子渲染节点
 
 /// 将原生的笔记/摘录卡片与编辑状态下的“删除热区”复合。
-private struct MobileRecordCardWrapper: View {
-    let item: MobileRecordItem
+private struct MobileAnnotationCardWrapper: View {
+    let annotation: BookAnnotation
     let isDeleteMode: Bool
     let onDelete: () -> Void
     
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Group {
-                switch item {
-                case .excerpt(let excerpt): MobileExcerptCard(excerpt: excerpt)
-                case .note(let note): MobileNoteCard(note: note)
+                // ✨ 自动根据模型内的类型属性分发不同 UI 卡片
+                if annotation.isNote {
+                    MobileNoteCard(annotation: annotation)
+                } else {
+                    MobileReadingExcerptCard(annotation: annotation)
                 }
             }
             
@@ -99,48 +81,48 @@ private struct MobileRecordCardWrapper: View {
 }
 
 /// 基于衬线体 (`.serif`) 的优雅原书划线展示模块。
-private struct MobileExcerptCard: View {
-    let excerpt: Excerpt
+private struct MobileReadingExcerptCard: View {
+    let annotation: BookAnnotation
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
-        let safeContent = excerpt.content ?? ""
-        let safeDate = excerpt.createdAt ?? Date()
-        
         VStack(alignment: .leading, spacing: 12) {
-            // 🍏 LocalizedStringKey 魔法，支持将存储的 markdown 粗体直接转出格式
-            Text(LocalizedStringKey(safeContent))
+            // ✨ 修复：模型里的 content 已经是必填项，干掉了冗余的 ?? ""
+            Text(LocalizedStringKey(annotation.content))
                 .font(.system(size: 15, weight: .regular, design: .serif))
                 .lineSpacing(6)
                 .foregroundColor(.primary)
+            
             HStack {
                 Spacer()
-                Text(safeDate, format: .dateTime.year().month().day())
+                // ✨ 修复：同理干掉 ?? Date()
+                Text(annotation.createdAt, format: .dateTime.year().month().day())
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(Color.gray.opacity(0.5))
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(AppColors.secondaryBackground(for: colorScheme))
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
     }
 }
 
 /// 呈现原生 Markdown 并带有橙紫暖色辨识特征的独立思考笔记视图卡片。
 private struct MobileNoteCard: View {
-    let note: Note
+    let annotation: BookAnnotation
+    
     var body: some View {
-        let safeContent = note.content ?? ""
-        let safeDate = note.createdAt ?? Date()
-        
         VStack(alignment: .leading, spacing: 12) {
             // 🍏 SwiftUI 底层自动接管 markdown 的多级 Header 和无序列表样式映射
-            Text(LocalizedStringKey(safeContent))
+            Text(LocalizedStringKey(annotation.content))
                 .font(.system(size: 14))
                 .lineSpacing(4)
                 .foregroundColor(.primary)
+            
             HStack {
                 Spacer()
-                Text(safeDate, format: .dateTime.year().month().day())
+                Text(annotation.createdAt, format: .dateTime.year().month().day())
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(Color.gray.opacity(0.5))
             }
@@ -148,7 +130,7 @@ private struct MobileNoteCard: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.orange.opacity(0.05)) // 笔记用极淡的暖黄色区分，并带底层阴影
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
     }
 }
 #endif

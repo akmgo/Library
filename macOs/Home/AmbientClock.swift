@@ -9,7 +9,7 @@ internal import Combine
 /// 采用了复古机械翻页钟的视觉逻辑，数字变化时带有丝滑的上下滑动转场。
 /// 去除了冒号的特效，保持极致的简单与克制。
 // MARK: - 🕰️ 桌面级环境时钟 (Ambient Clock - 玻璃晶体版)
-struct FluidAmbientClock: View {
+struct AmbientClock: View {
     @State private var currentTime = Date()
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -35,7 +35,7 @@ struct FluidAmbientClock: View {
     var body: some View {
         let accentColor = Color.indigo
         
-        VStack(alignment: .center, spacing: 25) {
+        VStack(alignment: .center, spacing: 20) {
             HStack(spacing: 16) {
                 GiantTimeBlock(value: hourString, label: "HOURS")
                 
@@ -107,7 +107,7 @@ private struct GiantTimeBlock: View {
 
 
 #Preview() {
-    FluidAmbientClock()
+    AmbientClock()
 }
 
 #endif

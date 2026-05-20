@@ -29,28 +29,10 @@ struct GeneralSettingsView: View {
                     .frame(width: 140)
                     .onChange(of: appTheme) { _, newValue in applyTheme(newValue) }
                 }
-                
-                SettingsControlRow(icon: "house.fill", iconColor: .mint, title: "默认启动视图", subtitle: "每次启动应用时优先展示的模块") {
-                    Picker("", selection: $defaultStartupTab) {
-                        Text("阅读主页").tag("home")
-                        Text("全景画廊").tag("gallery")
-                        Text("月度记录").tag("monthly")
-                        Text("年度轨迹").tag("yearly")
-                        Text("灵感碎片").tag("inspiration")
-                        Text("墨香画卷").tag("verses")
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
-                    .frame(width: 140)
-                }
-            } header: { Text("外观与体验").font(.system(size: 13, weight: .bold)) }
+            } header: { Text("外观").font(.system(size: 13, weight: .bold)) }
             
             // ================= 2. 操作指引 (纯展示) =================
             Section {
-                SettingsControlRow(icon: "magnifyingglass", iconColor: .gray, title: "全局聚合搜索", subtitle: "在任意主模块快速唤起无界 Spotlight") {
-                    ShortcutBadge(text: "⌘ K")
-                }
-                
                 SettingsControlRow(icon: "plus.square.fill", iconColor: .gray, title: "快速录入", subtitle: "脑暴时刻，迅速记录闪念或添加新书籍") {
                     ShortcutBadge(text: "⌘ N")
                 }

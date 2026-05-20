@@ -32,7 +32,7 @@ struct MomentumChartProvider: TimelineProvider {
     private func fetchRealData() async -> MomentumChartEntry {
         let context = SharedDatabase.shared.container.mainContext
         do {
-            let allRecords = try context.fetch(FetchDescriptor<ReadingRecord>())
+            let allRecords = try context.fetch(FetchDescriptor<ReadingSession>())
             let calendar = Calendar.current
             let today = calendar.startOfDay(for: Date())
             
@@ -44,7 +44,7 @@ struct MomentumChartProvider: TimelineProvider {
                 // 计算该记录是几天前
                 let components = calendar.dateComponents([.day], from: recDate, to: today)
                 if let daysAgo = components.day, daysAgo >= 0 && daysAgo < 7 {
-                    weekSeconds[6 - daysAgo] += record.readingDuration
+                    weekSeconds[6 - daysAgo] += record.duration
                 }
             }
             

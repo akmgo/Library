@@ -14,30 +14,48 @@ struct WaveProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WaveEntry) -> ()) {
-        Task { @MainActor in completion(fetchRealData()) }
+        Task { @MainActor in
+            let entry = fetchRealData(date: Date())
+            completion(entry)
+        }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         Task { @MainActor in
-            let entry = fetchRealData()
-            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
-            completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+            var entries: [WaveEntry] = []
+            let currentDate = Date()
+            
+            // ✨ 保持原始结构，但一次性生成 12 张幻灯片（每 5 分钟切换一次），解决不轮播的问题
+            for offset in 0 ..< 12 {
+                let entryDate = Calendar.current.date(byAdding: .minute, value: offset * 5, to: currentDate)!
+                entries.append(fetchRealData(date: entryDate))
+            }
+            
+            let timeline = Timeline(entries: entries, policy: .atEnd)
+            completion(timeline)
         }
     }
 
     @MainActor
-    private func fetchRealData() -> WaveEntry {
+    private func fetchRealData(date: Date) -> WaveEntry {
+        // 恢复你最初的调用方式
         let context = SharedDatabase.shared.container.mainContext
+        
         do {
-            let targetType = AnnotationType.excerpt
-            let descriptor = FetchDescriptor<BookAnnotation>(
-                predicate: #Predicate<BookAnnotation> { $0.type == targetType }
+            // ✨ 加上 200 条的限制，防止小组件因为内存超载而直接消失崩溃
+            var descriptor = FetchDescriptor<BookAnnotation>(
+                sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
             )
+            descriptor.fetchLimit = 200
+            
             let annotations = try context.fetch(descriptor)
+            
+            // ✨ 恢复最安全的内存过滤，避开 #Predicate 导致查不到数据的 Bug
+            let excerpts = annotations.filter { $0.type == .excerpt }
 
-            if let random = annotations.randomElement() {
+            if let random = excerpts.randomElement() {
                 return WaveEntry(
-                    date: Date(),
+                    date: date,
                     content: random.content,
                     source: random.book?.title ?? "我的阅读笔记"
                 )
@@ -45,7 +63,13 @@ struct WaveProvider: TimelineProvider {
         } catch {
             print("Widget Fetch Error: \(error)")
         }
-        return WaveEntry(date: Date(), content: "保持阅读，保持思考。你的书库中还没有留下摘录，去沉淀第一缕思想吧。", source: "我的书房")
+        
+        // 原汁原味的兜底文案
+        return WaveEntry(
+            date: date,
+            content: "保持阅读，保持思考。你的书库中还没有留下摘录，去沉淀第一缕思想吧。",
+            source: "我的书房"
+        )
     }
 }
 
@@ -54,7 +78,7 @@ struct WaveWidgetView: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            // ✨ UI优化：移植了你在主 App 中敲定的氛围感水印
+            // ✨ 原版氛围感水印
             Image(systemName: "quote.opening")
                 .font(.system(size: 64, weight: .heavy))
                 .foregroundColor(Color.indigo.opacity(0.08))
@@ -101,3 +125,4 @@ struct ResonanceWaveWidget: Widget {
         .supportedFamilies([.systemMedium])
     }
 }
+

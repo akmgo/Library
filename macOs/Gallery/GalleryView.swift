@@ -34,26 +34,19 @@ enum GalleryGridScale: Double, CaseIterable {
 
 enum GallerySortType: String, CaseIterable, Identifiable, CustomStringConvertible {
     case newest = "最近添加"; case oldest = "最早添加"; case titleAsc = "书名 (A-Z)"
-    var id: String {
-        rawValue
-    }
-
-    var description: String {
-        rawValue
-    }
+    var id: String { rawValue }
+    var description: String { rawValue }
 }
 
-enum ArchiveFilterTab: String, CaseIterable, CustomStringConvertible {
-    case all = "全部书籍"; case wantToRead = "想读书籍"; case unread = "待读书籍"
+enum GalleryFilterTab: String, CaseIterable, CustomStringConvertible {
+    case all = "全部书籍"; case planned = "想读书籍"; case unread = "待读书籍"
     case reading = "在读书籍"; case finished = "已读书籍"; case abandoned = "弃读书籍"
-    var description: String {
-        rawValue
-    }
+    var description: String { rawValue }
 
     var status: BookStatus? {
         switch self {
         case .all: return nil
-        case .wantToRead: return .wantToRead
+        case .planned: return .planned
         case .unread: return .unread
         case .reading: return .reading
         case .finished: return .finished
@@ -64,12 +57,11 @@ enum ArchiveFilterTab: String, CaseIterable, CustomStringConvertible {
 
 // MARK: - 🌟 核心全景画廊视图
 
-struct ArchiveGalleryView: View {
+struct GalleryView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
     
-    // ✨ 状态上提
-    @Binding var activeTab: ArchiveFilterTab
+    @Binding var activeTab: GalleryFilterTab
     @Binding var searchText: String
     @Binding var sortType: GallerySortType
     @Binding var scaleIndex: Double
@@ -79,7 +71,6 @@ struct ArchiveGalleryView: View {
     @State private var displayBooks: [Book] = []
     @State private var inventoryData: (total: Int, points: [InventoryDataPoint]) = (0, [])
     
-    /// ✨ 终极修复：强制状态驱动首屏动画锁
     @State private var isEntranceAnimated: Bool = false
     
     private var currentScale: GalleryGridScale {
@@ -88,23 +79,22 @@ struct ArchiveGalleryView: View {
     
     var body: some View {
         GeometryReader { geo in
-            // 1. 主体滚动区 (彻底移除外层 ZStack)
+            // 1. 主体滚动区
             ScrollView {
                 gridView(containerWidth: geo.size.width)
                     .padding(.horizontal, 40)
                     .padding(.top, 140)
                     .padding(.bottom, isBatchEditMode ? 120 : 60)
-                    // ✨ 视觉极限强化：统一底部的垂直电梯升空
                     .opacity(isEntranceAnimated ? 1.0 : 0.0)
                     .offset(y: isEntranceAnimated ? 0 : 150)
                     .scaleEffect(isEntranceAnimated ? 1.0 : 0.99, anchor: .center)
                     .animation(.appFluidSpring, value: isEntranceAnimated)
             }
-            // 2. ✨ 顶部 Header (转化为 overlay，解除 ZStack 层级负担)
+            // 2. 顶部 Header (overlay 挂载)
             .overlay(alignment: .top) {
                 VStack(spacing: 0) {
                     HStack(alignment: .center) {
-                        // 👈 左侧文字区：戏剧性向右滑入
+                        // 左侧文字区
                         VStack(alignment: .leading, spacing: 8) {
                             Text("全景画廊")
                                 .font(.system(size: 32, weight: .heavy, design: .rounded))
@@ -118,14 +108,13 @@ struct ArchiveGalleryView: View {
                         
                         Spacer()
                         
-                        // 👉 右侧数据区：戏剧性向左滑入
+                        // 右侧数据区
                         MiniInventoryBar(totalCount: inventoryData.total, dataPoints: inventoryData.points)
                             .frame(width: 320)
                             .opacity(isEntranceAnimated ? 1.0 : 0.0)
                             .offset(x: isEntranceAnimated ? 0 : 200)
                     }
                     .padding(.horizontal, 40).padding(.top, 45).padding(.bottom, 20)
-                    // ✨ 统一使用流体弹簧控制内部元素的横向归位
                     .animation(.appFluidSpring, value: isEntranceAnimated)
                     
                     Divider().background(Color.primary.opacity(0.05))
@@ -133,7 +122,7 @@ struct ArchiveGalleryView: View {
                 .background(Color.clear.background(.ultraThinMaterial).opacity(0.85))
                 .ignoresSafeArea(edges: .top)
             }
-            // 3. ✨ 底部批处理控制栏 (同样转化为 overlay)
+            // 3. 底部批处理控制栏
             .overlay(alignment: .bottom) {
                 if isBatchEditMode {
                     VStack {
@@ -174,24 +163,17 @@ struct ArchiveGalleryView: View {
             }
         }
         .onAppear {
-            // 强制先重刷数据，确保如果是从详情页删完回来的，这里能拿到最新结果
             refreshGalleryData(animate: false)
-            
-            // 这里的 isEntranceAnimated 逻辑可以保留
             if !isEntranceAnimated {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.appFluidSpring) {
-                        isEntranceAnimated = true
-                    }
+                    withAnimation(.appFluidSpring) { isEntranceAnimated = true }
                 }
             }
         }
         .onChange(of: activeTab) { _, _ in refreshGalleryData(animate: true) }
         .onChange(of: searchText) { _, _ in refreshGalleryData(animate: true) }
         .onChange(of: sortType) { _, _ in refreshGalleryData(animate: true) }
-        // 2. 确保 onReceive 逻辑能够穿透缓存
         .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
-            print("📡 画廊接收到更新通知，开始重刷数据...")
             refreshGalleryData(animate: true)
         }
     }
@@ -205,16 +187,14 @@ struct ArchiveGalleryView: View {
             let columns = [GridItem(.adaptive(minimum: currentScale.width, maximum: currentScale.width), spacing: currentScale.hSpacing)]
             LazyVGrid(columns: columns, spacing: currentScale.vSpacing) {
                 ForEach(displayBooks) { book in
-                    AnimatedCard_Glide(
+                    AnimatedCardGlide(
                         book: book, activeTab: activeTab.rawValue,
                         isBatchEditMode: isBatchEditMode, gridScale: currentScale,
                         selectedBooksForBatch: $selectedBooksForBatch, selectedBook: $selectedBook
                     )
-                    // ✨ 保留 transition，用于分类切换时单张卡片的动态入场
                     .transition(.appCardGlide)
                 }
             }
-            // 过滤、排序时的洗牌动画
             .animation(.appFluidSpring, value: displayBooks)
             .animation(.appFluidSpring, value: scaleIndex)
         }
@@ -222,41 +202,37 @@ struct ArchiveGalleryView: View {
     
     private func deleteSelectedBooks() {
         for book in displayBooks where selectedBooksForBatch.contains(book.id) {
-            modelContext.delete(book)
+            LocalBookManager.shared.deleteBook(book, context: modelContext)
         }
         try? modelContext.save()
-        withAnimation(.appSnappy) { isBatchEditMode = false; selectedBooksForBatch.removeAll() }
+        withAnimation(.appSnappy) {
+            isBatchEditMode = false
+            selectedBooksForBatch.removeAll()
+        }
         refreshGalleryData(animate: true)
-        // ✨ 这里使用了全局强类型通知
         NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
     }
 }
 
-extension ArchiveGalleryView {
+extension GalleryView {
     private func refreshGalleryData(animate: Bool) {
         Task { @MainActor in
             let newStats = fetchInventoryStats()
             let newBooks = fetchDisplayBooks()
             
-            // 数据赋值逻辑
             if animate && self.isEntranceAnimated {
-                // 如果已经完成首屏渲染，说明是在做过滤操作，使用流体动画更新数据
                 withAnimation(.appFluidSpring) {
                     self.inventoryData = newStats
                     self.displayBooks = newBooks
                 }
             } else {
-                // 首屏渲染，无动画秒塞数据
                 self.inventoryData = newStats
                 self.displayBooks = newBooks
             }
             
-            // ✨ 终极时序：延长等待确保底层数据被完全排版后，再拉开帷幕，消除任何可能存在的残影！
             if !self.isEntranceAnimated {
                 try? await Task.sleep(nanoseconds: 60_000_000)
-                withAnimation(.appFluidSpring) {
-                    self.isEntranceAnimated = true
-                }
+                withAnimation(.appFluidSpring) { self.isEntranceAnimated = true }
             }
         }
     }
@@ -266,7 +242,8 @@ extension ArchiveGalleryView {
         let desc = FetchDescriptor<Book>(); let allBooks = (try? modelContext.fetch(desc)) ?? []
         var finished = 0, reading = 0, want = 0, unread = 0, abandoned = 0
         for b in allBooks {
-            switch b.status { case .finished: finished+=1; case .reading: reading+=1; case .wantToRead: want+=1; case .unread: unread+=1; case .abandoned: abandoned+=1 }
+            // ✨ 模型 status 为强枚举，匹配极其安全
+            switch b.status { case .finished: finished+=1; case .reading: reading+=1; case .planned: want+=1; case .unread: unread+=1; case .abandoned: abandoned+=1 }
         }
         let totalCount = finished + reading + want + unread + abandoned
         guard totalCount > 0 else { return (0, []) }
@@ -281,37 +258,12 @@ extension ArchiveGalleryView {
         
         if !searchText.isEmpty {
             let lower = searchText.lowercased()
+            // ✨ title, author, tags 全是非可选属性，直接链式调用，极度清爽
             allBooks = allBooks.filter { $0.title.lowercased().contains(lower) || $0.author.lowercased().contains(lower) || $0.tags.contains { $0.lowercased().contains(lower) } }
         }
         
         switch sortType { case .newest: allBooks.sort(by: { $0.createdAt > $1.createdAt }); case .oldest: allBooks.sort(by: { $0.createdAt < $1.createdAt }); case .titleAsc: allBooks.sort(by: { $0.title < $1.title }) }
         return allBooks
     }
-}
-
-#Preview("全景画廊 (完整视图)") {
-    struct GalleryPreviewWrapper: View {
-        @State private var selectedBook: Book? = nil
-        @State private var activeTab: ArchiveFilterTab = .all
-        @State private var searchText: String = ""
-        @State private var sortType: GallerySortType = .newest
-        @State private var scaleIndex: Double = 2.0
-        @State private var isBatchEditMode: Bool = false
-        @State private var selectedBooksForBatch: Set<String> = []
-
-        var body: some View {
-            ArchiveGalleryView(
-                selectedBook: $selectedBook,
-                activeTab: $activeTab,
-                searchText: $searchText,
-                sortType: $sortType,
-                scaleIndex: $scaleIndex,
-                isBatchEditMode: $isBatchEditMode,
-                selectedBooksForBatch: $selectedBooksForBatch
-            )
-            .frame(width: 1000, height: 750)
-        }
-    }
-    return GalleryPreviewWrapper().modelContainer(PreviewData.shared)
 }
 #endif

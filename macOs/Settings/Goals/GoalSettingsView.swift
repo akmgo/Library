@@ -19,7 +19,7 @@ struct GoalSettingsView: View {
                 // ✨ 优化：单位转移至 subtitle，右侧仅保留纯净的控制舱
                 SettingsControlRow(icon: "timer", iconColor: .orange, title: "每日阅读目标", subtitle: "每天期望达成的沉浸阅读时长（分钟）") {
                     FluidCapsuleStepper(
-                        value: Binding(get: { config.dailyReadingGoal }, set: { config.dailyReadingGoal = $0 }),
+                        value: Binding(get: { config.dailyMinutesGoal }, set: { config.dailyMinutesGoal = $0 }),
                         step: 5,
                         range: 5...120,
                         action: saveConfig
@@ -29,7 +29,7 @@ struct GoalSettingsView: View {
                 // 2. 年度阅读目标 (1~500，步长1)
                 SettingsControlRow(icon: "target", iconColor: .pink, title: "年度阅读目标", subtitle: "今年计划通关的书籍数量（本）") {
                     FluidCapsuleStepper(
-                        value: Binding(get: { config.yearlyBookGoal }, set: { config.yearlyBookGoal = $0 }),
+                        value: Binding(get: { config.yearlyBooksGoal }, set: { config.yearlyBooksGoal = $0 }),
                         step: 1,
                         range: 1...500,
                         action: saveConfig
@@ -39,7 +39,7 @@ struct GoalSettingsView: View {
                 // 3. 总馆藏目标 (10~无限制，步长10)
                 SettingsControlRow(icon: "archivebox.fill", iconColor: .teal, title: "总馆藏目标", subtitle: "期望打造的个人书库规模（本）") {
                     FluidCapsuleStepper(
-                        value: Binding(get: { config.libraryTargetGoal }, set: { config.libraryTargetGoal = $0 }),
+                        value: Binding(get: { config.libraryBooksGoal }, set: { config.libraryBooksGoal = $0 }),
                         step: 10,
                         range: 10...999_999,
                         action: saveConfig
@@ -125,15 +125,4 @@ private struct FluidCapsuleStepper: View {
     }
 }
 
-// MARK: - ✨ 预览代码
-#Preview("目标设置预览") {
-    let mockConfig = UserConfig()
-    // 强制设置一个大数字测试绝对宽度
-    mockConfig.libraryTargetGoal = 100
-    
-    return GoalSettingsView(config: mockConfig, systemMessage: .constant(nil))
-        .frame(width: 560, height: 500)
-        .background(Color(nsColor: .windowBackgroundColor))
-        .modelContainer(PreviewData.shared)
-}
 #endif

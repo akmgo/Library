@@ -6,13 +6,13 @@ import SwiftUI
 /// 全宽铺开的知识维度光谱彩带。
 ///
 /// 最高排名的 5 个维度将被映射为长度不等、颜色绚丽的光滑胶囊条，呈现用户的宏观知识面分布。
-struct FluidKnowledgeSpectrumCard: View {
+struct KnowledgeSpectrum: View {
     /// 1. 彻底解耦：只接收纯粹的 UI 数据点
     let dataPoints: [SpectrumDataPoint]
     
     var body: some View {
         // ✨ 核心重构：抛弃 GroupBox，换上原生的液态玻璃舱
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: AppSpacing.m) {
             // 头部 Label
             HStack {
                 Text("知识基因")
@@ -25,7 +25,7 @@ struct FluidKnowledgeSpectrumCard: View {
             
             if dataPoints.isEmpty {
                 // 空状态
-                VStack(spacing: 8) {
+                VStack(spacing: AppSpacing.xs) {
                     Image(systemName: "chart.pie")
                         .font(.system(size: 24))
                         .foregroundColor(.secondary.opacity(0.4))
@@ -36,7 +36,7 @@ struct FluidKnowledgeSpectrumCard: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 // 数据展示状态
-                VStack(spacing: 24) {
+                VStack(spacing: AppSpacing.xl) {
                     // 🌈 光谱彩带渲染区
                     GeometryReader { geo in
                         // 1. 定义固定的间距
@@ -83,16 +83,9 @@ struct FluidKnowledgeSpectrumCard: View {
                 .frame(maxHeight: .infinity, alignment: .center)
             }
         }
-        .padding(24) // 撑开内部空间
-        .glassEffect(in: .rect(cornerRadius: 24.0)) // ✨ 注入极致通透的液态玻璃外壳
+        .padding(AppSpacing.xl)
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
     }
 }
 
-// MARK: - 预览
-
-#Preview("知识基因光谱") {
-    FluidKnowledgeSpectrumCard(dataPoints: PreviewData.mockSpectrumData)
-        .padding()
-        .frame(height: 180)
-}
 #endif

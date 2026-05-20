@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - 🎨 年度无界热力带 (展示型木偶组件)
 
-struct FluidHeatmapRibbon: View {
+struct HeatmapRibbon: View {
     let columns: [[HeatmapDataPoint]]
     let activeDays: Int
     
@@ -69,7 +69,3 @@ struct FluidHeatmapRibbon: View {
     }
 }
 #endif
-
-#Preview {
-    FluidHeatmapRibbon(columns: PreviewData.mockHeatmapData.columns, activeDays: PreviewData.mockHeatmapData.activeDays)
-}

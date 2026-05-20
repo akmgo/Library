@@ -54,7 +54,7 @@ struct MomentumProvider: TimelineProvider {
             let today = cal.startOfDay(for: Date())
             let startDate = cal.date(byAdding: .day, value: -13, to: today)!
 
-            let descriptor = FetchDescriptor<ReadingRecord>(
+            let descriptor = FetchDescriptor<ReadingSession>(
                 predicate: #Predicate { $0.date >= startDate }
             )
             let recentRecords = try dbContext.fetch(descriptor)
@@ -63,7 +63,7 @@ struct MomentumProvider: TimelineProvider {
             for record in recentRecords {
                 let recordDay = cal.startOfDay(for: record.date)
                 if recordDay <= today {
-                    dailyMap[recordDay, default: 0] += (record.readingDuration / 60.0)
+                    dailyMap[recordDay, default: 0] += (record.duration / 60.0)
                 }
             }
 

@@ -24,42 +24,33 @@ struct YearlyTimelineView: View {
     @State private var isEntranceAnimated: Bool = false
     
     var body: some View {
-        ZStack(alignment: .top) {
-            // ================= 1. 统一氛围感环境背景 =================
-            Color(nsColor: .windowBackgroundColor).ignoresSafeArea()
-                                                                                                    
-            Circle()
-                .fill(Color.indigo.opacity(0.08))
-                .blur(radius: 120)
-                .frame(width: 800, height: 800)
-                .offset(x: -200, y: -300)
-            
-            // ================= 2. 底层滚动内容区 =================
-            ScrollView(.vertical, showsIndicators: false) {
-                ZStack {
-                    VStack(spacing: 0) {
-                        if cachedYearlyBooks.isEmpty {
-                            ContentUnavailableView {
-                                Label("暂无 \(String(selectedYear)) 年轨迹", systemImage: "calendar.badge.exclamationmark")
-                            } description: {
-                                Text(selectedYear == Calendar.current.component(.year, from: Date()) ? "今年还没有读完的书籍，继续努力哦！" : "这一年没有留下已读记录。")
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 300)
-                            .padding(.top, 180)
-                        } else {
-                            wallContentView
+        // ✨ 核心重构：移除外层 ZStack 与固定背景，使 ScrollView 成为绝对主角，透出全局统一底层背景
+        ScrollView(.vertical, showsIndicators: false) {
+            ZStack {
+                VStack(spacing: 0) {
+                    if cachedYearlyBooks.isEmpty {
+                        ContentUnavailableView {
+                            Label("暂无 \(String(selectedYear)) 年轨迹", systemImage: "calendar.badge.exclamationmark")
+                        } description: {
+                            Text(selectedYear == Calendar.current.component(.year, from: Date()) ? "今年还没有读完的书籍，继续努力哦！" : "这一年没有留下已读记录。")
                         }
+                        .frame(maxWidth: .infinity, minHeight: 300)
+                        .padding(.top, 180)
+                    } else {
+                        wallContentView
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(y: isEntranceAnimated ? 0 : 90)
-                    .scaleEffect(isEntranceAnimated ? 1.0 : 0.93, anchor: .center)
-                    .animation(.appFluidSpring, value: isEntranceAnimated)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .opacity(isEntranceAnimated ? 1.0 : 0.0)
+                .offset(y: isEntranceAnimated ? 0 : 90)
+                .scaleEffect(isEntranceAnimated ? 1.0 : 0.93, anchor: .center)
+                .animation(.appFluidSpring, value: isEntranceAnimated)
             }
-            
-            // ================= 3. ✨ 顶层悬浮高定玻璃 Header =================
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 60) // 底部留白
+        }
+        // ================= ✨ 顶层悬浮高定玻璃 Header (使用 Overlay 挂载) =================
+        .overlay(alignment: .top) {
             VStack(spacing: 0) {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 8) {
@@ -96,7 +87,6 @@ struct YearlyTimelineView: View {
             .background(Color.clear.background(.ultraThinMaterial).opacity(0.85))
             .ignoresSafeArea(edges: .top)
         }
-        .ignoresSafeArea(edges: .top)
         .onAppear {
             isEntranceAnimated = false
             refreshYearlyData(animate: false)
@@ -105,7 +95,6 @@ struct YearlyTimelineView: View {
             previousYear = oldYear
             refreshYearlyData(animate: true)
         }
-        // ✨ 安全的 Notification 名称监听
         .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
             refreshYearlyData(animate: true)
         }
@@ -153,11 +142,11 @@ struct YearlyTimelineView: View {
     private func refreshYearlyData(animate: Bool) {
         Task { @MainActor in
             let allBooks = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
-            let allRecords = (try? modelContext.fetch(FetchDescriptor<ReadingRecord>())) ?? []
+            let allRecords = (try? modelContext.fetch(FetchDescriptor<ReadingSession>())) ?? []
             let cal = Calendar.current
             
             var years = Set(allBooks.compactMap { book -> Int? in
-                guard book.status == .finished, let endDate = book.endTime else { return nil }
+                guard book.status == .finished, let endDate = book.finishDate else { return nil }
                 return cal.component(.year, from: endDate)
             })
             let current = cal.component(.year, from: Date())
@@ -165,15 +154,15 @@ struct YearlyTimelineView: View {
             let newAvailableYears = Array(years).sorted(by: >)
             
             let newCachedBooks = allBooks.filter { book in
-                guard book.status == .finished, let endDate = book.endTime else { return false }
+                guard book.status == .finished, let endDate = book.finishDate else { return false }
                 return cal.component(.year, from: endDate) == selectedYear
-            }.sorted { ($0.endTime ?? Date.distantPast) > ($1.endTime ?? Date.distantPast) }
+            }.sorted { ($0.finishDate ?? Date.distantPast) > ($1.finishDate ?? Date.distantPast) }
             
             let yearRecords = allRecords.filter { cal.component(.year, from: $0.date) == selectedYear }
             let uniqueDays = Set(yearRecords.map { cal.startOfDay(for: $0.date) }).sorted()
             let newTotalDays = uniqueDays.count
             
-            let totalSeconds = yearRecords.reduce(0) { $0 + $1.readingDuration }
+            let totalSeconds = yearRecords.reduce(0) { $0 + $1.duration }
             let newTotalHours = Int(totalSeconds / 3600)
             
             var maxStreak = 0; var currentStreak = 0; var previousDate: Date? = nil
@@ -259,7 +248,7 @@ private struct TimelineRowView: View {
     @State private var isHovered = false
     
     private var dateStr: String {
-        guard let date = book.endTime else { return "未知" }
+        guard let date = book.finishDate else { return "未知" }
         return AppFormatters.chineseShortDateFormatter.string(from: date)
     }
     
@@ -400,7 +389,7 @@ private struct TimelineCardView: View {
     
     private var coverSection: some View {
         let safeTitle = book.title
-        return LocalCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: safeTitle)
+        return BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: safeTitle)
             .frame(width: 100, height: 150)
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             .overlay(
@@ -524,13 +513,13 @@ private struct TimelineJourneyTicket: View {
     let isLeft: Bool
     
     var body: some View {
-        let days = calculateDays(start: book.startTime, end: book.endTime)
+        let days = calculateDays(start: book.startDate, end: book.finishDate)
         
         let startView = VStack(alignment: .center, spacing: 2) {
             Text("始于")
                 .font(.system(size: 9, weight: .bold))
                 .foregroundColor(.secondary.opacity(0.6))
-            Text(formatShortDate(book.startTime))
+            Text(formatShortDate(book.startDate))
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundColor(.secondary)
         }.frame(width: 40)
@@ -539,7 +528,7 @@ private struct TimelineJourneyTicket: View {
             Text("终于")
                 .font(.system(size: 9, weight: .bold))
                 .foregroundColor(.secondary.opacity(0.6))
-            Text(formatShortDate(book.endTime))
+            Text(formatShortDate(book.finishDate))
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundColor(.secondary)
         }.frame(width: 40)
@@ -594,23 +583,4 @@ private struct TimelineJourneyTicket: View {
     }
 }
 
-// MARK: - ✨ 预览组件
-
-#Preview("年度轨迹") {
-    struct TimelinePreviewWrapper: View {
-        @State private var selectedBook: Book? = nil
-        @State private var selectedYear: Int = 2026
-        @State private var availableYears: [Int] = [2024]
-        
-        var body: some View {
-            YearlyTimelineView(
-                selectedBook: $selectedBook,
-                selectedYear: $selectedYear,
-                availableYears: $availableYears
-            )
-            .frame(width: 1000, height: 750)
-        }
-    }
-    return TimelinePreviewWrapper().modelContainer(PreviewData.shared)
-}
 #endif
