@@ -26,6 +26,7 @@ enum VersesFilterTab: String, CaseIterable, CustomStringConvertible {
 struct MobileInkGalleryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+    @Query private var allSnippets: [Snippet]
     
     // ✨ 状态内部自治
     @State private var activeCategory: VersesFilterTab = .all
@@ -44,6 +45,12 @@ struct MobileInkGalleryView: View {
     @State private var editingSnippet: Snippet? = nil
     
     @State private var fullscreenSnippet: Snippet? = nil
+
+    private var snippetFingerprint: String {
+        allSnippets
+            .map { "\($0.id)|\($0.category.rawValue)|\($0.addedDate.timeIntervalSince1970)|\($0.title.hashValue)|\($0.content.hashValue)" }
+            .joined(separator: ";")
+    }
     
     var body: some View {
         NavigationStack {
@@ -208,9 +215,7 @@ struct MobileInkGalleryView: View {
             .onAppear { refreshData(animate: false) }
             .onChange(of: activeCategory) { _, _ in refreshData(animate: true) }
             .onChange(of: sortType) { _, _ in refreshData(animate: true) }
-            .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
-                refreshData(animate: true)
-            }
+            .onChange(of: snippetFingerprint) { _, _ in refreshData(animate: true) }
             .sheet(isPresented: $showAddSheet) { MobileSnippetEditorSheet(isPresented: $showAddSheet) }
             .sheet(item: $editingSnippet) { snippet in
                 MobileSnippetEditorSheet(
@@ -310,16 +315,22 @@ struct MobileInkGalleryView: View {
     // 数据引擎
     private func refreshData(animate: Bool) {
         Task { @MainActor in
-            let newStats = fetchStatsData()
-            let newDisplay = fetchDisplaySnippets()
+            let snapshot = ReadingStatsCalculator.snippetGallerySnapshot(
+                snippets: allSnippets,
+                category: activeCategory.snippetCategory,
+                searchText: searchText,
+                sortKey: sortType.snippetSortKey
+            )
+            let newStats = snapshot.stats
+            let newDisplay = snapshot.snippets
             
             if animate && self.isEntranceAnimated {
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                    self.statsData = newStats
+                    self.statsData = (newStats.total, newStats.poetry, newStats.lyric, newStats.prose, newStats.quote, newStats.movie, newStats.web)
                     self.displaySnippets = newDisplay
                 }
             } else {
-                self.statsData = newStats
+                self.statsData = (newStats.total, newStats.poetry, newStats.lyric, newStats.prose, newStats.quote, newStats.movie, newStats.web)
                 self.displaySnippets = newDisplay
             }
             
@@ -332,48 +343,44 @@ struct MobileInkGalleryView: View {
         }
     }
     
-    @MainActor
-    private func fetchStatsData() -> (total: Int, poetry: Int, lyric: Int, prose: Int, quote: Int, movie: Int, web: Int) {
-        let desc = FetchDescriptor<Snippet>()
-        let all = (try? modelContext.fetch(desc)) ?? []
-        
-        // 精准统计 6 大分类
-        let poetry = all.filter { $0.category == .poetry }.count
-        let lyric = all.filter { $0.category == .lyric }.count
-        let prose = all.filter { $0.category == .prose }.count
-        let quote = all.filter { $0.category == .quote }.count
-        let movie = all.filter { $0.category == .movie }.count
-        let web = all.filter { $0.category == .web }.count
-        
-        return (all.count, poetry, lyric, prose, quote, movie, web)
-    }
-    
-    @MainActor
-    private func fetchDisplaySnippets() -> [Snippet] {
-        let desc = FetchDescriptor<Snippet>()
-        var all = (try? modelContext.fetch(desc)) ?? []
-        
-        if activeCategory != .all {
-            all = all.filter { $0.category.displayName == activeCategory.rawValue }
-        }
-        
-        switch sortType {
-        case .title:
-            all.sort { $0.title < $1.title }
-        case .dateAdded, .lastRead, .progress:
-            all.sort { $0.addedDate > $1.addedDate }
-        }
-        
-        return all
-    }
-    
     private func deleteSelectedSnippets() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         let toDelete = displaySnippets.filter { selectedSnippetsForBatch.contains($0.id) }
         for snippet in toDelete { modelContext.delete(snippet) }
         try? modelContext.save()
         withAnimation(.snappy) { isBatchEditMode = false; selectedSnippetsForBatch.removeAll() }
-        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
+    }
+}
+
+extension VersesFilterTab {
+    var snippetCategory: SnippetCategory? {
+        switch self {
+        case .all:
+            return nil
+        case .poetry:
+            return .poetry
+        case .lyric:
+            return .lyric
+        case .prose:
+            return .prose
+        case .quote:
+            return .quote
+        case .movie:
+            return .movie
+        case .web:
+            return .web
+        }
+    }
+}
+
+extension GallerySortType {
+    var snippetSortKey: SnippetGallerySortKey {
+        switch self {
+        case .title:
+            return .titleAscending
+        case .dateAdded, .lastRead, .progress:
+            return .newest
+        }
     }
 }
 

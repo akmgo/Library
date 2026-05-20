@@ -14,6 +14,8 @@ struct MomentumDataPoint: Identifiable {
 struct HeatmapDataPoint: Identifiable {
     let id = UUID()
     let date: Date
+    /// 当天阅读分钟数，供移动端和无 tooltip 场景直接渲染。
+    let minutes: Int
     /// 颜色深浅的透明度值 (0.0 到 1.0)
     let intensity: Double
     /// 是否是未来的日期（用于隐藏圆点）

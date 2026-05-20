@@ -6,29 +6,32 @@ import AppKit
 // MARK: - ✨ 年度阅读轨迹主视图
 
 struct YearlyTimelineView: View {
-    @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
+    @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
+    @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
     
     @Binding var selectedYear: Int
     @Binding var availableYears: [Int]
     
     @State private var previousYear: Int = Calendar.current.component(.year, from: Date())
-    @State private var cachedYearlyBooks: [Book] = []
-    
-    // MARK: - 宏观统计指标状态
-    @State private var totalDaysReadThisYear: Int = 0
-    @State private var totalReadingHoursThisYear: Int = 0
-    @State private var longestStreakThisYear: Int = 0
-    
+
     // ✨ 核心机制：强制状态驱动首屏动画锁
     @State private var isEntranceAnimated: Bool = false
+
+    private var yearlySnapshot: ReadingStatsCalculator.YearlyArchiveSnapshot {
+        ReadingStatsCalculator.yearlyArchiveSnapshot(
+            books: books,
+            sessions: sessions,
+            selectedYear: selectedYear
+        )
+    }
     
     var body: some View {
         // ✨ 核心重构：移除外层 ZStack 与固定背景，使 ScrollView 成为绝对主角，透出全局统一底层背景
         ScrollView(.vertical, showsIndicators: false) {
             ZStack {
                 VStack(spacing: 0) {
-                    if cachedYearlyBooks.isEmpty {
+                    if yearlySnapshot.books.isEmpty {
                         ContentUnavailableView {
                             Label("暂无 \(String(selectedYear)) 年轨迹", systemImage: "calendar.badge.exclamationmark")
                         } description: {
@@ -69,10 +72,10 @@ struct YearlyTimelineView: View {
                     Spacer()
                     
                     HStack(spacing: 32) {
-                        HeaderStatItem(title: "完结作品", value: "\(cachedYearlyBooks.count)", unit: "部", icon: "book.closed.fill", color: .indigo)
-                        HeaderStatItem(title: "打卡天数", value: "\(totalDaysReadThisYear)", unit: "天", icon: "calendar", color: .orange)
-                        HeaderStatItem(title: "阅读时长", value: "\(totalReadingHoursThisYear)", unit: "小时", icon: "clock.fill", color: .teal)
-                        HeaderStatItem(title: "最高连续", value: "\(longestStreakThisYear)", unit: "天", icon: "flame.fill", color: .pink)
+                        HeaderStatItem(title: "完结作品", value: "\(yearlySnapshot.books.count)", unit: "部", icon: "book.closed.fill", color: .indigo)
+                        HeaderStatItem(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", unit: "天", icon: "calendar", color: .orange)
+                        HeaderStatItem(title: "阅读时长", value: "\(yearlySnapshot.totalReadingHours)", unit: "小时", icon: "clock.fill", color: .teal)
+                        HeaderStatItem(title: "最高连续", value: "\(yearlySnapshot.longestStreak)", unit: "天", icon: "flame.fill", color: .pink)
                     }
                     .opacity(isEntranceAnimated ? 1.0 : 0.0)
                     .offset(x: isEntranceAnimated ? 0 : 200)
@@ -88,15 +91,19 @@ struct YearlyTimelineView: View {
             .ignoresSafeArea(edges: .top)
         }
         .onAppear {
-            isEntranceAnimated = false
-            refreshYearlyData(animate: false)
+            availableYears = yearlySnapshot.availableYears
+            guard !isEntranceAnimated else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+                withAnimation(.appFluidSpring) {
+                    isEntranceAnimated = true
+                }
+            }
         }
         .onChange(of: selectedYear) { oldYear, newYear in
             previousYear = oldYear
-            refreshYearlyData(animate: true)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
-            refreshYearlyData(animate: true)
+        .onChange(of: yearlySnapshot.availableYears) { _, newYears in
+            availableYears = newYears
         }
     }
     
@@ -120,7 +127,7 @@ struct YearlyTimelineView: View {
                 .frame(width: 2)
                 
             LazyVStack(spacing: 80) {
-                ForEach(Array(cachedYearlyBooks.enumerated()), id: \.element.id) { index, book in
+                ForEach(Array(yearlySnapshot.books.enumerated()), id: \.element.id) { index, book in
                     TimelineRowView(
                         book: book,
                         isLeft: index % 2 == 0,
@@ -137,67 +144,6 @@ struct YearlyTimelineView: View {
         .transition(.appTemporalPush(isForward: selectedYear >= previousYear))
     }
     
-    // MARK: - ✨ 异步数据调度引擎
-    
-    private func refreshYearlyData(animate: Bool) {
-        Task { @MainActor in
-            let allBooks = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
-            let allRecords = (try? modelContext.fetch(FetchDescriptor<ReadingSession>())) ?? []
-            let cal = Calendar.current
-            
-            var years = Set(allBooks.compactMap { book -> Int? in
-                guard book.status == .finished, let endDate = book.finishDate else { return nil }
-                return cal.component(.year, from: endDate)
-            })
-            let current = cal.component(.year, from: Date())
-            years.insert(current)
-            let newAvailableYears = Array(years).sorted(by: >)
-            
-            let newCachedBooks = allBooks.filter { book in
-                guard book.status == .finished, let endDate = book.finishDate else { return false }
-                return cal.component(.year, from: endDate) == selectedYear
-            }.sorted { ($0.finishDate ?? Date.distantPast) > ($1.finishDate ?? Date.distantPast) }
-            
-            let yearRecords = allRecords.filter { cal.component(.year, from: $0.date) == selectedYear }
-            let uniqueDays = Set(yearRecords.map { cal.startOfDay(for: $0.date) }).sorted()
-            let newTotalDays = uniqueDays.count
-            
-            let totalSeconds = yearRecords.reduce(0) { $0 + $1.duration }
-            let newTotalHours = Int(totalSeconds / 3600)
-            
-            var maxStreak = 0; var currentStreak = 0; var previousDate: Date? = nil
-            for date in uniqueDays {
-                if let prev = previousDate {
-                    let diff = cal.dateComponents([.day], from: prev, to: date).day ?? 0
-                    if diff == 1 { currentStreak += 1 } else if diff > 1 { currentStreak = 1 }
-                } else { currentStreak = 1 }
-                maxStreak = max(maxStreak, currentStreak); previousDate = date
-            }
-            
-            if animate && self.isEntranceAnimated {
-                withAnimation(.appFluidSpring) {
-                    self.availableYears = newAvailableYears
-                    self.cachedYearlyBooks = newCachedBooks
-                    self.totalDaysReadThisYear = newTotalDays
-                    self.totalReadingHoursThisYear = newTotalHours
-                    self.longestStreakThisYear = maxStreak
-                }
-            } else {
-                self.availableYears = newAvailableYears
-                self.cachedYearlyBooks = newCachedBooks
-                self.totalDaysReadThisYear = newTotalDays
-                self.totalReadingHoursThisYear = newTotalHours
-                self.longestStreakThisYear = maxStreak
-            }
-            
-            if !self.isEntranceAnimated {
-                try? await Task.sleep(nanoseconds: 80_000_000)
-                withAnimation(.appFluidSpring) {
-                    self.isEntranceAnimated = true
-                }
-            }
-        }
-    }
 }
 
 // MARK: - ✨ 子组件：极致微缩数据块

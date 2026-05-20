@@ -3,16 +3,8 @@ import SwiftUI
 
 // MARK: - 🗓️ 年度热力矩阵 (接入视觉引擎版)
 
-/// iOS 专属的热力图数据模型，携带真实的分钟数
-struct MobileHeatmapDataPoint: Identifiable {
-    let id = UUID()
-    let date: Date
-    let minutes: Int
-    let isFuture: Bool
-}
-
 struct MobileYearlyHeatmapCard: View {
-    let columns: [[MobileHeatmapDataPoint]]
+    let columns: [[HeatmapDataPoint]]
     let activeDays: Int
     
     var body: some View {
@@ -27,10 +19,7 @@ struct MobileYearlyHeatmapCard: View {
                                     .fill(
                                         day.isFuture
                                         ? Color.clear
-                                        : (day.minutes > 0
-                                           // ✨ 核心接入：调用全局 VisualEngines 获取标准透明度
-                                           ? Color.indigo.opacity(VisualEngines.ReadingHeatmap.intensity(for: day.minutes))
-                                           : Color.secondary.opacity(0.15))
+                                        : (day.minutes > 0 ? Color.indigo.opacity(day.intensity) : Color.secondary.opacity(0.15))
                                     )
                                     .frame(width: 12, height: 12)
                             }

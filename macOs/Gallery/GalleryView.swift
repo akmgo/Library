@@ -60,6 +60,7 @@ enum GalleryFilterTab: String, CaseIterable, CustomStringConvertible {
 struct GalleryView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
+    @Query private var allBooks: [Book]
     
     @Binding var activeTab: GalleryFilterTab
     @Binding var searchText: String
@@ -68,10 +69,16 @@ struct GalleryView: View {
     @Binding var isBatchEditMode: Bool
     @Binding var selectedBooksForBatch: Set<String>
     
-    @State private var displayBooks: [Book] = []
-    @State private var inventoryData: (total: Int, points: [InventoryDataPoint]) = (0, [])
-    
     @State private var isEntranceAnimated: Bool = false
+
+    private var gallerySnapshot: ReadingStatsCalculator.BookGallerySnapshot {
+        ReadingStatsCalculator.bookGallerySnapshot(
+            books: allBooks,
+            filterStatus: activeTab.status,
+            searchText: searchText,
+            sortKey: sortType.gallerySortKey
+        )
+    }
     
     private var currentScale: GalleryGridScale {
         GalleryGridScale(rawValue: scaleIndex) ?? .large
@@ -99,7 +106,7 @@ struct GalleryView: View {
                             Text("全景画廊")
                                 .font(.system(size: 32, weight: .heavy, design: .rounded))
                                 .foregroundColor(.primary)
-                            Text("共收录 \(displayBooks.count) 本图书")
+                            Text("共收录 \(gallerySnapshot.books.count) 本图书")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
@@ -109,7 +116,7 @@ struct GalleryView: View {
                         Spacer()
                         
                         // 右侧数据区
-                        MiniInventoryBar(totalCount: inventoryData.total, dataPoints: inventoryData.points)
+                        MiniInventoryBar(totalCount: gallerySnapshot.totalInventoryCount, dataPoints: gallerySnapshot.inventoryPoints)
                             .frame(width: 320)
                             .opacity(isEntranceAnimated ? 1.0 : 0.0)
                             .offset(x: isEntranceAnimated ? 0 : 200)
@@ -163,30 +170,23 @@ struct GalleryView: View {
             }
         }
         .onAppear {
-            refreshGalleryData(animate: false)
             if !isEntranceAnimated {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     withAnimation(.appFluidSpring) { isEntranceAnimated = true }
                 }
             }
         }
-        .onChange(of: activeTab) { _, _ in refreshGalleryData(animate: true) }
-        .onChange(of: searchText) { _, _ in refreshGalleryData(animate: true) }
-        .onChange(of: sortType) { _, _ in refreshGalleryData(animate: true) }
-        .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
-            refreshGalleryData(animate: true)
-        }
     }
     
     @ViewBuilder
     private func gridView(containerWidth: CGFloat) -> some View {
-        if displayBooks.isEmpty {
+        if gallerySnapshot.books.isEmpty {
             ContentUnavailableView { Label("没有找到相关书籍", systemImage: "books.vertical.fill") } description: { Text(searchText.isEmpty ? "试试切换分类或点击添加书籍" : "尝试更换搜索关键词") }
                 .frame(maxWidth: .infinity, minHeight: 400)
         } else {
             let columns = [GridItem(.adaptive(minimum: currentScale.width, maximum: currentScale.width), spacing: currentScale.hSpacing)]
             LazyVGrid(columns: columns, spacing: currentScale.vSpacing) {
-                ForEach(displayBooks) { book in
+                ForEach(gallerySnapshot.books) { book in
                     AnimatedCardGlide(
                         book: book, activeTab: activeTab.rawValue,
                         isBatchEditMode: isBatchEditMode, gridScale: currentScale,
@@ -195,13 +195,13 @@ struct GalleryView: View {
                     .transition(.appCardGlide)
                 }
             }
-            .animation(.appFluidSpring, value: displayBooks)
+            .animation(.appFluidSpring, value: gallerySnapshot.books.map(\.id))
             .animation(.appFluidSpring, value: scaleIndex)
         }
     }
     
     private func deleteSelectedBooks() {
-        for book in displayBooks where selectedBooksForBatch.contains(book.id) {
+        for book in gallerySnapshot.books where selectedBooksForBatch.contains(book.id) {
             LocalBookManager.shared.deleteBook(book, context: modelContext)
         }
         try? modelContext.save()
@@ -209,61 +209,19 @@ struct GalleryView: View {
             isBatchEditMode = false
             selectedBooksForBatch.removeAll()
         }
-        refreshGalleryData(animate: true)
-        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
     }
 }
 
-extension GalleryView {
-    private func refreshGalleryData(animate: Bool) {
-        Task { @MainActor in
-            let newStats = fetchInventoryStats()
-            let newBooks = fetchDisplayBooks()
-            
-            if animate && self.isEntranceAnimated {
-                withAnimation(.appFluidSpring) {
-                    self.inventoryData = newStats
-                    self.displayBooks = newBooks
-                }
-            } else {
-                self.inventoryData = newStats
-                self.displayBooks = newBooks
-            }
-            
-            if !self.isEntranceAnimated {
-                try? await Task.sleep(nanoseconds: 60_000_000)
-                withAnimation(.appFluidSpring) { self.isEntranceAnimated = true }
-            }
+extension GallerySortType {
+    var gallerySortKey: BookGallerySortKey {
+        switch self {
+        case .newest:
+            return .newest
+        case .oldest:
+            return .oldest
+        case .titleAsc:
+            return .titleAscending
         }
-    }
-    
-    @MainActor
-    private func fetchInventoryStats() -> (total: Int, points: [InventoryDataPoint]) {
-        let desc = FetchDescriptor<Book>(); let allBooks = (try? modelContext.fetch(desc)) ?? []
-        var finished = 0, reading = 0, want = 0, unread = 0, abandoned = 0
-        for b in allBooks {
-            // ✨ 模型 status 为强枚举，匹配极其安全
-            switch b.status { case .finished: finished+=1; case .reading: reading+=1; case .planned: want+=1; case .unread: unread+=1; case .abandoned: abandoned+=1 }
-        }
-        let totalCount = finished + reading + want + unread + abandoned
-        guard totalCount > 0 else { return (0, []) }
-        let rawStats: [(label: String, count: Int, color: Color)] = [("已读", finished, .indigo), ("在读", reading, .blue), ("未读", unread, .gray), ("想读", want, .orange), ("弃读", abandoned, .red)]
-        return (totalCount, rawStats.filter { $0.count > 0 }.map { stat in InventoryDataPoint(label: stat.label, count: stat.count, color: stat.color, percentage: Double(stat.count) / Double(totalCount)) })
-    }
-    
-    @MainActor
-    private func fetchDisplayBooks() -> [Book] {
-        let desc = FetchDescriptor<Book>(); var allBooks = (try? modelContext.fetch(desc)) ?? []
-        if let targetStatus = activeTab.status { allBooks = allBooks.filter { $0.status == targetStatus } }
-        
-        if !searchText.isEmpty {
-            let lower = searchText.lowercased()
-            // ✨ title, author, tags 全是非可选属性，直接链式调用，极度清爽
-            allBooks = allBooks.filter { $0.title.lowercased().contains(lower) || $0.author.lowercased().contains(lower) || $0.tags.contains { $0.lowercased().contains(lower) } }
-        }
-        
-        switch sortType { case .newest: allBooks.sort(by: { $0.createdAt > $1.createdAt }); case .oldest: allBooks.sort(by: { $0.createdAt < $1.createdAt }); case .titleAsc: allBooks.sort(by: { $0.title < $1.title }) }
-        return allBooks
     }
 }
 #endif

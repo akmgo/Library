@@ -116,7 +116,6 @@ struct BookCard: View {
                         Button(role: .destructive) {
                             LocalBookManager.shared.deleteBook(book, context: modelContext)
                             try? modelContext.save()
-                            NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
                         } label: { Label("删除此书", systemImage: "trash") }
                     } label: {
                         Image(systemName: "ellipsis")
@@ -150,7 +149,6 @@ struct BookCard: View {
     
     private func changeStatus(to newStatus: BookStatus) {
         book.status = newStatus; try? modelContext.save()
-        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
     }
     
     private func progressCapsule(progress: Double) -> some View {

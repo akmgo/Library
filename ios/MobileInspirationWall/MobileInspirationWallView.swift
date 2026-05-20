@@ -21,17 +21,6 @@ enum MobileInspirationSort: String, CaseIterable, Identifiable, CustomStringConv
     var id: String { self.rawValue }
 }
 
-struct MobileInspirationSnippet: Identifiable, Hashable {
-    let id: String
-    let content: String
-    let date: Date
-    let bookTitle: String
-    let bookAuthor: String // ✨ 新增：作者字段
-    let bookID: String
-    let isNote: Bool
-    let coverData: Data?
-}
-
 // ============================================================================
 // MARK: - 🌊 2. 灵感画廊 (核心视图)
 // ============================================================================
@@ -52,7 +41,13 @@ struct MobileInspirationWallView: View {
     @State private var selectedSnippetsForBatch = Set<String>()
     
     // 🖥️ 显示数据容器
-    @State private var displaySnippets: [MobileInspirationSnippet] = []
+    @State private var displaySnippets: [InspirationSnippet] = []
+
+    private var annotationFingerprint: String {
+        allAnnotations
+            .map { "\($0.id)|\($0.type.rawValue)|\($0.createdAt.timeIntervalSince1970)|\($0.content.hashValue)|\($0.book?.id ?? "")" }
+            .joined(separator: ";")
+    }
     
     var body: some View {
         let totalSnippetCharacters = displaySnippets.reduce(0) { $0 + $1.content.count }
@@ -130,7 +125,7 @@ struct MobileInspirationWallView: View {
             .onChange(of: contentType) { _, _ in refreshData(animate: true) }
             .onChange(of: sortType) { _, _ in refreshData(animate: true) }
             .onChange(of: isRandomRoam) { _, _ in refreshData(animate: true) }
-            .onChange(of: allAnnotations) { _, _ in refreshData(animate: true) }
+            .onChange(of: annotationFingerprint) { _, _ in refreshData(animate: true) }
             .onAppear { refreshData(animate: false) }
         }
     }
@@ -230,29 +225,13 @@ struct MobileInspirationWallView: View {
     // MARK: - ⚙️ 核心数据引擎
     
     private func refreshData(animate: Bool) {
-        var results: [MobileInspirationSnippet] = []
-        
-        for a in allAnnotations {
-            if contentType == .excerpt && a.type != .excerpt { continue }
-            if contentType == .note && a.type != .note { continue }
-            
-            let safeTitle = a.book?.title ?? "未知书籍"
-            let safeAuthor = a.book?.author ?? "佚名" // ✨ 提取作者
-            
-            results.append(MobileInspirationSnippet(
-                id: a.id, content: a.content, date: a.createdAt,
-                bookTitle: safeTitle, bookAuthor: safeAuthor, bookID: a.book?.id ?? "",
-                isNote: a.isNote, coverData: a.book?.coverData
-            ))
-        }
-        
-        switch sortType {
-        case .newest: results.sort(by: { $0.date > $1.date })
-        case .oldest: results.sort(by: { $0.date < $1.date })
-        }
-        
-        // 随机漫游模式下的随机排序
-        if isRandomRoam { results.shuffle() }
+        let results = ReadingStatsCalculator.inspirationSnapshot(
+            annotations: allAnnotations,
+            type: contentType.annotationType,
+            searchText: "",
+            sortKey: sortType.annotationSortKey,
+            randomize: isRandomRoam
+        ).snippets
         
         if animate {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { self.displaySnippets = results }
@@ -309,7 +288,7 @@ struct MobileInspirationWallView: View {
     private func deleteSelectedSnippets() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         for targetID in selectedSnippetsForBatch {
-            if let target = try? modelContext.fetch(FetchDescriptor<BookAnnotation>(predicate: #Predicate { $0.id == targetID })).first {
+            if let target = allAnnotations.first(where: { $0.id == targetID }) {
                 modelContext.delete(target)
             }
         }
@@ -321,7 +300,7 @@ struct MobileInspirationWallView: View {
     }
     
     private func deleteSnippet(_ id: String) {
-        if let target = try? modelContext.fetch(FetchDescriptor<BookAnnotation>(predicate: #Predicate { $0.id == id })).first {
+        if let target = allAnnotations.first(where: { $0.id == id }) {
             modelContext.delete(target)
             try? modelContext.save()
         }
@@ -370,7 +349,7 @@ struct MobileInspirationStatsHeader: View {
 }
 
 struct MobileUnifiedSnippetCardView: View {
-    let snippet: MobileInspirationSnippet
+    let snippet: InspirationSnippet
     let isMasonry: Bool
     let isBatchEditMode: Bool
     let isSelected: Bool
@@ -478,6 +457,30 @@ struct MobileUnifiedSnippetCardView: View {
                 .frame(width: 28, height: 28)
                 .background(AppColors.secondaryBackground(for: colorScheme).opacity(0.8), in: Circle())
                 .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
+        }
+    }
+}
+
+extension MobileInspirationType {
+    var annotationType: AnnotationType? {
+        switch self {
+        case .all:
+            return nil
+        case .excerpt:
+            return .excerpt
+        case .note:
+            return .note
+        }
+    }
+}
+
+extension MobileInspirationSort {
+    var annotationSortKey: AnnotationSortKey {
+        switch self {
+        case .newest:
+            return .newest
+        case .oldest:
+            return .oldest
         }
     }
 }

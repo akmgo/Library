@@ -301,7 +301,6 @@
 			children = (
 				C54818FC2F9A64F8006D5686 /* UIComponents */,
 				C5FD82A72F90C5570003A500 /* Sheets */,
-				C54819052F9B6875006D5686 /* AppNotifications.swift */,
 				C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */,
 				C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */,
 				C54819882FA19CA7006D5686 /* TopToastManager.swift */,
@@ -671,6 +670,7 @@
 		C6A104012FA80000006D5686 /* Foundation */ = {
 			isa = PBXGroup;
 			children = (
+				C54819052F9B6875006D5686 /* AppNotifications.swift */,
 				C6A101012FA80000006D5686 /* ReadingDateHelper.swift */,
 				C6A101032FA80000006D5686 /* ReadingStatsCalculator.swift */,
 				C6A101052FA80000006D5686 /* ReadingValidation.swift */,

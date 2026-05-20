@@ -4,14 +4,7 @@ import Charts
 import SwiftData
 import SwiftUI
 
-// MARK: - 数据模型与滚动监听器
-
-private struct MonthSection: Identifiable {
-    let id: String
-    let year: Int
-    let month: Int
-    let days: [Date?]
-}
+// MARK: - 滚动监听器
 
 private struct ScrollBoundsKey: PreferenceKey {
     static var defaultValue: [String: CGRect] = [:]
@@ -23,18 +16,19 @@ private struct ScrollBoundsKey: PreferenceKey {
 // MARK: - 🗓️ 核心月度记录视图
 
 struct MonthlyRecordView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
     
     let daysOfWeek = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-    
-    @State private var cachedRecordsDict: [Date: TimeInterval] = [:]
-    @State private var cachedSections: [MonthSection] = []
     
     @State private var visibleYear: Int = Calendar.current.component(.year, from: Date())
     @State private var visibleMonth: Int = Calendar.current.component(.month, from: Date())
     
     // ✨ 核心机制：强制状态驱动首屏动画锁
     @State private var isEntranceAnimated: Bool = false
+
+    private var monthlySnapshot: ReadingStatsCalculator.MonthlyArchiveSnapshot {
+        ReadingStatsCalculator.monthlyArchiveSnapshot(sessions: sessions)
+    }
     
     var body: some View {
         GeometryReader { mainGeo in
@@ -43,8 +37,8 @@ struct MonthlyRecordView: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     ZStack {
                         VStack(spacing: 30) {
-                            ForEach(cachedSections) { section in
-                                MonthGridSection(section: section, recordsDict: cachedRecordsDict)
+                            ForEach(monthlySnapshot.sections) { section in
+                                MonthGridSection(section: section, recordsDict: monthlySnapshot.durationByDay)
                                     .id(section.id)
                                     .background(
                                         GeometryReader { geo in
@@ -108,7 +102,7 @@ struct MonthlyRecordView: View {
                         .opacity(isEntranceAnimated ? 1.0 : 0.0)
                         .offset(x: isEntranceAnimated ? 0 : -200)
                                                                                                         
-                        MonthlySparklineView(year: visibleYear, month: visibleMonth, recordsDict: cachedRecordsDict)
+                        MonthlySparklineView(year: visibleYear, month: visibleMonth, recordsDict: monthlySnapshot.durationByDay)
                             .frame(height: 36)
                             .padding(.horizontal, 20)
                             .opacity(isEntranceAnimated ? 1.0 : 0.0)
@@ -158,61 +152,13 @@ struct MonthlyRecordView: View {
         .toolbarBackground(.hidden, for: .windowToolbar)
         .ignoresSafeArea(edges: .top)
         .onAppear {
-            isEntranceAnimated = false
-            self.buildContinuousData(animate: false)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in
-            self.buildContinuousData(animate: true)
-        }
-    }
-    
-    // MARK: - ✨ 异步引擎逻辑
-    
-    private func buildContinuousData(animate: Bool) {
-        Task { @MainActor in
-            let calendar = Calendar.current
-            let allRecords = (try? modelContext.fetch(FetchDescriptor<ReadingSession>())) ?? []
-            
-            var dict = [Date: TimeInterval]()
-            for record in allRecords {
-                dict[calendar.startOfDay(for: record.date), default: 0] += record.duration
-            }
-            
-            let today = Date()
-            let earliestDate = allRecords.compactMap { $0.date }.min() ?? calendar.date(byAdding: .month, value: -6, to: today)!
-            
-            var currentMonthDate = calendar.date(from: calendar.dateComponents([.year, .month], from: earliestDate))!
-            let endMonthDate = calendar.date(byAdding: .month, value: 1, to: calendar.date(from: calendar.dateComponents([.year, .month], from: today))!)!
-            
-            var sections = [MonthSection]()
-            
-            while currentMonthDate <= endMonthDate {
-                let year = calendar.component(.year, from: currentMonthDate)
-                let month = calendar.component(.month, from: currentMonthDate)
-                let id = String(format: "%d-%02d", year, month)
-                let days = extractDaysInMonth(for: currentMonthDate)
-                sections.append(MonthSection(id: id, year: year, month: month, days: days))
-                
-                currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate)!
-            }
-            
-            if animate && self.isEntranceAnimated {
-                withAnimation(.appFluidSpring) {
-                    self.cachedRecordsDict = dict
-                    self.cachedSections = sections
-                }
-            } else {
-                self.cachedRecordsDict = dict
-                self.cachedSections = sections
-            }
-            
-            if !self.isEntranceAnimated {
-                try? await Task.sleep(nanoseconds: 30_000_000)
+            guard !isEntranceAnimated else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
                 NotificationCenter.default.post(name: .scrollToToday, object: nil)
-                try? await Task.sleep(nanoseconds: 80_000_000)
-                
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.11) {
                 withAnimation(.appFluidSpring) {
-                    self.isEntranceAnimated = true
+                    isEntranceAnimated = true
                 }
             }
         }
@@ -224,26 +170,12 @@ struct MonthlyRecordView: View {
         let targetID = String(format: "%d-%02d", newYear, newMonth)
         NotificationCenter.default.post(name: .scrollToMonth, object: targetID)
     }
-    
-    private func extractDaysInMonth(for date: Date) -> [Date?] {
-        let calendar = Calendar.current; var days = [Date?]()
-        guard let monthInterval = calendar.dateInterval(of: .month, for: date),
-              let firstDayOfMonth = calendar.date(bySettingHour: 0, minute: 0, second: 0, of: monthInterval.start) else { return [] }
-        let component = calendar.component(.weekday, from: firstDayOfMonth)
-        let emptyDaysBefore = (component + 5) % 7
-        for _ in 0..<emptyDaysBefore { days.append(nil) }
-        let range = calendar.range(of: .day, in: .month, for: firstDayOfMonth)!
-        for i in 0..<range.count {
-            if let dayDate = calendar.date(byAdding: .day, value: i, to: firstDayOfMonth) { days.append(dayDate) }
-        }
-        return days
-    }
 }
 
 // MARK: - 无缝网格分段
 
 private struct MonthGridSection: View {
-    let section: MonthSection
+    let section: ReadingStatsCalculator.ReadingMonthSection
     let recordsDict: [Date: TimeInterval]
     
     private var monthTotalMinutes: Int {

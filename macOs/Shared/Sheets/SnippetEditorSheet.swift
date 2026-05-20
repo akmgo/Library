@@ -206,7 +206,6 @@ struct SnippetEditorSheet: View {
         
         try? modelContext.save()
         isPresented = false
-        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
     }
 }
 

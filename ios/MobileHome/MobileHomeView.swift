@@ -9,36 +9,30 @@ struct BookDetailPresentation: Identifiable {
 }
 
 struct MobileHomeView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     
     // MARK: - 📥 全局配置
     @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
-    
-    // MARK: - 📊 核心状态池
-    @State private var activeReadingBook: Book? = nil
-    @State private var yearlyCount: Int = 0
-    @State private var monthlyDays: Int = 0
-    @State private var weekCount: Int = 0
-    @State private var todayMinutes: Int = 0
-    @State private var totalFinished: Int = 0
-    @State private var totalLibrary: Int = 0
-    @State private var momentumPoints: [MomentumDataPoint] = []
-    @State private var momentumTotal: Int = 0
-    @State private var heatmapColumns: [[MobileHeatmapDataPoint]] = []
-    @State private var heatmapActiveDays: Int = 0
-    @State private var queueBooksData: [Book] = []
-    @State private var spectrumPoints: [SpectrumDataPoint] = []
+    @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
+    @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
+    @Query(sort: \BookAnnotation.createdAt, order: .reverse) private var annotations: [BookAnnotation]
     
     // MARK: - 🎮 UI 交互状态
     @State private var showAddBookSheet = false
     @State private var showSettingsSheet = false
-    @State private var isInitialLoaded = false
     
     // ✨ 全局沉浸式底部搜索状态
     @State private var showGlobalSearch = false
     
     @State private var activeBookDetail: BookDetailPresentation? = nil
+
+    private var dashboard: ReadingStatsCalculator.DashboardSnapshot {
+        ReadingStatsCalculator.dashboardSnapshot(
+            books: books,
+            sessions: sessions,
+            annotations: annotations
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -63,7 +57,7 @@ struct MobileHomeView: View {
                     
                     VStack(spacing: 24) {
                         // 🌟 1. 视觉锚点 (在读焦点)
-                        if let heroBook = activeReadingBook {
+                        if let heroBook = dashboard.activeReadingBook {
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 activeBookDetail = BookDetailPresentation(id: heroBook.id)
@@ -77,20 +71,20 @@ struct MobileHomeView: View {
                         
                         // 📊 2. 数据大盘
                         MobileDashboardCard(
-                            weekCount: weekCount, monthlyDays: monthlyDays, todayMinutes: todayMinutes,
-                            dailyGoal: dailyGoal, yearlyCount: yearlyCount, yearTarget: yearTarget,
-                            totalFinished: totalFinished, totalLibrary: totalLibrary
+                            weekCount: dashboard.weekCount, monthlyDays: dashboard.monthlyDays, todayMinutes: dashboard.todayMinutes,
+                            dailyGoal: dailyGoal, yearlyCount: dashboard.yearlyCount, yearTarget: yearTarget,
+                            totalFinished: dashboard.totalFinished, totalLibrary: dashboard.totalLibrary
                         )
                         
                         // 🌊 3. 双周动能
-                        MobileMomentumChartCard(dataPoints: momentumPoints, totalMinutes: momentumTotal)
+                        MobileMomentumChartCard(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
                         
                         // 📚 4. 想读画廊
-                        MobileQueueCarouselCard(displayBooks: queueBooksData)
+                        MobileQueueCarouselCard(displayBooks: dashboard.queueBooks)
                         
                         // 🧠 5. 深度复盘
-                        MobileYearlyHeatmapCard(columns: heatmapColumns, activeDays: heatmapActiveDays)
-                        MobileKnowledgeSpectrumCard(dataPoints: spectrumPoints)
+                        MobileYearlyHeatmapCard(columns: dashboard.heatmapColumns, activeDays: dashboard.heatmapActiveDays)
+                        MobileKnowledgeSpectrumCard(dataPoints: dashboard.spectrumPoints)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -132,19 +126,13 @@ struct MobileHomeView: View {
                     MobileBookDetailView(book: book)
                 }
             }
-            
-            .onAppear { loadAllDashboardData() }
-            .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in loadAllDashboardData() }
         }
     }
 }
 
 private extension MobileHomeView {
     func book(withID id: String) -> Book? {
-        let descriptor = FetchDescriptor<Book>(
-            predicate: #Predicate<Book> { $0.id == id }
-        )
-        return try? modelContext.fetch(descriptor).first
+        books.first { $0.id == id }
     }
 }
 
@@ -655,123 +643,6 @@ struct MobileUnifiedFullscreenReadingView: View {
             }
             .padding(.trailing, 20)
             .padding(.top, 20)
-        }
-    }
-}
-
-// MARK: - ⚙️ 异步调度引擎
-
-extension MobileHomeView {
-    @MainActor
-    private func loadAllDashboardData() {
-        Task {
-            calculateBaseStats()
-            self.activeReadingBook = fetchActiveReadingBook()
-            let momentum = fetchMomentumData()
-            self.momentumPoints = momentum.points
-            self.momentumTotal = momentum.total
-            let heatmap = fetchHeatmapData()
-            self.heatmapColumns = heatmap.columns
-            self.heatmapActiveDays = heatmap.activeDays
-            self.queueBooksData = fetchQueueBooksData()
-            self.spectrumPoints = fetchSpectrumData()
-            self.isInitialLoaded = true
-        }
-    }
-    
-    private func calculateBaseStats() {
-        let cal = Calendar.current; let today = Date()
-        let startOfYear = cal.date(from: cal.dateComponents([.year], from: today))!
-        let recordDesc = FetchDescriptor<ReadingSession>(predicate: #Predicate { $0.date >= startOfYear })
-        let currentYearRecords = (try? modelContext.fetch(recordDesc)) ?? []
-        let allBooks = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
-        totalFinished = allBooks.filter { $0.status == .finished }.count
-        totalLibrary = allBooks.count
-        todayMinutes = currentYearRecords.filter { cal.isDate($0.date, inSameDayAs: today) }.reduce(0) { $0 + Int($1.duration) } / 60
-        yearlyCount = allBooks.filter { $0.status == .finished && cal.component(.year, from: $0.finishDate ?? Date.distantFuture) == cal.component(.year, from: today) }.count
-        monthlyDays = Set(currentYearRecords.filter { cal.isDate($0.date, equalTo: today, toGranularity: .month) }.map { cal.component(.day, from: $0.date) }).count
-        weekCount = Set(currentYearRecords.filter { cal.isDate($0.date, equalTo: today, toGranularity: .weekOfYear) }.map { cal.component(.day, from: $0.date) }).count
-    }
-
-    private func fetchMomentumData() -> (points: [MomentumDataPoint], total: Int) {
-        let cal = Calendar.current; let today = cal.startOfDay(for: Date())
-        let startDate = cal.date(byAdding: .day, value: -13, to: today)!
-        let descriptor = FetchDescriptor<ReadingSession>(predicate: #Predicate { $0.date >= startDate })
-        let recentRecords = (try? modelContext.fetch(descriptor)) ?? []
-        var buckets: [Date: Double] = [:]
-        for i in 0..<14 { buckets[cal.date(byAdding: .day, value: -i, to: today)!] = 0.0 }
-        var totalMins = 0.0
-        for record in recentRecords {
-            let recordDate = cal.startOfDay(for: record.date)
-            if buckets.keys.contains(recordDate) {
-                let mins = record.duration / 60.0
-                buckets[recordDate]! += mins
-                totalMins += mins
-            }
-        }
-        var points: [MomentumDataPoint] = []
-        for i in (0..<14).reversed() {
-            let date = cal.date(byAdding: .day, value: -i, to: today)!
-            points.append(MomentumDataPoint(date: date, minutes: buckets[date]!, isToday: i == 0))
-        }
-        return (points, Int(totalMins))
-    }
-
-    @MainActor
-    private func fetchHeatmapData() -> (columns: [[MobileHeatmapDataPoint]], activeDays: Int) {
-        var cal = Calendar.current; cal.firstWeekday = 2
-        let today = cal.startOfDay(for: Date())
-        let daysToSubtract = (cal.component(.weekday, from: today) + 5) % 7
-        let currentWeekStart = cal.date(byAdding: .day, value: -daysToSubtract, to: today)!
-        let startDate = cal.date(byAdding: .weekOfYear, value: -52, to: currentWeekStart)!
-        let descriptor = FetchDescriptor<ReadingSession>(predicate: #Predicate { $0.date >= startDate })
-        let recentRecords = (try? modelContext.fetch(descriptor)) ?? []
-        var durs: [Date: TimeInterval] = [:]
-        var activeDaysCount = 0
-        for r in recentRecords { durs[cal.startOfDay(for: r.date), default: 0] += r.duration }
-        var cols = [[MobileHeatmapDataPoint]]()
-        for w in 0..<53 {
-            var col = [MobileHeatmapDataPoint]()
-            for d in 0..<7 {
-                let date = cal.date(byAdding: .day, value: w * 7 + d, to: startDate)!
-                let dur = durs[date] ?? 0
-                let minutes = Int(dur / 60)
-                let isFuture = date > today
-                if !isFuture && minutes > 0 { activeDaysCount += 1 }
-                col.append(MobileHeatmapDataPoint(date: date, minutes: minutes, isFuture: isFuture))
-            }
-            cols.append(col)
-        }
-        return (cols, activeDaysCount)
-    }
-
-    private func fetchActiveReadingBook() -> Book? {
-        let allBooks = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
-        return allBooks.filter { $0.status == .reading }.max { b1, b2 in
-            let date1 = b1.lastReadAt ?? b1.startDate ?? b1.createdAt
-            let date2 = b2.lastReadAt ?? b2.startDate ?? b2.createdAt
-            return date1 < date2
-        }
-    }
-
-    private func fetchQueueBooksData() -> [Book] {
-        let allBooks = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
-        return Array(allBooks.filter { $0.status == .planned }.prefix(4))
-    }
-
-    private func fetchSpectrumData() -> [SpectrumDataPoint] {
-        let allBooks = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
-        let finishedBooks = allBooks.filter { $0.status == .finished }
-        var counts: [String: Double] = [:]
-        for b in finishedBooks {
-            for t in b.tags { counts[t, default: 0] += 1 }
-        }
-        let top5 = counts.sorted { $0.value > $1.value }.prefix(5)
-        let top5Total = top5.reduce(0.0) { $0 + $1.value }
-        guard top5Total > 0 else { return [] }
-        let colors: [Color] = [.purple, .indigo, .teal, .orange, .blue]
-        return top5.enumerated().map { index, element in
-            SpectrumDataPoint(tagName: element.key, percentage: (element.value / top5Total) * 100.0, color: colors[index % colors.count])
         }
     }
 }

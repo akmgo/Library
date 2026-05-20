@@ -141,7 +141,6 @@ struct MobileBookEditorSheet: View {
         }
 
         try? modelContext.save()
-        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
         dismiss()
     }
 }

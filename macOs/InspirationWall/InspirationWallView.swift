@@ -16,16 +16,13 @@ enum InspirationSortMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-// ✨ 核心修改 1：DTO 增加 bookAuthor 字段
-struct InspirationSnippet: Identifiable, Hashable {
-    let id: String; let content: String; let date: Date; let bookTitle: String; let bookAuthor: String; let bookID: String; let isNote: Bool; let coverData: Data?
-}
-
 // MARK: - ✨ 灵感画廊 (核心视图)
 
 struct InspirationWallView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
+    @Query private var allAnnotations: [BookAnnotation]
+    @Query private var allBooks: [Book]
     
     @Binding var contentType: InspirationContentType
     @Binding var sortType: GallerySortType
@@ -41,6 +38,12 @@ struct InspirationWallView: View {
     @State private var bookForEdit: Book? = nil
     
     @State private var isEntranceAnimated: Bool = false
+
+    private var annotationFingerprint: String {
+        allAnnotations
+            .map { "\($0.id)|\($0.type.rawValue)|\($0.createdAt.timeIntervalSince1970)|\($0.content.hashValue)|\($0.book?.id ?? "")" }
+            .joined(separator: ";")
+    }
     
     private var subtitleText: String {
         let count = shuffledSnippets.count
@@ -163,7 +166,7 @@ struct InspirationWallView: View {
             .onChange(of: isRandomRoam) { _, _ in refreshData(animate: true) }
             .onChange(of: searchText) { _, _ in refreshData(animate: true) }
             .onChange(of: shuffleTrigger) { _, _ in withAnimation(.appFluidSpring) { shuffledSnippets.shuffle() } }
-            .onReceive(NotificationCenter.default.publisher(for: .libraryDidUpdate)) { _ in refreshData(animate: true) }
+            .onChange(of: annotationFingerprint) { _, _ in refreshData(animate: true) }
         }
     }
     
@@ -288,7 +291,7 @@ extension InspirationWallView {
     @MainActor
     private func triggerEdit(for snippet: InspirationSnippet) {
         let targetID = snippet.id
-        if let target = try? modelContext.fetch(FetchDescriptor<BookAnnotation>(predicate: #Predicate { $0.id == targetID })).first {
+        if let target = allAnnotations.first(where: { $0.id == targetID }) {
             self.bookForEdit = target.book
             self.recordToEdit = target
         }
@@ -315,41 +318,19 @@ extension InspirationWallView {
     
     @MainActor
     private func fetchAndProcessSnippets() -> [InspirationSnippet] {
-        var results: [InspirationSnippet] = []
-        let lowerSearch = searchText.lowercased()
-        
-        let allAnnotations = (try? modelContext.fetch(FetchDescriptor<BookAnnotation>())) ?? []
-        
-        for a in allAnnotations {
-            if contentType == .excerpt && a.type != .excerpt { continue }
-            if contentType == .note && a.type != .note { continue }
-            
-            let safeTitle = a.book?.title ?? "未知书籍"
-            // ✨ 核心修改 3：抓取作者信息
-            let safeAuthor = a.book?.author ?? "佚名"
-            
-            if !searchText.isEmpty {
-                guard a.content.lowercased().contains(lowerSearch) || safeTitle.lowercased().contains(lowerSearch) else { continue }
-            }
-            
-            // 注入 DTO
-            results.append(InspirationSnippet(id: a.id, content: a.content, date: a.createdAt, bookTitle: safeTitle, bookAuthor: safeAuthor, bookID: a.book?.id ?? "", isNote: a.isNote, coverData: a.book?.coverData))
-        }
-        
-        switch sortType {
-        case .newest: results.sort(by: { $0.date > $1.date })
-        case .oldest: results.sort(by: { $0.date < $1.date })
-        case .titleAsc: results.sort(by: { $0.bookTitle < $1.bookTitle })
-        }
-        
-        if isRandomRoam { results.shuffle() }
-        return results
+        ReadingStatsCalculator.inspirationSnapshot(
+            annotations: allAnnotations,
+            type: contentType.annotationType,
+            searchText: searchText,
+            sortKey: sortType.annotationSortKey,
+            randomize: isRandomRoam
+        ).snippets
     }
     
     @MainActor
     private func deleteSnippet(snippet: InspirationSnippet) {
         let targetID = snippet.id
-        if let target = try? modelContext.fetch(FetchDescriptor<BookAnnotation>(predicate: #Predicate { $0.id == targetID })).first {
+        if let target = allAnnotations.first(where: { $0.id == targetID }) {
             modelContext.delete(target)
         }
         try? modelContext.save()
@@ -359,7 +340,7 @@ extension InspirationWallView {
     @MainActor
     private func deleteSelectedSnippets() {
         for targetID in selectedSnippetsForBatch {
-            if let target = try? modelContext.fetch(FetchDescriptor<BookAnnotation>(predicate: #Predicate { $0.id == targetID })).first {
+            if let target = allAnnotations.first(where: { $0.id == targetID }) {
                 modelContext.delete(target)
             }
         }
@@ -371,8 +352,34 @@ extension InspirationWallView {
     @MainActor
     private func locateBook(snippet: InspirationSnippet) {
         let targetID = snippet.bookID
-        if let book = try? modelContext.fetch(FetchDescriptor<Book>(predicate: #Predicate { $0.id == targetID })).first {
+        if let book = allBooks.first(where: { $0.id == targetID }) {
             withAnimation(.appFluidSpring) { selectedBook = book }
+        }
+    }
+}
+
+extension InspirationContentType {
+    var annotationType: AnnotationType? {
+        switch self {
+        case .all:
+            return nil
+        case .excerpt:
+            return .excerpt
+        case .note:
+            return .note
+        }
+    }
+}
+
+extension GallerySortType {
+    var annotationSortKey: AnnotationSortKey {
+        switch self {
+        case .newest:
+            return .newest
+        case .oldest:
+            return .oldest
+        case .titleAsc:
+            return .bookTitle
         }
     }
 }

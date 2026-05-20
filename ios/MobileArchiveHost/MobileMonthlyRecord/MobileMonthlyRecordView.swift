@@ -6,20 +6,20 @@ import Charts
 // MARK: - 🗓️ 核心月度记录视图 (原生秒开版)
 
 struct MobileMonthlyRecordView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
-    
-    // 缓存数据源
-    @State private var cachedRecordsDict: [Date: TimeInterval] = [:]
-    @State private var cachedSections: [MonthSection] = []
+    @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
     
     let daysOfWeek = ["一", "二", "三", "四", "五", "六", "日"]
+
+    private var monthlySnapshot: ReadingStatsCalculator.MonthlyArchiveSnapshot {
+        ReadingStatsCalculator.monthlyArchiveSnapshot(sessions: sessions)
+    }
     
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 32, pinnedViews: [.sectionHeaders]) {
-                    ForEach(cachedSections) { section in
+                    ForEach(monthlySnapshot.sections) { section in
                         Section(header: monthSectionHeader(section)) {
                             monthGrid(section: section)
                         }
@@ -33,14 +33,16 @@ struct MobileMonthlyRecordView: View {
             }
             // 完全摒弃 opacity 和 offset 动画，原生直出
             .onAppear {
-                buildDataAndScroll(proxy: proxy)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    proxy.scrollTo(monthlySnapshot.currentMonthID, anchor: .top)
+                }
             }
         }
     }
     
     // MARK: - ✨ UI 组件模块
     
-    private func monthSectionHeader(_ section: MonthSection) -> some View {
+    private func monthSectionHeader(_ section: ReadingStatsCalculator.ReadingMonthSection) -> some View {
         HStack(alignment: .lastTextBaseline) {
             Text("\(String(section.year))年")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -53,7 +55,7 @@ struct MobileMonthlyRecordView: View {
             
             // 计算该月总时长
             let totalMins = section.days.compactMap { d -> Int? in
-                guard let date = d, let duration = cachedRecordsDict[Calendar.current.startOfDay(for: date)] else { return nil }
+                guard let date = d, let duration = monthlySnapshot.durationByDay[Calendar.current.startOfDay(for: date)] else { return nil }
                 return Int(duration / 60)
             }.reduce(0, +)
             
@@ -70,7 +72,7 @@ struct MobileMonthlyRecordView: View {
         .background(AppColors.primaryBackground(for: colorScheme)) // 吸顶时不透明
     }
     
-    private func monthGrid(section: MonthSection) -> some View {
+    private func monthGrid(section: ReadingStatsCalculator.ReadingMonthSection) -> some View {
         VStack(spacing: 12) {
             // 星期表头
             HStack(spacing: 0) {
@@ -85,7 +87,7 @@ struct MobileMonthlyRecordView: View {
                     if let date = section.days[index] {
                         MobileDayCardView(
                             date: date,
-                            duration: cachedRecordsDict[Calendar.current.startOfDay(for: date)]
+                            duration: monthlySnapshot.durationByDay[Calendar.current.startOfDay(for: date)]
                         )
                     } else {
                         Color.clear.frame(height: 70)
@@ -93,61 +95,6 @@ struct MobileMonthlyRecordView: View {
                 }
             }
         }
-    }
-    
-    // MARK: - ⚙️ 数据引擎 (瞬间加载与定位)
-    
-    private func buildDataAndScroll(proxy: ScrollViewProxy) {
-        Task { @MainActor in
-            let calendar = Calendar.current
-            let records = (try? modelContext.fetch(FetchDescriptor<ReadingSession>())) ?? []
-            
-            var dict = [Date: TimeInterval]()
-            for r in records { dict[calendar.startOfDay(for: r.date), default: 0] += r.duration }
-            self.cachedRecordsDict = dict
-            
-            // 动态推算展示区间（从最早的一条记录开始，一直到下个月）
-            let today = Date()
-            let earliestDate = records.map { $0.date }.min() ?? calendar.date(byAdding: .month, value: -6, to: today)!
-            
-            var currentMonthDate = calendar.date(from: calendar.dateComponents([.year, .month], from: earliestDate))!
-            let endMonthDate = calendar.date(byAdding: .month, value: 1, to: calendar.date(from: calendar.dateComponents([.year, .month], from: today))!)!
-            
-            var sections = [MonthSection]()
-            
-            while currentMonthDate <= endMonthDate {
-                let year = calendar.component(.year, from: currentMonthDate)
-                let month = calendar.component(.month, from: currentMonthDate)
-                sections.append(MonthSection(
-                    id: String(format: "%d-%02d", year, month),
-                    year: year, month: month,
-                    days: extractDays(for: currentMonthDate)
-                ))
-                // 推进到下一个月
-                currentMonthDate = calendar.date(byAdding: .month, value: 1, to: currentMonthDate)!
-            }
-            self.cachedSections = sections
-            
-            // 先获取当前月的 ID
-            let currentID = String(format: "%d-%02d", calendar.component(.year, from: today), calendar.component(.month, from: today))
-            
-            // 给 SwiftUI 一个极短的运行周期来挂载刚刚赋值的 sections 视图树
-            try? await Task.sleep(nanoseconds: 50_000_000)
-            
-            // ✨ 原生直出：瞬间、无动画地把当前月份卡在屏幕最顶部 (anchor: .top)
-            proxy.scrollTo(currentID, anchor: .top)
-        }
-    }
-    
-    private func extractDays(for date: Date) -> [Date?] {
-        let cal = Calendar.current
-        guard let range = cal.range(of: .day, in: .month, for: date),
-              let firstDay = cal.date(from: cal.dateComponents([.year, .month], from: date)) else { return [] }
-        let weekday = cal.component(.weekday, from: firstDay)
-        let offset = (weekday + 5) % 7
-        var days: [Date?] = Array(repeating: nil, count: offset)
-        for i in 0..<range.count { days.append(cal.date(byAdding: .day, value: i, to: firstDay)) }
-        return days
     }
 }
 
@@ -210,7 +157,4 @@ struct MobileDayCardView: View {
     }
 }
 
-private struct MonthSection: Identifiable {
-    let id: String; let year: Int; let month: Int; let days: [Date?]
-}
 #endif

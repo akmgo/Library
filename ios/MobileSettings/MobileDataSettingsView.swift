@@ -275,7 +275,6 @@ struct MobileDataSettingsView: View {
                         
                         try modelContext.save()
                         WidgetCenter.shared.reloadAllTimelines()
-                        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
                         showToast("✅ 时光机恢复成功！")
                     } catch { showToast("❌ 数据重建失败: \(error.localizedDescription)") }
                 }

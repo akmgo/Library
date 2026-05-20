@@ -60,26 +60,13 @@ struct MobileGalleryView: View {
     
     /// 核心引擎：在内存中一条龙完成 [过滤] -> [排序]
     var processedBooks: [Book] {
-        let filtered = allBooks.filter { book in
-            return selectedFilter == .all || book.status == selectedFilter.targetStatus
-        }
-        
-        return filtered.sorted { b1, b2 in
-            let result: Bool
-            switch sortType {
-            case .dateAdded:
-                result = b1.createdAt < b2.createdAt
-            case .lastRead:
-                let d1 = b1.lastReadAt ?? b1.startDate ?? b1.createdAt
-                let d2 = b2.lastReadAt ?? b2.startDate ?? b2.createdAt
-                result = d1 < d2
-            case .progress:
-                result = b1.progressRatio < b2.progressRatio
-            case .title:
-                result = b1.title.localizedStandardCompare(b2.title) == .orderedAscending
-            }
-            return isAscending ? result : !result
-        }
+        ReadingStatsCalculator.bookGallerySnapshot(
+            books: allBooks,
+            filterStatus: selectedFilter.targetStatus,
+            searchText: "",
+            sortKey: sortType.gallerySortKey,
+            ascending: isAscending
+        ).books
     }
     
     var body: some View {
@@ -226,7 +213,21 @@ struct MobileGalleryView: View {
         try? modelContext.save()
         selectedBooks.removeAll()
         isBatchEditing = false
-        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
+    }
+}
+
+extension GallerySortType {
+    var gallerySortKey: BookGallerySortKey {
+        switch self {
+        case .lastRead:
+            return .lastRead
+        case .dateAdded:
+            return .dateAdded
+        case .progress:
+            return .progress
+        case .title:
+            return .title
+        }
     }
 }
 

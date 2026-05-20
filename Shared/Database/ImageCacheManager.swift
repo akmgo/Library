@@ -46,15 +46,29 @@ public final class ImageCacheManager: @unchecked Sendable {
     ///   - image: 准备缓存的 `NSImage` 或 `UIImage` 对象。
     ///   - key: 图像的唯一标识符。
     public func setImage(_ image: PlatformImage, forKey key: String) {
-        cache.setObject(image, forKey: key as NSString)
+        cache.setObject(image, forKey: key as NSString, cost: imageCost(image))
     }
     
     /// 从内存缓存中强制移除指定的图像。
-        ///
-        /// - Parameter key: 需要移除的图像的唯一标识符。
-        public func removeImage(forKey key: String) {
-            cache.removeObject(forKey: key as NSString)
-        }
+    ///
+    /// - Parameter key: 需要移除的图像的唯一标识符。
+    public func removeImage(forKey key: String) {
+        cache.removeObject(forKey: key as NSString)
+    }
+
+    public func removeAllImages() {
+        cache.removeAllObjects()
+    }
+
+    private func imageCost(_ image: PlatformImage) -> Int {
+        #if os(iOS)
+        guard let cgImage = image.cgImage else { return 1 }
+        return cgImage.bytesPerRow * cgImage.height
+        #else
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return 1 }
+        return cgImage.bytesPerRow * cgImage.height
+        #endif
+    }
     
     
     #if os(iOS)

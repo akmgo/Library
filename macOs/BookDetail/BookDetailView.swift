@@ -116,10 +116,7 @@ struct BookDetailView: View {
                         // ✨ 核心操作：强制持久化到磁盘，确保画廊读取的是最新状态
                         try modelContext.save()
                                 
-                        // ✨ 核心操作：发送全局信号，告诉画廊“该干活了”
-                        NotificationCenter.default.post(name: .libraryDidUpdate, object: nil)
-                                
-                        print("✅ 书籍及物理文件已彻底销毁并通知画廊")
+                        print("✅ 书籍及物理文件已彻底销毁")
                     } catch {
                         print("❌ 删除保存失败: \(error.localizedDescription)")
                     }

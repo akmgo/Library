@@ -17,6 +17,11 @@ struct BookCoverView: View {
     @State private var loadedImage: PlatformImage? = nil
     @State private var isLoading = true
     @Environment(\.colorScheme) private var colorScheme
+
+    private var cacheKey: String {
+        guard let coverData else { return "cover_img_\(coverID)_empty" }
+        return "cover_img_\(coverID)_\(coverData.count)_\(coverData.hashValue)"
+    }
     
     var body: some View {
         ZStack {
@@ -58,17 +63,19 @@ struct BookCoverView: View {
     
     // MARK: - 核心异步加载引擎
     
+    @MainActor
     private func loadCoverImage() async {
         // 重置状态
         if !isLoading { isLoading = true }
         
         guard let data = coverData, !coverID.isEmpty else {
-            withAnimation { isLoading = false }
+            withAnimation {
+                loadedImage = nil
+                isLoading = false
+            }
             return
         }
-        
-        let cacheKey = "cover_img_\(coverID)"
-        
+
         // 1. 极速读取内存缓存
         if let cachedImage = ImageCacheManager.shared.getImage(forKey: cacheKey) {
             withAnimation(.easeOut(duration: 0.3)) {
@@ -82,14 +89,17 @@ struct BookCoverView: View {
         let processedImage = await Task.detached(priority: .userInitiated) { () -> PlatformImage? in
             #if os(iOS)
             let targetSize = CGSize(width: 300, height: 450)
-            return await ImageCacheManager.shared.downsample(data: data, to: targetSize)
+            return ImageCacheManager.shared.downsample(data: data, to: targetSize)
             #else
             return NSImage(data: data)
             #endif
         }.value
         
         guard let validImage = processedImage else {
-            withAnimation { isLoading = false }
+            withAnimation {
+                loadedImage = nil
+                isLoading = false
+            }
             return
         }
         
