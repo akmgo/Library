@@ -25,7 +25,7 @@ struct LibraryApp: App {
         .windowStyle(.hiddenTitleBar)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("新建图书...") { NotificationCenter.default.post(name: .showAddBookModal, object: nil) }
+                Button("搜索并导入图书...") { NotificationCenter.default.post(name: .showAddBookModal, object: nil) }
                     .keyboardShortcut("n", modifiers: .command)
             }
         }

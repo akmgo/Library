@@ -17,6 +17,7 @@
 		C54819082F9B775B006D5686 /* VisualEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819072F9B775B006D5686 /* VisualEngines.swift */; };
 		C548190C2F9C44EA006D5686 /* BookMetadataSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */; };
 		C54819122F9C52C3006D5686 /* BookMetadataSearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */; };
+		C5481A022FA86010006D5686 /* BookMetadataSpotlightSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5481A012FA86010006D5686 /* BookMetadataSpotlightSearchView.swift */; };
 		C548191C2F9CBD48006D5686 /* InkGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191B2F9CBD48006D5686 /* InkGalleryView.swift */; };
 		C548191E2F9DABBE006D5686 /* SnippetEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */; };
 		C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819272F9F385D006D5686 /* GoalSettingsView.swift */; };
@@ -144,6 +145,7 @@
 		C54819072F9B775B006D5686 /* VisualEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEngines.swift; sourceTree = "<group>"; };
 		C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSearchManager.swift; sourceTree = "<group>"; };
 		C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSearchComponents.swift; sourceTree = "<group>"; };
+		C5481A012FA86010006D5686 /* BookMetadataSpotlightSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSpotlightSearchView.swift; sourceTree = "<group>"; };
 		C548191B2F9CBD48006D5686 /* InkGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkGalleryView.swift; sourceTree = "<group>"; };
 		C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetEditorSheet.swift; sourceTree = "<group>"; };
 		C54819272F9F385D006D5686 /* GoalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalSettingsView.swift; sourceTree = "<group>"; };
@@ -301,11 +303,20 @@
 			children = (
 				C54818FC2F9A64F8006D5686 /* UIComponents */,
 				C5FD82A72F90C5570003A500 /* Sheets */,
+				C5481A032FA86010006D5686 /* Search */,
 				C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */,
 				C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */,
 				C54819882FA19CA7006D5686 /* TopToastManager.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		C5481A032FA86010006D5686 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				C5481A012FA86010006D5686 /* BookMetadataSpotlightSearchView.swift */,
+			);
+			path = Search;
 			sourceTree = "<group>";
 		};
 		C54818FC2F9A64F8006D5686 /* UIComponents */ = {
@@ -889,6 +900,7 @@
 				C5FD83A32F952FFE0003A500 /* MobileQueueCarouselCard.swift in Sources */,
 				C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */,
 				C54819122F9C52C3006D5686 /* BookMetadataSearchComponents.swift in Sources */,
+				C5481A022FA86010006D5686 /* BookMetadataSpotlightSearchView.swift in Sources */,
 				C5FD82BA2F90C5B70003A500 /* MobileYearlyTimelineView.swift in Sources */,
 				C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */,
 				C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */,
