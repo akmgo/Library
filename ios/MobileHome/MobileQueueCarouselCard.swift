@@ -18,21 +18,13 @@ struct MobileQueueCarouselCard: View {
                 .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
+                    HStack(spacing: 14) {
                         ForEach(displayBooks) { book in
                             NavigationLink(destination: MobileBookDetailView(book: book)) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
-                                        .frame(width: 80, height: 120)
-                                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover))
-                                        .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
-                                    
-                                    Text(book.title)
-                                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                                        .foregroundColor(.primary)
-                                        .lineLimit(1)
-                                        .frame(width: 80, alignment: .leading)
-                                }
+                                BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+                                    .frame(width: 84, height: 126)
+                                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
                             }
                             .buttonStyle(.plain)
                         }

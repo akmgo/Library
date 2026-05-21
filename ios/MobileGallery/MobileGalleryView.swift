@@ -76,18 +76,17 @@ struct MobileGalleryView: View {
                     emptyStateView
                 } else {
                     ScrollView(.vertical, showsIndicators: false) {
-                        let minWidth: CGFloat = isLandscape ? 140 : 105
-                        let maxWidth: CGFloat = isLandscape ? 200 : 160
-                        let gridSpacing: CGFloat = isLandscape ? 28 : 20
+                        let minWidth: CGFloat = isLandscape ? 118 : 96
+                        let maxWidth: CGFloat = isLandscape ? 154 : 124
+                        let gridSpacing: CGFloat = isLandscape ? 20 : 16
                         
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: minWidth, maximum: maxWidth), spacing: gridSpacing)], spacing: 32) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: minWidth, maximum: maxWidth), spacing: gridSpacing)], spacing: isLandscape ? 24 : 22) {
                             ForEach(processedBooks, id: \.id) { book in
                                 if isBatchEditing {
                                     // 批量编辑模式
                                     Button(action: { toggleSelection(for: book.id) }) {
                                         MobileBookGridCell(
                                             book: book,
-                                            showProgress: selectedFilter == .reading,
                                             isEditing: true,
                                             isSelected: selectedBooks.contains(book.id)
                                         )
@@ -99,20 +98,15 @@ struct MobileGalleryView: View {
                                     }) {
                                         MobileBookGridCell(
                                             book: book,
-                                            showProgress: selectedFilter == .reading,
                                             isEditing: false,
-                                            isSelected: false,
-                                            onDetailTap: {
-                                                // 触发菜单栏选项：进入详情
-                                                detailBook = book
-                                            }
+                                            isSelected: false
                                         )
                                     }
                                     .buttonStyle(.plain)
                                 }
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, isLandscape ? 28 : 18)
                         .padding(.top, 16)
                         .padding(.bottom, 120)
                     }
@@ -233,19 +227,13 @@ extension GallerySortType {
 
 struct MobileBookGridCell: View {
     let book: Book
-    var showProgress: Bool = false
     var isEditing: Bool = false
     var isSelected: Bool = false
     
-    // ✨ 菜单点击事件回调
-    var onDetailTap: (() -> Void)? = nil
-    
     var body: some View {
         let safeTitle = book.title
-        let safeAuthor = book.author
-        let safeStatus = book.status
         
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 0) {
             // ================= 1. 顶部纯净封面区 =================
             ZStack(alignment: .topTrailing) {
                 Color.clear
@@ -264,17 +252,7 @@ struct MobileBookGridCell: View {
                         .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
                     )
                     .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover).stroke(Color.black.opacity(0.1), lineWidth: 0.5))
-                
-                if showProgress && safeStatus == .reading {
-                    Text("\(Int(book.progressRatio * 100))%")
-                        .font(.system(size: 10, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 6).padding(.vertical, 4)
-                        .background(AppColors.progress.opacity(0.9).background(.ultraThinMaterial))
-                        .clipShape(Capsule())
-                        .offset(x: -8, y: 8)
-                }
-                
+
                 if isEditing {
                     ZStack {
                         Color.black.opacity(isSelected ? 0.1 : 0.4)
@@ -295,40 +273,6 @@ struct MobileBookGridCell: View {
                 }
             }
             .opacity(isEditing && !isSelected ? 0.8 : 1.0)
-            
-            // ================= 2. 底部信息与菜单区 =================
-            HStack(alignment: .top, spacing: 4) {
-                // 左侧书名与作者
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(safeTitle).font(.system(size: 14, weight: .bold, design: .rounded)).foregroundColor(.primary).lineLimit(1)
-                    Text(safeAuthor).font(.system(size: 12, weight: .medium)).foregroundColor(.secondary).lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // ✨ 移到外部右下角的详情菜单
-                if !isEditing {
-                    Menu {
-                        Button(action: {
-                            onDetailTap?()
-                        }) {
-                            Label("书籍详情", systemImage: "info.circle")
-                        }
-                        // 未来可以加分享、加标签等快捷按钮
-                    } label: {
-                        // 适应页面背景的极简风格
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.secondary.opacity(0.6))
-                            // 扩大点击热区，避免误触跳转阅读器
-                            .frame(width: 24, height: 24)
-                            .contentShape(Rectangle())
-                    }
-                    // 消除自带的系统点击高亮抖动
-                    .buttonStyle(.plain)
-                    // 微调位置，使其在视觉上与第一行书名完美居中对齐
-                    .offset(y: -2)
-                }
-            }
         }
         .contentShape(Rectangle())
     }

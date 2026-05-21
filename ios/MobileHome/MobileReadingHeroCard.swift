@@ -9,10 +9,9 @@ struct MobileReadingHeroCard: View {
     var body: some View {
         let safeTitle = book.title
         let safeAuthor = book.author
-        let progress = book.progressRatio
         
         GroupBox {
-            HStack(alignment: .top, spacing: 18) {
+            HStack(alignment: .center, spacing: 18) {
                 // 左侧封面
                 BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: safeTitle)
                     .frame(width: 90, height: 135)
@@ -30,29 +29,6 @@ struct MobileReadingHeroCard: View {
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                             .lineLimit(1)
-                    }
-                    
-                    Spacer(minLength: 12)
-                    
-                    // 底部：进度展示
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .lastTextBaseline) {
-                            Text("阅读进度")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text("\(Int(progress * 100))%")
-                                .font(.system(size: 30, weight: .black, design: .rounded))
-                                .foregroundColor(.blue)
-                        }
-                        
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(Color.secondary.opacity(0.15))
-                                Capsule().fill(Color.blue.gradient)
-                                    .frame(width: max(0, geo.size.width * CGFloat(progress)))
-                            }
-                        }.frame(height: 6)
                     }
                 }
             }
@@ -98,21 +74,6 @@ struct MobileEmptyReadingCard: View {
                             .foregroundColor(.secondary.opacity(0.6))
                     }
                     
-                    Spacer()
-                    
-                    // 底部占位进度
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .lastTextBaseline) {
-                            Text("当前进度")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.secondary.opacity(0.3))
-                            Spacer()
-                            Text("0%")
-                                .font(.system(size: 22, weight: .black, design: .rounded))
-                                .foregroundColor(.secondary.opacity(0.2))
-                        }
-                        Capsule().fill(Color.secondary.opacity(0.08)).frame(height: 6)
-                    }
                 }
             }
             .padding(.vertical, 2)

@@ -8,15 +8,15 @@ import SwiftUI
 enum GalleryGridScale: Double, CaseIterable {
     case small = 0.0; case medium = 1.0; case large = 2.0; case extraLarge = 3.0
     var width: CGFloat {
-        switch self { case .small: 120; case .medium: 160; case .large: 200; case .extraLarge: 260 }
+        switch self { case .small: 118; case .medium: 152; case .large: 188; case .extraLarge: 238 }
     }
 
     var hSpacing: CGFloat {
-        switch self { case .small: 20; case .medium: 24; case .large: 32; case .extraLarge: 40 }
+        switch self { case .small: 18; case .medium: 22; case .large: 28; case .extraLarge: 34 }
     }
 
     var vSpacing: CGFloat {
-        switch self { case .small: 24; case .medium: 32; case .large: 40; case .extraLarge: 50 }
+        switch self { case .small: 22; case .medium: 28; case .large: 34; case .extraLarge: 42 }
     }
 
     var titleFont: CGFloat {
@@ -89,7 +89,7 @@ struct GalleryView: View {
             // 1. 主体滚动区
             ScrollView {
                 gridView(containerWidth: geo.size.width)
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, horizontalPadding(for: geo.size.width))
                     .padding(.top, 140)
                     .padding(.bottom, isBatchEditMode ? 120 : 60)
                     .opacity(isEntranceAnimated ? 1.0 : 0.0)
@@ -121,7 +121,7 @@ struct GalleryView: View {
                             .opacity(isEntranceAnimated ? 1.0 : 0.0)
                             .offset(x: isEntranceAnimated ? 0 : 200)
                     }
-                    .padding(.horizontal, 40).padding(.top, 45).padding(.bottom, 20)
+                    .padding(.horizontal, horizontalPadding(for: geo.size.width)).padding(.top, 45).padding(.bottom, 20)
                     .animation(.appFluidSpring, value: isEntranceAnimated)
                     
                     Divider().background(Color.primary.opacity(0.05))
@@ -201,6 +201,10 @@ struct GalleryView: View {
             }
             .animation(.appFluidSpring, value: scaleIndex)
         }
+    }
+
+    private func horizontalPadding(for width: CGFloat) -> CGFloat {
+        min(max(width * 0.045, 28), 56)
     }
     
     private func deleteSelectedBooks() {

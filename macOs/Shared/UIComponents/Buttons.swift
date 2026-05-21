@@ -316,14 +316,14 @@ struct GlobalBackButton: View {
     }
 }
 
-/// 全局通用的新建图书按钮
+/// 全局通用的图书导入按钮
 struct GlobalAddBookButton: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
             Image(systemName: "plus")
         }
-        .help("新建图书 (⌘+N)")
+        .help("搜索并导入图书 (⌘N)")
     }
 }
 #endif

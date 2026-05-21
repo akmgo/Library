@@ -24,6 +24,7 @@ struct QueueBookshelf: View {
                 HStack(alignment: .top, spacing: AppSpacing.l) {
                     ForEach(displayBooks) { book in
                         PlannedBookItem(book: book)
+                            .frame(width: 100)
                             .frame(maxWidth: .infinity)
                             .onTapGesture { onBookTap(book) } // 触发闭包
                     }
@@ -43,18 +44,13 @@ private struct PlannedBookItem: View {
     @State private var isHovered = false
     
     var body: some View {
-        VStack(alignment: .center, spacing: AppSpacing.s) {
+        VStack(alignment: .center, spacing: 0) {
             BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
                 .frame(width: 100, height: 150)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
                 .shadow(color: Color.black.opacity(isHovered ? 0.2 : 0.1), radius: isHovered ? 8 : 4, y: isHovered ? 4 : 2)
                 .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover).stroke(Color.primary.opacity(0.05), lineWidth: 0.5))
                 .scaleEffect(isHovered ? 1.05 : 1.0).animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
-            
-            VStack(alignment: .center, spacing: 4) {
-                Text(book.title).font(.system(size: 13, weight: .bold)).multilineTextAlignment(.center).lineLimit(1)
-                Text(book.author).font(.system(size: 11, weight: .medium)).foregroundColor(.secondary).multilineTextAlignment(.center).lineLimit(1)
-            }.frame(maxWidth: .infinity)
         }
         .contentShape(Rectangle())
         .onHover { h in isHovered = h; if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }

@@ -48,7 +48,6 @@ struct ContentView: View {
     @State private var selectedModule: NavigationModule? = .home
     @State private var columnVisibility = NavigationSplitViewVisibility.all
 
-    @State private var showAddModal = false
     @State private var showAddSnippetModal = false
 
     @State private var globalSearchText: String = ""
@@ -79,8 +78,8 @@ struct ContentView: View {
     @State private var detailShowEditSheet = false
     @State private var detailShowDeleteAlert = false
 
-    @State private var showCloudSpotlight = false
-    
+    @State private var showBookMetadataSpotlight = false
+
     @State private var showOPDSBrowser = false
 
     var body: some View {
@@ -100,8 +99,13 @@ struct ContentView: View {
             ConfettiView().ignoresSafeArea().allowsHitTesting(false).zIndex(2)
         }
         .ignoresSafeArea(edges: .top)
-        .sheet(isPresented: $showAddModal) { BookEditorSheet(isPresented: $showAddModal, bookToEdit: nil) }
         .sheet(isPresented: $showAddSnippetModal) { SnippetEditorSheet(isPresented: $showAddSnippetModal) }
+        .overlay {
+            if showBookMetadataSpotlight {
+                BookMetadataSpotlightSearchView(isPresented: $showBookMetadataSpotlight)
+                    .zIndex(20)
+            }
+        }
         .onChange(of: selectedModule) { _, _ in
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { selectedBook = nil }
             globalSearchText = ""
@@ -112,7 +116,9 @@ struct ContentView: View {
             versesSelectedSnippets.removeAll()
         }
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
-            showAddModal = true
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                showBookMetadataSpotlight = true
+            }
         }
         .onAppear {
             applyTheme(appTheme)
@@ -120,17 +126,6 @@ struct ContentView: View {
         .onChange(of: appTheme) { _, newTheme in
             applyTheme(newTheme)
         }
-        .background(
-            Button("") {
-                if selectedModule == .verses {
-                    showAddSnippetModal = true
-                } else if [.home, .gallery, .inspiration].contains(selectedModule) {
-                    showAddModal = true
-                }
-            }
-            .keyboardShortcut("n", modifiers: .command)
-            .opacity(0)
-        )
     }
 
     private func applyTheme(_ theme: String) {

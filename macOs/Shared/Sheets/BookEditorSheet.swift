@@ -12,7 +12,7 @@ struct BookEditorSheet: View {
 
     @Binding var isPresented: Bool
 
-    var bookToEdit: Book? = nil
+    let bookToEdit: Book
 
     @State private var titleInput: String = ""
     @State private var authorInput: String = ""
@@ -21,21 +21,14 @@ struct BookEditorSheet: View {
     @State private var isShowingImagePicker = false
     @State private var showDuplicateAlert = false
 
-    @State private var isSearchingCloud = false
-    @State private var showSearchResults = false
-    @State private var searchResults: [BookSearchResult] = []
-    @State private var searchError: String? = nil
-
     var body: some View {
-        let isEdit = bookToEdit != nil
-
         VStack(spacing: 0) {
             HStack(spacing: 10) {
                 Image(systemName: "book.closed.fill")
                     .font(.system(size: 18))
                     .foregroundColor(.blue)
 
-                Text(isEdit ? "编辑档案" : "添加图书")
+                Text("编辑档案")
                     .font(.system(size: 16, weight: .bold))
                 Spacer()
             }
@@ -68,10 +61,10 @@ struct BookEditorSheet: View {
                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
 
                 let isFormEmpty = titleInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                let hasChanges = bookToEdit == nil ? true : (titleInput != bookToEdit?.title || authorInput != bookToEdit?.author || selectedCoverData != bookToEdit?.coverData)
+                let hasChanges = titleInput != bookToEdit.title || authorInput != bookToEdit.author || selectedCoverData != bookToEdit.coverData
                 let canSave = !isFormEmpty && hasChanges
 
-                Button(isEdit ? "保存修改" : "确认入库") { saveBook() }
+                Button("保存修改") { saveBook() }
                     .buttonStyle(.plain)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
@@ -86,11 +79,9 @@ struct BookEditorSheet: View {
         .glassEffect(in: .rect(cornerRadius: 16.0))
         .background(WindowTransparentEffect())
         .onAppear {
-            if let book = bookToEdit {
-                titleInput = book.title
-                authorInput = book.author
-                selectedCoverData = book.coverData
-            }
+            titleInput = bookToEdit.title
+            authorInput = bookToEdit.author
+            selectedCoverData = bookToEdit.coverData
         }
         .alert("书名重复", isPresented: $showDuplicateAlert) {
             Button("好的", role: .cancel) {}
@@ -153,24 +144,6 @@ struct BookEditorSheet: View {
                     TextField("书名", text: $titleInput)
                         .textFieldStyle(.plain)
                         .font(.system(size: 14, weight: .medium))
-                        .onSubmit { performInlineSearch() }
-                        .onChange(of: titleInput) { _, newValue in
-                            if newValue.trimmingCharacters(in: .whitespaces).isEmpty { showSearchResults = false }
-                        }
-                    Button(action: performInlineSearch) {
-                        if isSearchingCloud {
-                            ProgressView().controlSize(.mini)
-                        } else {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(titleInput.isEmpty ? .secondary.opacity(0.4) : .blue.opacity(0.8))
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(titleInput.isEmpty || isSearchingCloud)
-                    .popover(isPresented: $showSearchResults, arrowEdge: .trailing) {
-                        InlineBookSearchResultsPopover(results: searchResults, error: searchError, isLoading: isSearchingCloud, onSelect: applySearchResult)
-                    }
                 }
                 .padding(10)
                 .glassEffect(in: .rect(cornerRadius: 6))
@@ -193,62 +166,26 @@ struct BookEditorSheet: View {
         }
     }
 
-    private func performInlineSearch() {
-        guard !titleInput.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        isSearchingCloud = true
-        showSearchResults = true
-        searchError = nil
-        searchResults.removeAll()
-
-        Task { @MainActor in
-            do {
-                let results = try await BookMetadataSearchManager.shared.search(query: titleInput)
-                if results.isEmpty { searchError = "未能找到相关书籍" } else { searchResults = results }
-            } catch {
-                searchError = "查询受阻：\(error.localizedDescription)"
-            }
-            isSearchingCloud = false
-        }
-    }
-
-    private func applySearchResult(_ result: BookSearchResult, fetchedCoverData: Data?) {
-        showSearchResults = false
-        withAnimation(.snappy) {
-            titleInput = result.title
-            authorInput = result.author
-            selectedCoverData = fetchedCoverData
-        }
-        if fetchedCoverData == nil {
-            Task { @MainActor in
-                if let coverData = await BookMetadataSearchManager.shared.fetchCoverData(from: result.coverURL) {
-                    withAnimation(.spring()) { self.selectedCoverData = coverData }
-                }
-            }
-        }
-    }
-
     private func saveBook() {
         let cleanedTitle = titleInput.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanedAuthor = authorInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanedTitle.isEmpty else { return }
 
-        let existingTitles = Set(allBooks.map { $0.title })
-        if let book = bookToEdit {
-            let isCoverChanged = book.coverData != selectedCoverData
-            book.title = cleanedTitle
-            book.author = cleanedAuthor
-            book.coverData = selectedCoverData
-            if isCoverChanged { ImageCacheManager.shared.removeImage(forKey: "cover_img_\(book.id)") }
-            ReadingDataService.shared.normalizeBook(book)
-            try? modelContext.save()
-        } else {
-            if existingTitles.contains(cleanedTitle) {
-                showDuplicateAlert = true
-                return
-            }
-            let newBook = Book(title: cleanedTitle, author: cleanedAuthor, coverData: selectedCoverData)
-            try? ReadingDataService.shared.insertBook(newBook, context: modelContext)
+        let hasDuplicateTitle = allBooks.contains { book in
+            book.id != bookToEdit.id && book.title == cleanedTitle
         }
+        if hasDuplicateTitle {
+            showDuplicateAlert = true
+            return
+        }
+
+        let isCoverChanged = bookToEdit.coverData != selectedCoverData
+        bookToEdit.title = cleanedTitle
+        bookToEdit.author = cleanedAuthor
+        bookToEdit.coverData = selectedCoverData
+        if isCoverChanged { ImageCacheManager.shared.removeImage(forKey: "cover_img_\(bookToEdit.id)") }
+        ReadingDataService.shared.normalizeBook(bookToEdit)
+        try? modelContext.save()
 
         isPresented = false
     }

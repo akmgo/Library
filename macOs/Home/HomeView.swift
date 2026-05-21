@@ -36,10 +36,7 @@ struct HomeView: View {
                     // 🌟 Row 1: 核心操作区 (Hero Section) - UI 布局严格保留你的原样
                     HStack {
                         if let heroBook = dashboard.activeReadingBook {
-                            ReadingHero(book: heroBook) {
-                                // 点击右上角按钮：触发详情页
-                                withAnimation(.appFluidSpring) { self.selectedBook = heroBook }
-                            }
+                            ReadingHero(book: heroBook)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                             .onTapGesture {

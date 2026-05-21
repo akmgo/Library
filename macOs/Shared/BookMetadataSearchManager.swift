@@ -71,8 +71,8 @@ class DoubanWebViewProvider: NSObject, BookMetadataProvider {
                 if (items.length === 0) return 'EMPTY';
                 
                 var result = [];
-                // 提取前 5 条结果
-                for(var i=0; i<Math.min(items.length, 5); i++) {
+                // 提取前 10 条结果，Spotlight 导入层会保持最多渲染 10 条。
+                for(var i=0; i<Math.min(items.length, 10); i++) {
                     var item = items[i];
                     var title = item.querySelector('.title-text') ? item.querySelector('.title-text').innerText : '';
                     var img = item.querySelector('img');
