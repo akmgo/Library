@@ -33,26 +33,25 @@ enum ProgressUnit: String, Codable, CaseIterable {
     }
 }
 
-enum AnnotationType: String, Codable, CaseIterable {
-    case excerpt
-    case note
-}
-
 enum ReadingInputMode: String, Codable, CaseIterable {
     case timer
     case manual
 }
 
-enum SnippetCategory: String, Codable, CaseIterable {
-    case poetry = "POETRY"
-    case lyric = "LYRIC"
-    case prose = "PROSE"
-    case quote = "QUOTE"
-    case web = "WEB"
-    case movie = "MOVIE"
+enum ExcerptCategory: String, Codable, CaseIterable {
+    case bookExcerpt
+    case note
+    case poetry
+    case lyric
+    case prose
+    case quote
+    case web
+    case movie
 
     var displayName: String {
         switch self {
+        case .bookExcerpt: return "读书摘录"
+        case .note: return "笔记"
         case .poetry: return "诗歌"
         case .lyric: return "词曲"
         case .prose: return "短文"
@@ -62,8 +61,12 @@ enum SnippetCategory: String, Codable, CaseIterable {
         }
     }
 
+    static var excerpt: ExcerptCategory { .bookExcerpt }
+
     var themeColor: Color {
         switch self {
+        case .bookExcerpt: return Color(red: 0.78, green: 0.61, blue: 0.35)
+        case .note: return .orange
         case .poetry, .lyric: return .orange
         case .prose: return .blue
         case .quote: return .purple

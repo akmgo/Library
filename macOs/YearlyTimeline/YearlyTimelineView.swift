@@ -15,9 +15,6 @@ struct YearlyTimelineView: View {
     
     @State private var previousYear: Int = Calendar.current.component(.year, from: Date())
 
-    // ✨ 核心机制：强制状态驱动首屏动画锁
-    @State private var isEntranceAnimated: Bool = false
-
     private var yearlySnapshot: ReadingStatsCalculator.YearlyArchiveSnapshot {
         ReadingStatsCalculator.yearlyArchiveSnapshot(
             books: books,
@@ -44,60 +41,34 @@ struct YearlyTimelineView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-                .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                .offset(y: isEntranceAnimated ? 0 : 90)
-                .scaleEffect(isEntranceAnimated ? 1.0 : 0.93, anchor: .center)
-                .animation(.appFluidSpring, value: isEntranceAnimated)
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 60) // 底部留白
         }
         // ================= ✨ 顶层悬浮高定玻璃 Header (使用 Overlay 挂载) =================
         .overlay(alignment: .top) {
-            VStack(spacing: 0) {
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 8) {
+            AppPageHeader(contentID: "\(selectedYear)-\(yearlySnapshot.books.count)-\(yearlySnapshot.totalDaysRead)") {
+                VStack(alignment: .leading, spacing: 8) {
                         Text("\(String(selectedYear)) 年度报告")
                             .font(.system(size: 32, weight: .heavy, design: .rounded))
                             .foregroundColor(.primary)
-                            .animation(.appSnappy, value: selectedYear)
+                            .contentTransition(.opacity)
                         
                         Text("岁月留痕，阅有所获")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundColor(.secondary)
-                    }
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(x: isEntranceAnimated ? 0 : -200)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 32) {
-                        HeaderStatItem(title: "完结作品", value: "\(yearlySnapshot.books.count)", unit: "部", icon: "book.closed.fill", color: .indigo)
-                        HeaderStatItem(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", unit: "天", icon: "calendar", color: .orange)
-                        HeaderStatItem(title: "阅读时长", value: "\(yearlySnapshot.totalReadingHours)", unit: "小时", icon: "clock.fill", color: .teal)
-                        HeaderStatItem(title: "最高连续", value: "\(yearlySnapshot.longestStreak)", unit: "天", icon: "flame.fill", color: .pink)
-                    }
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(x: isEntranceAnimated ? 0 : 200)
                 }
-                .padding(.horizontal, 40)
-                .padding(.top, 40)
-                .padding(.bottom, 20)
-                .animation(.appFluidSpring, value: isEntranceAnimated)
-                
-                Divider().background(Color.primary.opacity(0.05))
+            } trailingContent: {
+                HStack(spacing: 32) {
+                    HeaderStatItem(title: "完结作品", value: "\(yearlySnapshot.books.count)", unit: "部", icon: "book.closed.fill", color: .indigo)
+                    HeaderStatItem(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", unit: "天", icon: "calendar", color: .orange)
+                    HeaderStatItem(title: "阅读时长", value: "\(yearlySnapshot.totalReadingHours)", unit: "小时", icon: "clock.fill", color: .teal)
+                    HeaderStatItem(title: "最高连续", value: "\(yearlySnapshot.longestStreak)", unit: "天", icon: "flame.fill", color: .pink)
+                }
             }
-            .background(Color.clear.background(.ultraThinMaterial).opacity(0.85))
-            .ignoresSafeArea(edges: .top)
         }
         .onAppear {
             availableYears = yearlySnapshot.availableYears
-            guard !isEntranceAnimated else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-                withAnimation(.appFluidSpring) {
-                    isEntranceAnimated = true
-                }
-            }
         }
         .onChange(of: selectedYear) { oldYear, newYear in
             previousYear = oldYear
@@ -141,7 +112,7 @@ struct YearlyTimelineView: View {
         }
         .padding(.top, 160)
         .id(selectedYear)
-        .transition(.appTemporalPush(isForward: selectedYear >= previousYear))
+        .transition(.opacity)
     }
     
 }
@@ -237,8 +208,8 @@ private struct TimelineRowView: View {
             }
             .frame(width: 20)
             .zIndex(10)
-            .scaleEffect(isHovered ? 1.3 : 1.0)
-            .animation(.appSnappy, value: isHovered)
+            .scaleEffect(isHovered ? 1.08 : 1.0)
+            .animation(.appControlFeedback, value: isHovered)
             
             // 右侧内容区
             Group {
@@ -319,17 +290,17 @@ private struct TimelineCardView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(Color.primary.opacity(isHovered ? 0.15 : 0.05), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(isHovered ? 0.1 : 0.02), radius: isHovered ? 14 : 4, y: isHovered ? 6 : 2)
+        .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.02), radius: isHovered ? 10 : 4, y: isHovered ? 3 : 2)
         .contentShape(Rectangle())
         .onHover { h in
-            withAnimation(.appSnappy) { isHovered = h }
+            withAnimation(.appControlFeedback) { isHovered = h }
             if h { NSCursor.pointingHand.push() } else { NSCursor.pop() }
         }
         .onChange(of: selectedBook) { _, newValue in
             if newValue != nil { isHovered = false }
         }
         .onTapGesture {
-            withAnimation(.appFluidSpring) { selectedBook = book }
+            selectedBook = book
         }
     }
     
@@ -343,13 +314,13 @@ private struct TimelineCardView: View {
                     .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
             )
             .shadow(color: Color.black.opacity(0.15), radius: 6, y: 3)
-            .scaleEffect(isHovered ? 1.03 : 1.0)
+            .scaleEffect(isHovered ? 1.012 : 1.0)
     }
     
     private var textSection: some View {
         let safeTitle = book.title
         let safeAuthor = book.author
-        let notesCount = (book.annotations?.count ?? 0)
+        let notesCount = (book.excerpts?.count ?? 0)
         
         return VStack(alignment: isLeft ? .trailing : .leading, spacing: 12) {
             VStack(alignment: isLeft ? .trailing : .leading, spacing: 4) {

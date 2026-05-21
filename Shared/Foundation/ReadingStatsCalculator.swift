@@ -12,7 +12,7 @@ enum BookGallerySortKey {
     case title
 }
 
-enum SnippetGallerySortKey {
+enum ExcerptGallerySortKey {
     case newest
     case oldest
     case titleAscending
@@ -24,7 +24,7 @@ enum AnnotationSortKey {
     case bookTitle
 }
 
-struct InspirationSnippet: Identifiable, Hashable {
+struct ExcerptListItem: Identifiable, Hashable {
     let id: String
     let content: String
     let date: Date
@@ -48,7 +48,7 @@ enum ReadingStatsCalculator {
         )
     }
 
-    struct SnippetGalleryStats {
+    struct ExcerptGalleryStats {
         let total: Int
         let poetry: Int
         let lyric: Int
@@ -59,7 +59,7 @@ enum ReadingStatsCalculator {
 
         var poetryAndLyric: Int { poetry + lyric }
 
-        static let empty = SnippetGalleryStats(
+        static let empty = ExcerptGalleryStats(
             total: 0,
             poetry: 0,
             lyric: 0,
@@ -70,20 +70,20 @@ enum ReadingStatsCalculator {
         )
     }
 
-    struct SnippetGallerySnapshot {
-        let snippets: [Snippet]
-        let stats: SnippetGalleryStats
+    struct ExcerptGallerySnapshot {
+        let excerpts: [Excerpt]
+        let stats: ExcerptGalleryStats
 
-        static let empty = SnippetGallerySnapshot(snippets: [], stats: .empty)
+        static let empty = ExcerptGallerySnapshot(excerpts: [], stats: .empty)
     }
 
     struct InspirationSnapshot {
-        let snippets: [InspirationSnippet]
+        let excerpts: [ExcerptListItem]
         let totalContentCharacters: Int
         let uniqueBooksCount: Int
 
         static let empty = InspirationSnapshot(
-            snippets: [],
+            excerpts: [],
             totalContentCharacters: 0,
             uniqueBooksCount: 0
         )
@@ -234,101 +234,101 @@ enum ReadingStatsCalculator {
         )
     }
 
-    static func snippetGallerySnapshot(
-        snippets: [Snippet],
-        category: SnippetCategory?,
+    static func excerptGallerySnapshot(
+        excerpts: [Excerpt],
+        category: ExcerptCategory?,
         searchText: String,
-        sortKey: SnippetGallerySortKey
-    ) -> SnippetGallerySnapshot {
-        let stats = SnippetGalleryStats(
-            total: snippets.count,
-            poetry: snippets.filter { $0.category == .poetry }.count,
-            lyric: snippets.filter { $0.category == .lyric }.count,
-            prose: snippets.filter { $0.category == .prose }.count,
-            quote: snippets.filter { $0.category == .quote }.count,
-            movie: snippets.filter { $0.category == .movie }.count,
-            web: snippets.filter { $0.category == .web }.count
+        sortKey: ExcerptGallerySortKey
+    ) -> ExcerptGallerySnapshot {
+        let stats = ExcerptGalleryStats(
+            total: excerpts.count,
+            poetry: excerpts.filter { $0.category == .poetry }.count,
+            lyric: excerpts.filter { $0.category == .lyric }.count,
+            prose: excerpts.filter { $0.category == .prose }.count,
+            quote: excerpts.filter { $0.category == .quote }.count,
+            movie: excerpts.filter { $0.category == .movie }.count,
+            web: excerpts.filter { $0.category == .web }.count
         )
 
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        var displaySnippets = snippets.filter { snippet in
-            guard category == nil || snippet.category == category else { return false }
+        var displayExcerpts = excerpts.filter { excerpt in
+            guard category == nil || excerpt.category == category else { return false }
             guard !query.isEmpty else { return true }
-            return snippet.title.lowercased().contains(query)
-                || snippet.author.lowercased().contains(query)
-                || snippet.dynasty.lowercased().contains(query)
-                || snippet.content.lowercased().contains(query)
-                || snippet.annotation.lowercased().contains(query)
+            return (excerpt.title ?? "").lowercased().contains(query)
+                || excerpt.author.lowercased().contains(query)
+                || excerpt.dynasty.lowercased().contains(query)
+                || excerpt.content.lowercased().contains(query)
+                || excerpt.annotation.lowercased().contains(query)
         }
 
         switch sortKey {
         case .newest:
-            displaySnippets.sort { $0.addedDate > $1.addedDate }
+            displayExcerpts.sort { $0.addedDate > $1.addedDate }
         case .oldest:
-            displaySnippets.sort { $0.addedDate < $1.addedDate }
+            displayExcerpts.sort { $0.addedDate < $1.addedDate }
         case .titleAscending:
-            displaySnippets.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+            displayExcerpts.sort { ($0.title ?? "").localizedStandardCompare($1.title ?? "") == .orderedAscending }
         }
 
-        return SnippetGallerySnapshot(snippets: displaySnippets, stats: stats)
+        return ExcerptGallerySnapshot(excerpts: displayExcerpts, stats: stats)
     }
 
     static func inspirationSnapshot(
-        annotations: [BookAnnotation],
-        type: AnnotationType?,
+        excerpts: [Excerpt],
+        type: ExcerptCategory?,
         searchText: String,
         sortKey: AnnotationSortKey,
         randomize: Bool
     ) -> InspirationSnapshot {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        var snippets = annotations.compactMap { annotation -> InspirationSnippet? in
-            guard type == nil || annotation.type == type else { return nil }
+        var excerpts = excerpts.compactMap { excerpt -> ExcerptListItem? in
+            guard type == nil || excerpt.category == type else { return nil }
 
-            let title = annotation.book?.title ?? "未知书籍"
-            let author = annotation.book?.author ?? "佚名"
+            let title = excerpt.book?.title ?? "未知书籍"
+            let author = excerpt.book?.author ?? "佚名"
             if !query.isEmpty {
-                let matches = annotation.content.lowercased().contains(query)
+                let matches = excerpt.content.lowercased().contains(query)
                     || title.lowercased().contains(query)
                     || author.lowercased().contains(query)
                 guard matches else { return nil }
             }
 
-            return InspirationSnippet(
-                id: annotation.id,
-                content: annotation.content,
-                date: annotation.createdAt,
+            return ExcerptListItem(
+                id: excerpt.id,
+                content: excerpt.content,
+                date: excerpt.createdAt,
                 bookTitle: title,
                 bookAuthor: author,
-                bookID: annotation.book?.id ?? "",
-                isNote: annotation.isNote,
-                coverData: annotation.book?.coverData
+                bookID: excerpt.book?.id ?? "",
+                isNote: excerpt.isNote,
+                coverData: excerpt.book?.coverData
             )
         }
 
         switch sortKey {
         case .newest:
-            snippets.sort { $0.date > $1.date }
+            excerpts.sort { $0.date > $1.date }
         case .oldest:
-            snippets.sort { $0.date < $1.date }
+            excerpts.sort { $0.date < $1.date }
         case .bookTitle:
-            snippets.sort { $0.bookTitle.localizedStandardCompare($1.bookTitle) == .orderedAscending }
+            excerpts.sort { $0.bookTitle.localizedStandardCompare($1.bookTitle) == .orderedAscending }
         }
 
         if randomize {
-            snippets.shuffle()
+            excerpts.shuffle()
         }
 
         return InspirationSnapshot(
-            snippets: snippets,
-            totalContentCharacters: snippets.reduce(0) { $0 + $1.content.count },
-            uniqueBooksCount: Set(snippets.map(\.bookID)).filter { !$0.isEmpty }.count
+            excerpts: excerpts,
+            totalContentCharacters: excerpts.reduce(0) { $0 + $1.content.count },
+            uniqueBooksCount: Set(excerpts.map(\.bookID)).filter { !$0.isEmpty }.count
         )
     }
 
     static func dashboardSnapshot(
         books: [Book],
         sessions: [ReadingSession],
-        annotations: [BookAnnotation],
+        excerpts: [Excerpt],
         today: Date = Date(),
         calendar: Calendar = .current
     ) -> DashboardSnapshot {
@@ -375,7 +375,7 @@ enum ReadingStatsCalculator {
             momentumTotal: momentum.totalMinutes,
             heatmapColumns: heatmap.columns,
             heatmapActiveDays: heatmap.activeDays,
-            resonancePoints: resonanceData(from: annotations),
+            resonancePoints: resonanceData(from: excerpts),
             queueBooks: queueBooks(from: books),
             spectrumPoints: spectrumData(from: books)
         )
@@ -535,9 +535,9 @@ enum ReadingStatsCalculator {
         Array(books.filter { $0.status == .planned }.prefix(limit))
     }
 
-    static func resonanceData(from annotations: [BookAnnotation], limit: Int = 100) -> [ResonanceDataPoint] {
-        let excerpts = annotations
-            .filter { $0.type == .excerpt }
+    static func resonanceData(from excerpts: [Excerpt], limit: Int = 100) -> [ResonanceDataPoint] {
+        let excerpts = excerpts
+            .filter { $0.category == .bookExcerpt }
             .sorted { $0.createdAt > $1.createdAt }
             .prefix(limit)
 

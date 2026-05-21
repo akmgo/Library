@@ -18,7 +18,6 @@
 		C548190C2F9C44EA006D5686 /* BookMetadataSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */; };
 		C54819122F9C52C3006D5686 /* BookMetadataSearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */; };
 		C5481A022FA86010006D5686 /* BookMetadataSpotlightSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5481A012FA86010006D5686 /* BookMetadataSpotlightSearchView.swift */; };
-		C548191C2F9CBD48006D5686 /* InkGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191B2F9CBD48006D5686 /* InkGalleryView.swift */; };
 		C548191E2F9DABBE006D5686 /* SnippetEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */; };
 		C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819272F9F385D006D5686 /* GoalSettingsView.swift */; };
 		C548192E2F9F38AC006D5686 /* DataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548192D2F9F38AC006D5686 /* DataSettingsView.swift */; };
@@ -28,7 +27,6 @@
 		C54819892FA19CA7006D5686 /* TopToastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819882FA19CA7006D5686 /* TopToastManager.swift */; };
 		C54819C52FA34065006D5686 /* MobileButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819C42FA34065006D5686 /* MobileButtons.swift */; };
 		C54819C72FA37817006D5686 /* MobileDataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819C62FA37817006D5686 /* MobileDataSettingsView.swift */; };
-		C54819CA2FA39EEE006D5686 /* MobileInkGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819C92FA39EEE006D5686 /* MobileInkGalleryView.swift */; };
 		C54819CC2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819CB2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift */; };
 		C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
 		C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */; };
@@ -88,12 +86,10 @@
 		C6A100022FA80000006D5686 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100012FA80000006D5686 /* Book.swift */; };
 		C6A100052FA80000006D5686 /* ReadingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100042FA80000006D5686 /* ReadingSession.swift */; };
 		C6A100062FA80000006D5686 /* ReadingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100042FA80000006D5686 /* ReadingSession.swift */; };
-		C6A100082FA80000006D5686 /* BookAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100072FA80000006D5686 /* BookAnnotation.swift */; };
-		C6A100092FA80000006D5686 /* BookAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100072FA80000006D5686 /* BookAnnotation.swift */; };
+		C6A100082FA80000006D5686 /* Excerpt.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100072FA80000006D5686 /* Excerpt.swift */; };
+		C6A100092FA80000006D5686 /* Excerpt.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100072FA80000006D5686 /* Excerpt.swift */; };
 		C6A1000B2FA80000006D5686 /* UserConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1000A2FA80000006D5686 /* UserConfig.swift */; };
 		C6A1000C2FA80000006D5686 /* UserConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1000A2FA80000006D5686 /* UserConfig.swift */; };
-		C6A1000E2FA80000006D5686 /* Snippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1000D2FA80000006D5686 /* Snippet.swift */; };
-		C6A1000F2FA80000006D5686 /* Snippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1000D2FA80000006D5686 /* Snippet.swift */; };
 		C6A100112FA80000006D5686 /* ReadingEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100102FA80000006D5686 /* ReadingEnums.swift */; };
 		C6A100122FA80000006D5686 /* ReadingEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100102FA80000006D5686 /* ReadingEnums.swift */; };
 		C6A101022FA80000006D5686 /* ReadingDateHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A101012FA80000006D5686 /* ReadingDateHelper.swift */; };
@@ -146,7 +142,6 @@
 		C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSearchManager.swift; sourceTree = "<group>"; };
 		C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSearchComponents.swift; sourceTree = "<group>"; };
 		C5481A012FA86010006D5686 /* BookMetadataSpotlightSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSpotlightSearchView.swift; sourceTree = "<group>"; };
-		C548191B2F9CBD48006D5686 /* InkGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkGalleryView.swift; sourceTree = "<group>"; };
 		C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetEditorSheet.swift; sourceTree = "<group>"; };
 		C54819272F9F385D006D5686 /* GoalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalSettingsView.swift; sourceTree = "<group>"; };
 		C548192D2F9F38AC006D5686 /* DataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsView.swift; sourceTree = "<group>"; };
@@ -156,7 +151,6 @@
 		C54819882FA19CA7006D5686 /* TopToastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopToastManager.swift; sourceTree = "<group>"; };
 		C54819C42FA34065006D5686 /* MobileButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileButtons.swift; sourceTree = "<group>"; };
 		C54819C62FA37817006D5686 /* MobileDataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileDataSettingsView.swift; sourceTree = "<group>"; };
-		C54819C92FA39EEE006D5686 /* MobileInkGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileInkGalleryView.swift; sourceTree = "<group>"; };
 		C54819CB2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSnippetEditorSheet.swift; sourceTree = "<group>"; };
 		C5FD820B2F90C3530003A500 /* Library.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Library.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
@@ -215,9 +209,8 @@
 		C5FD83C02F9536B50003A500 /* MobileArchiveHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileArchiveHostView.swift; sourceTree = "<group>"; };
 		C6A100012FA80000006D5686 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		C6A100042FA80000006D5686 /* ReadingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSession.swift; sourceTree = "<group>"; };
-		C6A100072FA80000006D5686 /* BookAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookAnnotation.swift; sourceTree = "<group>"; };
+		C6A100072FA80000006D5686 /* Excerpt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Excerpt.swift; sourceTree = "<group>"; };
 		C6A1000A2FA80000006D5686 /* UserConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserConfig.swift; sourceTree = "<group>"; };
-		C6A1000D2FA80000006D5686 /* Snippet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Snippet.swift; sourceTree = "<group>"; };
 		C6A100102FA80000006D5686 /* ReadingEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingEnums.swift; sourceTree = "<group>"; };
 		C6A101012FA80000006D5686 /* ReadingDateHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingDateHelper.swift; sourceTree = "<group>"; };
 		C6A101032FA80000006D5686 /* ReadingStatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingStatsCalculator.swift; sourceTree = "<group>"; };
@@ -332,7 +325,6 @@
 		C54819182F9CBD20006D5686 /* Verse */ = {
 			isa = PBXGroup;
 			children = (
-				C548191B2F9CBD48006D5686 /* InkGalleryView.swift */,
 			);
 			path = Verse;
 			sourceTree = "<group>";
@@ -381,7 +373,6 @@
 		C54819C82FA39EDB006D5686 /* MobileVerse */ = {
 			isa = PBXGroup;
 			children = (
-				C54819C92FA39EEE006D5686 /* MobileInkGalleryView.swift */,
 			);
 			path = MobileVerse;
 			sourceTree = "<group>";
@@ -430,9 +421,8 @@
 			children = (
 				C6A100012FA80000006D5686 /* Book.swift */,
 				C6A100042FA80000006D5686 /* ReadingSession.swift */,
-				C6A100072FA80000006D5686 /* BookAnnotation.swift */,
+				C6A100072FA80000006D5686 /* Excerpt.swift */,
 				C6A1000A2FA80000006D5686 /* UserConfig.swift */,
-				C6A1000D2FA80000006D5686 /* Snippet.swift */,
 				C6A100102FA80000006D5686 /* ReadingEnums.swift */,
 			);
 			path = Models;
@@ -839,11 +829,9 @@
 				C5FD83882F9519EB0003A500 /* BookExcerpts.swift in Sources */,
 				C5FD839B2F952F930003A500 /* MobileReadingHeroCard.swift in Sources */,
 				C5FD83BD2F9535DD0003A500 /* MobileBookDetailComponents.swift in Sources */,
-				C548191C2F9CBD48006D5686 /* InkGalleryView.swift in Sources */,
 				C54819042F9B684C006D5686 /* AppFormatters.swift in Sources */,
 				C5FD83A92F9530530003A500 /* MobileMomentumChartCard.swift in Sources */,
 				C5FD83812F9519930003A500 /* BookDetailView.swift in Sources */,
-				C54819CA2FA39EEE006D5686 /* MobileInkGalleryView.swift in Sources */,
 				C5FD83BF2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift in Sources */,
 				C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */,
 				C54819892FA19CA7006D5686 /* TopToastManager.swift in Sources */,
@@ -859,9 +847,8 @@
 				C54819022F9B67EC006D5686 /* AppConstants.swift in Sources */,
 				C6A100022FA80000006D5686 /* Book.swift in Sources */,
 				C6A100052FA80000006D5686 /* ReadingSession.swift in Sources */,
-				C6A100082FA80000006D5686 /* BookAnnotation.swift in Sources */,
+				C6A100082FA80000006D5686 /* Excerpt.swift in Sources */,
 				C6A1000B2FA80000006D5686 /* UserConfig.swift in Sources */,
-				C6A1000E2FA80000006D5686 /* Snippet.swift in Sources */,
 				C6A100112FA80000006D5686 /* ReadingEnums.swift in Sources */,
 				C6A101022FA80000006D5686 /* ReadingDateHelper.swift in Sources */,
 				C6A101042FA80000006D5686 /* ReadingStatsCalculator.swift in Sources */,
@@ -926,9 +913,8 @@
 			files = (
 				C5FD82FC2F90CD2E0003A500 /* Book.swift in Sources */,
 				C6A100062FA80000006D5686 /* ReadingSession.swift in Sources */,
-				C6A100092FA80000006D5686 /* BookAnnotation.swift in Sources */,
+				C6A100092FA80000006D5686 /* Excerpt.swift in Sources */,
 				C6A1000C2FA80000006D5686 /* UserConfig.swift in Sources */,
-				C6A1000F2FA80000006D5686 /* Snippet.swift in Sources */,
 				C6A100122FA80000006D5686 /* ReadingEnums.swift in Sources */,
 				C54818F22F97C840006D5686 /* ReadingDataPoints.swift in Sources */,
 				C5FD82FA2F90CD1F0003A500 /* SharedDatabase.swift in Sources */,

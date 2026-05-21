@@ -230,12 +230,12 @@ struct MobileDataSettingsView: View {
         do {
             let configs = try modelContext.fetch(FetchDescriptor<UserConfig>())
             let books = try modelContext.fetch(FetchDescriptor<Book>())
-            let snippets = try modelContext.fetch(FetchDescriptor<Snippet>())
+            let excerpts = try modelContext.fetch(FetchDescriptor<Excerpt>())
             
             let configDTO = configs.first.map { BackupConfigDTO(from: $0) }
             let bookDTOs = books.map { BackupBookDTO(from: $0) }
-            let snippetDTOs = snippets.map { BackupSnippetDTO(from: $0) }
-            let payload = BackupPayload(exportDate: Date(), config: configDTO, books: bookDTOs, snippets: snippetDTOs)
+            let excerptDTOs = excerpts.map { BackupExcerptDTO(from: $0) }
+            let payload = BackupPayload(exportDate: Date(), config: configDTO, books: bookDTOs, excerpts: excerptDTOs)
             
             showToast("📦 正在生成快照...")
             let encoder = JSONEncoder()
@@ -264,14 +264,14 @@ struct MobileDataSettingsView: View {
                         let oldConfigs = try modelContext.fetch(FetchDescriptor<UserConfig>()); oldConfigs.forEach { modelContext.delete($0) }
                         let oldBooks = try modelContext.fetch(FetchDescriptor<Book>()); oldBooks.forEach { modelContext.delete($0) }
                         let oldRecords = try modelContext.fetch(FetchDescriptor<ReadingSession>()); oldRecords.forEach { modelContext.delete($0) }
-                        let oldAnnos = try modelContext.fetch(FetchDescriptor<BookAnnotation>()); oldAnnos.forEach { modelContext.delete($0) }
-                        let oldSnippets = try modelContext.fetch(FetchDescriptor<Snippet>()); oldSnippets.forEach { modelContext.delete($0) }
+                        let oldAnnos = try modelContext.fetch(FetchDescriptor<Excerpt>()); oldAnnos.forEach { modelContext.delete($0) }
+                        let oldExcerpts = try modelContext.fetch(FetchDescriptor<Excerpt>()); oldExcerpts.forEach { modelContext.delete($0) }
                         
                         // 重建配置
                         if let cDTO = payload.config { modelContext.insert(UserConfig(dailyMinutesGoal: cDTO.dailyMinutesGoal, yearlyBooksGoal: cDTO.yearlyBooksGoal, libraryBooksGoal: cDTO.libraryBooksGoal, updatedAt: cDTO.updatedAt)) }
                         // 重建数据
                         for bDTO in payload.books { modelContext.insert(bDTO.toModel()) }
-                        for sDTO in payload.snippets { modelContext.insert(sDTO.toModel()) }
+                        for sDTO in payload.excerpts { modelContext.insert(sDTO.toModel()) }
                         
                         try modelContext.save()
                         WidgetCenter.shared.reloadAllTimelines()
@@ -329,7 +329,7 @@ struct BackupPayload: Codable {
     let exportDate: Date
     let config: BackupConfigDTO?
     let books: [BackupBookDTO]
-    let snippets: [BackupSnippetDTO]
+    let excerpts: [BackupExcerptDTO]
 }
 
 struct BackupConfigDTO: Codable {
@@ -357,7 +357,7 @@ struct BackupBookDTO: Codable {
     let startDate: Date?
     let finishDate: Date?
     let progress: Double
-    let annotations: [BackupAnnotationDTO]
+    let excerpts: [BackupAnnotationDTO]
     
     init(from book: Book) {
         self.title = book.title
@@ -370,7 +370,7 @@ struct BackupBookDTO: Codable {
         self.startDate = book.startDate
         self.finishDate = book.finishDate
         self.progress = book.progressRatio
-        self.annotations = (book.annotations ?? []).map { BackupAnnotationDTO(from: $0) }
+        self.excerpts = (book.excerpts ?? []).map { BackupAnnotationDTO(from: $0) }
     }
     
     func toModel() -> Book {
@@ -381,7 +381,7 @@ struct BackupBookDTO: Codable {
             tags: tags, startDate: startDate, finishDate: finishDate,
             progressUnit: .percent, totalAmount: 100, currentAmount: progress * 100
         )
-        newBook.annotations = annotations.map { $0.toModel(for: newBook) }
+        newBook.excerpts = excerpts.map { $0.toModel(for: newBook) }
         return newBook
     }
 }
@@ -401,19 +401,19 @@ struct BackupAnnotationDTO: Codable {
     let content: String
     let createdAt: Date
     
-    init(from annotation: BookAnnotation) {
+    init(from annotation: Excerpt) {
         self.typeStr = annotation.type.rawValue
         self.content = annotation.content
         self.createdAt = annotation.createdAt
     }
 
-    func toModel(for book: Book) -> BookAnnotation {
-        let parsedType = AnnotationType(rawValue: typeStr) ?? .excerpt
-        return BookAnnotation(content: content, type: parsedType, createdAt: createdAt, book: book)
+    func toModel(for book: Book) -> Excerpt {
+        let parsedType = ExcerptCategory(rawValue: typeStr) ?? .bookExcerpt
+        return Excerpt(content: content, type: parsedType, createdAt: createdAt, book: book)
     }
 }
 
-struct BackupSnippetDTO: Codable {
+struct BackupExcerptDTO: Codable {
     let title: String
     let content: String
     let author: String
@@ -422,24 +422,24 @@ struct BackupSnippetDTO: Codable {
     let categoryStr: String
     let addedDate: Date
     
-    init(from snippet: Snippet) {
-        self.title = snippet.title
-        self.content = snippet.content
-        self.author = snippet.author
-        self.dynasty = snippet.dynasty
-        self.annotation = snippet.annotation
-        self.categoryStr = snippet.category.rawValue
-        self.addedDate = snippet.addedDate
+    init(from excerpt: Excerpt) {
+        self.title = excerpt.title ?? ""
+        self.content = excerpt.content
+        self.author = excerpt.author
+        self.dynasty = excerpt.dynasty
+        self.annotation = excerpt.annotation
+        self.categoryStr = excerpt.category.rawValue
+        self.addedDate = excerpt.addedDate
     }
     
-    func toModel() -> Snippet {
-        let parsedCategory = SnippetCategory(rawValue: categoryStr) ?? .web
-        let newSnippet = Snippet(
+    func toModel() -> Excerpt {
+        let parsedCategory = ExcerptCategory(rawValue: categoryStr) ?? .web
+        let newExcerpt = Excerpt(
             title: title, content: content, author: author,
             dynasty: dynasty, annotation: annotation, category: parsedCategory
         )
-        newSnippet.addedDate = addedDate
-        return newSnippet
+        newExcerpt.addedDate = addedDate
+        return newExcerpt
     }
 }
 #endif

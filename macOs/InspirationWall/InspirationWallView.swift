@@ -3,142 +3,65 @@ import AppKit
 import SwiftData
 import SwiftUI
 
-// MARK: - 灵感画廊枚举与 DTO 定义
-
-enum InspirationContentType: String, CaseIterable, Identifiable, CustomStringConvertible {
-    case all = "全部"; case excerpt = "摘录"; case note = "笔记"
-    var id: String { rawValue }
-    var description: String { rawValue }
-}
-
-enum InspirationSortMode: String, CaseIterable, Identifiable {
-    case byBook = "书籍分类"; case random = "随机漫游"
-    var id: String { rawValue }
-}
-
 // MARK: - ✨ 灵感画廊 (核心视图)
 
 struct InspirationWallView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
-    @Query private var allAnnotations: [BookAnnotation]
+    @Query private var allExcerpts: [Excerpt]
     @Query private var allBooks: [Book]
     
-    @Binding var contentType: InspirationContentType
-    @Binding var sortType: GallerySortType
-    @Binding var isRandomRoam: Bool
-    @Binding var searchText: String
-    @Binding var shuffleTrigger: Int
-    @Binding var isBatchEditMode: Bool
-    @Binding var selectedSnippetsForBatch: Set<String>
+    @State private var shuffledExcerpts: [ExcerptListItem] = []
     
-    @State private var shuffledSnippets: [InspirationSnippet] = []
-    
-    @State private var recordToEdit: BookAnnotation? = nil
+    @State private var recordToEdit: Excerpt? = nil
     @State private var bookForEdit: Book? = nil
     
-    @State private var isEntranceAnimated: Bool = false
-
     private var annotationFingerprint: String {
-        allAnnotations
+        allExcerpts
             .map { "\($0.id)|\($0.type.rawValue)|\($0.createdAt.timeIntervalSince1970)|\($0.content.hashValue)|\($0.book?.id ?? "")" }
             .joined(separator: ";")
     }
     
     private var subtitleText: String {
-        let count = shuffledSnippets.count
-        switch contentType { case .all: return "共收集 \(count) 条内容"; case .excerpt: return "共收集 \(count) 条摘录"; case .note: return "共收集 \(count) 条笔记" }
+        "共收集 \(shuffledExcerpts.count) 条内容"
     }
     
     var body: some View {
-        let totalSnippetCharacters = shuffledSnippets.reduce(0) { $0 + $1.content.count }
-        let uniqueBooksCount = Set(shuffledSnippets.map { $0.bookTitle }).count
-        let formattedKCount = String(format: "%.1f", Double(totalSnippetCharacters) / 1000.0)
+        let totalExcerptCharacters = shuffledExcerpts.reduce(0) { $0 + $1.content.count }
+        let uniqueBooksCount = Set(shuffledExcerpts.map { $0.bookTitle }).count
+        let formattedKCount = String(format: "%.1f", Double(totalExcerptCharacters) / 1000.0)
         
         GeometryReader { geo in
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack {
                     wallContentView(containerWidth: geo.size.width)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                        .offset(y: isEntranceAnimated ? 0 : 150)
-                        .scaleEffect(isEntranceAnimated ? 1.0 : 0.99, anchor: .center)
-                        .animation(.appFluidSpring, value: isEntranceAnimated)
                 }
                 .frame(maxWidth: .infinity)
             }
             .overlay(alignment: .top) {
-                VStack(spacing: 0) {
-                    HStack(alignment: .center) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("灵感碎片").font(.system(size: 32, weight: .heavy, design: .rounded)).foregroundColor(.primary)
-                            Text(subtitleText).font(.system(size: 15, weight: .medium)).foregroundColor(.secondary)
-                        }
-                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                        .offset(x: isEntranceAnimated ? 0 : -200)
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 32) {
-                            VStack(alignment: .trailing, spacing: 2) {
-                                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                                    Text(totalSnippetCharacters > 1000 ? formattedKCount : "\(totalSnippetCharacters)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
-                                    Text(totalSnippetCharacters > 1000 ? "k" : "").font(.system(size: 14, weight: .bold)).foregroundColor(.indigo)
-                                }
-                                Text("字沉淀").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary.opacity(0.8))
+                AppPageHeader(
+                    contentID: "\(shuffledExcerpts.count)-\(totalExcerptCharacters)-\(uniqueBooksCount)"
+                ) {
+                    AppHeaderTitle("灵感碎片", subtitle: subtitleText)
+                } trailingContent: {
+                    HStack(spacing: 32) {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                                Text(totalExcerptCharacters > 1000 ? formattedKCount : "\(totalExcerptCharacters)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
+                                Text(totalExcerptCharacters > 1000 ? "k" : "").font(.system(size: 14, weight: .bold)).foregroundColor(.indigo)
                             }
-                            Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1, height: 32)
-                            VStack(alignment: .trailing, spacing: 2) {
-                                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                                    Text("\(uniqueBooksCount)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
-                                    Text("本").font(.system(size: 14, weight: .bold)).foregroundColor(.orange)
-                                }
-                                Text("知识源泉").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary.opacity(0.8))
-                            }
+                            Text("字沉淀").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary.opacity(0.8))
                         }
-                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                        .offset(x: isEntranceAnimated ? 0 : 200)
+                        Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1, height: 32)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                                Text("\(uniqueBooksCount)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
+                                Text("本").font(.system(size: 14, weight: .bold)).foregroundColor(.orange)
+                            }
+                            Text("知识源泉").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary.opacity(0.8))
+                        }
                     }
-                    .padding(.horizontal, 40).padding(.top, 40).padding(.bottom, 20)
-                    .animation(.appFluidSpring, value: isEntranceAnimated)
-                    
-                    Divider().background(Color.primary.opacity(0.05))
-                }
-                .background(Color.clear.background(.ultraThinMaterial).opacity(0.85))
-                .ignoresSafeArea(edges: .top)
-            }
-            .overlay(alignment: .bottom) {
-                if isBatchEditMode {
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Text("已选择 \(selectedSnippetsForBatch.count) 条内容")
-                                .font(.system(size: 14, weight: .bold))
-                            Spacer()
-                            Button("取消") {
-                                withAnimation(.appSnappy) { isBatchEditMode = false; selectedSnippetsForBatch.removeAll() }
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.horizontal, 8)
-                            
-                            Button(action: deleteSelectedSnippets) {
-                                Text("删除选中项")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 6)
-                                    .background(selectedSnippetsForBatch.isEmpty ? Color.gray : Color.red)
-                                    .clipShape(Capsule())
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(selectedSnippetsForBatch.isEmpty)
-                        }
-                        .padding(.horizontal, 20).padding(.vertical, 12).frame(width: 400)
-                        .background(Color(nsColor: .windowBackgroundColor).opacity(0.9))
-                        .background(.ultraThinMaterial).clipShape(Capsule())
-                        .shadow(color: .black.opacity(0.15), radius: 20, y: 10).padding(.bottom, 30)
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity).animation(.appSnappy))
                 }
             }
             .sheet(item: $recordToEdit) { record in
@@ -158,48 +81,38 @@ struct InspirationWallView: View {
                 )
             }
             .onAppear {
-                isEntranceAnimated = false
                 refreshData(animate: false)
             }
-            .onChange(of: contentType) { _, _ in refreshData(animate: true) }
-            .onChange(of: sortType) { _, _ in refreshData(animate: true) }
-            .onChange(of: isRandomRoam) { _, _ in refreshData(animate: true) }
-            .onChange(of: searchText) { _, _ in refreshData(animate: true) }
-            .onChange(of: shuffleTrigger) { _, _ in withAnimation(.appFluidSpring) { shuffledSnippets.shuffle() } }
             .onChange(of: annotationFingerprint) { _, _ in refreshData(animate: true) }
         }
     }
     
     @ViewBuilder
     private func wallContentView(containerWidth: CGFloat) -> some View {
-        if shuffledSnippets.isEmpty {
+        if shuffledExcerpts.isEmpty {
             EmptyStateView(
-                systemImage: searchText.isEmpty ? "leaf" : "magnifyingglass",
+                systemImage: "leaf",
                 title: "空空如也",
-                message: searchText.isEmpty ? "多读书，多记录，这里会长出智慧的森林。" : "尝试更换搜索关键词。",
+                message: "多读书，多记录，这里会长出智慧的森林。",
                 minHeight: 400
             )
-            .padding(.top, 140)
+            .padding(.top, AppPageHeaderMetrics.height + 12)
         } else {
-            if isRandomRoam == false {
-                groupedCatalogView(containerWidth: containerWidth)
-            } else {
-                masonryGrid(containerWidth: containerWidth)
-            }
+            masonryGrid(containerWidth: containerWidth)
         }
     }
 
     private func groupedCatalogView(containerWidth: CGFloat) -> some View {
         LazyVStack(spacing: 60) {
-            let grouped = Dictionary(grouping: shuffledSnippets, by: { $0.bookTitle })
+            let grouped = Dictionary(grouping: shuffledExcerpts, by: { $0.bookTitle })
             let sortedKeys = grouped.keys.sorted()
             
             ForEach(sortedKeys, id: \.self) { bookTitle in
-                let snippets = grouped[bookTitle]!
+                let excerpts = grouped[bookTitle]!
                 HStack(alignment: .top, spacing: 40) {
                     VStack(alignment: .leading, spacing: 16) {
-                        if let coverData = snippets.first?.coverData {
-                            BookCoverView(coverID: snippets.first?.bookID ?? "", coverData: coverData, fallbackTitle: bookTitle)
+                        if let coverData = excerpts.first?.coverData {
+                            BookCoverView(coverID: excerpts.first?.bookID ?? "", coverData: coverData, fallbackTitle: bookTitle)
                                 .frame(width: 140, height: 210).clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                 .shadow(color: Color.black.opacity(0.12), radius: 8, y: 4).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
                         } else {
@@ -212,12 +125,12 @@ struct InspirationWallView: View {
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
                                 .foregroundColor(.primary)
                             
-                            Text(snippets.first?.bookAuthor ?? "佚名")
+                            Text(excerpts.first?.bookAuthor ?? "佚名")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
                             
-                            Text("\(snippets.count) 条灵感")
+                            Text("\(excerpts.count) 条灵感")
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 8).padding(.vertical, 4)
@@ -227,11 +140,10 @@ struct InspirationWallView: View {
                     }.frame(width: 140)
                     
                     LazyVStack(spacing: 16) {
-                        ForEach(snippets) { snippet in
-                            SnippetCardView(
-                                snippet: snippet, isMasonry: false, isBatchEditMode: isBatchEditMode,
-                                selectedSnippetsForBatch: $selectedSnippetsForBatch,
-                                onDelete: deleteSnippet,
+                        ForEach(excerpts) { excerpt in
+                            ExcerptWallCardView(
+                                excerpt: excerpt, isMasonry: false,
+                                onDelete: deleteExcerpt,
                                 onEdit: { s in triggerEdit(for: s) },
                                 onLocate: locateBook
                             )
@@ -241,7 +153,7 @@ struct InspirationWallView: View {
                 }
             }
         }
-        .padding(.horizontal, 40).padding(.top, 160).padding(.bottom, 60)
+        .padding(.horizontal, 40).padding(.top, AppPageHeaderMetrics.height + 32).padding(.bottom, 60)
     }
     
     @ViewBuilder
@@ -253,16 +165,15 @@ struct InspirationWallView: View {
         let columnsCount = max(1, Int((availableWidth + spacing) / (minColumnWidth + spacing)))
         let exactColumnWidth = (availableWidth - spacing * CGFloat(columnsCount - 1)) / CGFloat(columnsCount)
         
-        let columns = distributeSnippets(into: columnsCount)
+        let columns = distributeExcerpts(into: columnsCount)
         
         HStack(alignment: .top, spacing: spacing) {
             ForEach(0 ..< columnsCount, id: \.self) { colIndex in
                 LazyVStack(spacing: spacing) {
-                    ForEach(columns[colIndex]) { snippet in
-                        SnippetCardView(
-                            snippet: snippet, isMasonry: true, isBatchEditMode: isBatchEditMode,
-                            selectedSnippetsForBatch: $selectedSnippetsForBatch,
-                            onDelete: deleteSnippet,
+                    ForEach(columns[colIndex]) { excerpt in
+                        ExcerptWallCardView(
+                            excerpt: excerpt, isMasonry: true,
+                            onDelete: deleteExcerpt,
                             onEdit: { s in triggerEdit(for: s) },
                             onLocate: locateBook
                         )
@@ -273,16 +184,16 @@ struct InspirationWallView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.horizontal, 40).padding(.top, 160).padding(.bottom, 60)
+        .padding(.horizontal, 40).padding(.top, AppPageHeaderMetrics.height + 32).padding(.bottom, 60)
     }
     
-    private func distributeSnippets(into columnsCount: Int) -> [[InspirationSnippet]] {
-        var columns: [[InspirationSnippet]] = Array(repeating: [], count: columnsCount)
+    private func distributeExcerpts(into columnsCount: Int) -> [[ExcerptListItem]] {
+        var columns: [[ExcerptListItem]] = Array(repeating: [], count: columnsCount)
         var columnHeights: [Double] = Array(repeating: 0, count: columnsCount)
-        for snippet in shuffledSnippets {
-            let approxHeight = 80.0 + Double(snippet.content.count) * 0.8
+        for excerpt in shuffledExcerpts {
+            let approxHeight = 80.0 + Double(excerpt.content.count) * 0.8
             let minIndex = columnHeights.enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
-            columns[minIndex].append(snippet)
+            columns[minIndex].append(excerpt)
             columnHeights[minIndex] += approxHeight
         }
         return columns
@@ -294,9 +205,9 @@ struct InspirationWallView: View {
 extension InspirationWallView {
     
     @MainActor
-    private func triggerEdit(for snippet: InspirationSnippet) {
-        let targetID = snippet.id
-        if let target = allAnnotations.first(where: { $0.id == targetID }) {
+    private func triggerEdit(for excerpt: ExcerptListItem) {
+        let targetID = excerpt.id
+        if let target = allExcerpts.first(where: { $0.id == targetID }) {
             self.bookForEdit = target.book
             self.recordToEdit = target
         }
@@ -304,83 +215,43 @@ extension InspirationWallView {
 
     private func refreshData(animate: Bool) {
         Task { @MainActor in
-            let newData = fetchAndProcessSnippets()
+            let newData = fetchAndProcessExcerpts()
             
-            if animate && self.isEntranceAnimated {
-                withAnimation(.appFluidSpring) { self.shuffledSnippets = newData }
+            if animate {
+                withAnimation(.appContentFade) { self.shuffledExcerpts = newData }
             } else {
-                self.shuffledSnippets = newData
-            }
-            
-            if !self.isEntranceAnimated {
-                try? await Task.sleep(nanoseconds: 80000000)
-                withAnimation(.appFluidSpring) {
-                    self.isEntranceAnimated = true
-                }
+                self.shuffledExcerpts = newData
             }
         }
     }
     
     @MainActor
-    private func fetchAndProcessSnippets() -> [InspirationSnippet] {
+    private func fetchAndProcessExcerpts() -> [ExcerptListItem] {
         ReadingStatsCalculator.inspirationSnapshot(
-            annotations: allAnnotations,
-            type: contentType.annotationType,
-            searchText: searchText,
-            sortKey: sortType.annotationSortKey,
-            randomize: isRandomRoam
-        ).snippets
+            excerpts: allExcerpts,
+            type: nil,
+            searchText: "",
+            sortKey: .newest,
+            randomize: true
+        ).excerpts
     }
     
     @MainActor
-    private func deleteSnippet(snippet: InspirationSnippet) {
-        let targetID = snippet.id
-        if let target = allAnnotations.first(where: { $0.id == targetID }) {
-            try? ReadingDataService.shared.deleteAnnotation(target, context: modelContext)
+    private func deleteExcerpt(excerpt: ExcerptListItem) {
+        let targetID = excerpt.id
+        if let target = allExcerpts.first(where: { $0.id == targetID }) {
+            try? ReadingDataService.shared.deleteExcerpt(target, context: modelContext)
         }
         refreshData(animate: true)
     }
     
     @MainActor
-    private func deleteSelectedSnippets() {
-        let annotationsToDelete = allAnnotations.filter { selectedSnippetsForBatch.contains($0.id) }
-        try? ReadingDataService.shared.deleteAnnotations(annotationsToDelete, context: modelContext)
-        withAnimation(.appSnappy) { isBatchEditMode = false; selectedSnippetsForBatch.removeAll() }
-        refreshData(animate: true)
-    }
-    
-    @MainActor
-    private func locateBook(snippet: InspirationSnippet) {
-        let targetID = snippet.bookID
+    private func locateBook(excerpt: ExcerptListItem) {
+        let targetID = excerpt.bookID
         if let book = allBooks.first(where: { $0.id == targetID }) {
-            withAnimation(.appFluidSpring) { selectedBook = book }
+            selectedBook = book
         }
     }
 }
 
-extension InspirationContentType {
-    var annotationType: AnnotationType? {
-        switch self {
-        case .all:
-            return nil
-        case .excerpt:
-            return .excerpt
-        case .note:
-            return .note
-        }
-    }
-}
-
-extension GallerySortType {
-    var annotationSortKey: AnnotationSortKey {
-        switch self {
-        case .newest:
-            return .newest
-        case .oldest:
-            return .oldest
-        case .titleAsc:
-            return .bookTitle
-        }
-    }
-}
 #endif

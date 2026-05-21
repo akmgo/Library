@@ -137,35 +137,30 @@ final class ReadingDataService {
         try context.save()
     }
 
-    func insertAnnotation(
+    func insertExcerpt(
         content: String,
-        type: AnnotationType,
+        category: ExcerptCategory,
         book: Book?,
         context: ModelContext
     ) throws {
         let text = ReadingValidation.trimmedRequiredText(content)
         guard !text.isEmpty else { return }
-        context.insert(BookAnnotation(content: text, type: type, book: book))
+        context.insert(Excerpt(content: text, category: category, book: book))
         try context.save()
     }
 
-    func deleteAnnotation(_ annotation: BookAnnotation, context: ModelContext) throws {
-        context.delete(annotation)
+    func deleteExcerpt(_ excerpt: Excerpt, context: ModelContext) throws {
+        context.delete(excerpt)
         try context.save()
     }
 
-    func deleteAnnotations(_ annotations: [BookAnnotation], context: ModelContext) throws {
-        annotations.forEach { context.delete($0) }
+    func insertExcerpt(_ excerpt: Excerpt, context: ModelContext) throws {
+        context.insert(excerpt)
         try context.save()
     }
 
-    func insertSnippet(_ snippet: Snippet, context: ModelContext) throws {
-        context.insert(snippet)
-        try context.save()
-    }
-
-    func deleteSnippets(_ snippets: [Snippet], context: ModelContext) throws {
-        snippets.forEach { context.delete($0) }
+    func deleteExcerpts(_ excerpts: [Excerpt], context: ModelContext) throws {
+        excerpts.forEach { context.delete($0) }
         try context.save()
     }
 

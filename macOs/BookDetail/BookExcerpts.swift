@@ -14,20 +14,20 @@ struct BookExcerpts: View {
     let book: Book
     let isDeleteMode: Bool
     
-    // ✨ 修改为传入 BookAnnotation
-    let onDelete: (BookAnnotation) -> Void
+    // ✨ 修改为传入 Excerpt
+    let onDelete: (Excerpt) -> Void
     
     @Environment(\.modelContext) private var modelContext
-    @State private var itemToEdit: BookAnnotation? = nil
+    @State private var itemToEdit: Excerpt? = nil
     
     @State private var currentFilter: AnnotationFilter = .all
     
     // ✨ 核心重构：从单表中一次性取出，自带时间排序，不再需要人造缝合！
-    private var allRecords: [BookAnnotation] {
-        return (book.annotations ?? []).sorted { $0.createdAt > $1.createdAt }
+    private var allRecords: [Excerpt] {
+        return (book.excerpts ?? []).sorted { $0.createdAt > $1.createdAt }
     }
     
-    private var filteredRecords: [BookAnnotation] {
+    private var filteredRecords: [Excerpt] {
         switch currentFilter {
         case .all:
             return allRecords
@@ -38,8 +38,8 @@ struct BookExcerpts: View {
         }
     }
     
-    private var excerptCount: Int { book.annotations?.filter({ $0.type == .excerpt }).count ?? 0 }
-    private var noteCount: Int { book.annotations?.filter({ $0.type == .note }).count ?? 0 }
+    private var excerptCount: Int { book.excerpts?.filter({ $0.type == .excerpt }).count ?? 0 }
+    private var noteCount: Int { book.excerpts?.filter({ $0.type == .note }).count ?? 0 }
     
     var body: some View {
         VStack(spacing: 24) {
@@ -169,7 +169,7 @@ struct WaterfallLayout: Layout {
 
 // MARK: - 内部视图组件
 struct AnnotationCardWrapper: View {
-    let item: BookAnnotation
+    let item: Excerpt
     let isDeleteMode: Bool
     let onDelete: () -> Void
     let onEdit: () -> Void
@@ -203,7 +203,7 @@ struct AnnotationCardWrapper: View {
 }
 
 struct ExcerptCardView: View {
-    let excerpt: BookAnnotation // ✨
+    let excerpt: Excerpt // ✨
     let onEdit: () -> Void
     @State private var isHovered = false
     
@@ -238,7 +238,7 @@ struct ExcerptCardView: View {
 }
 
 struct NoteCardView: View {
-    let note: BookAnnotation // ✨
+    let note: Excerpt // ✨
     let onEdit: () -> Void
     @State private var isHovered = false
     

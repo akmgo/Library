@@ -16,7 +16,6 @@ struct MobileYearlyTimelineView: View {
     // ✨ 动画与生命周期引擎
     @State private var isEntranceAnimated: Bool = false
     @State private var hasAppeared: Bool = false // 核心修复：防止从详情页退回时重复触发入场动画
-    @State private var previousYear: Int = Calendar.current.component(.year, from: Date())
 
     private var yearlySnapshot: ReadingStatsCalculator.YearlyArchiveSnapshot {
         ReadingStatsCalculator.yearlyArchiveSnapshot(
@@ -65,11 +64,6 @@ struct MobileYearlyTimelineView: View {
             }
             .navigationTitle("\(String(selectedYear)) 年轨迹")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    MobileYearSelectorMenu(selectedYear: $selectedYear, availableYears: yearlySnapshot.availableYears)
-                }
-            }
             .onAppear {
                 // ✨ 核心修复：锁定生命周期，只在首次进入时触发下拉动画
                 if !hasAppeared {
@@ -81,9 +75,6 @@ struct MobileYearlyTimelineView: View {
                         }
                     }
                 }
-            }
-            .onChange(of: selectedYear) { oldYear, newYear in
-                previousYear = oldYear
             }
         }
     }
@@ -146,30 +137,6 @@ private struct MobileStatItem: View {
             Text(title).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
-    }
-}
-
-struct MobileYearSelectorMenu: View {
-    @Binding var selectedYear: Int
-    let availableYears: [Int]
-    
-    var body: some View {
-        Menu {
-            ForEach(availableYears, id: \.self) { year in
-                Button(action: {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    selectedYear = year
-                }) {
-                    HStack { Text("\(String(year)) 年"); if selectedYear == year { Image(systemName: "checkmark") } }
-                }
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "calendar")
-                Text("切换")
-            }
-            .font(.system(size: 16, weight: .bold))
-        }
     }
 }
 

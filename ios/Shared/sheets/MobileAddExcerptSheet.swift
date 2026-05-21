@@ -55,9 +55,9 @@ struct MobileAddExcerptSheet: View {
     private func saveExcerpt() {
         let cleanContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
         if !cleanContent.isEmpty {
-            try? ReadingDataService.shared.insertAnnotation(
+            try? ReadingDataService.shared.insertExcerpt(
                 content: cleanContent,
-                type: .excerpt,
+                category: .bookExcerpt,
                 book: book,
                 context: modelContext
             )

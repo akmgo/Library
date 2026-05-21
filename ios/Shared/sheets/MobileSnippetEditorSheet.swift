@@ -3,13 +3,13 @@ import SwiftData
 import SwiftUI
 
 // MARK: - ✨ iOS 原生录入弹窗
-struct MobileSnippetEditorSheet: View {
+struct MobileExcerptEditorSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var isPresented: Bool
     
-    var snippetToEdit: Snippet? = nil
+    var excerptToEdit: Excerpt? = nil
     
-    @State private var selectedCategory: SnippetCategory = .web
+    @State private var selectedCategory: ExcerptCategory = .web
     @State private var titleInput: String = ""
     @State private var contentInput: String = ""
     @State private var authorInput: String = ""
@@ -35,7 +35,7 @@ struct MobileSnippetEditorSheet: View {
                 Section {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            ForEach(SnippetCategory.allCases, id: \.self) { category in
+                            ForEach(ExcerptCategory.allCases, id: \.self) { category in
                                 Text(category.displayName)
                                     .font(.system(size: 15, weight: .bold))
                                     .foregroundColor(selectedCategory == category ? .white : .primary.opacity(0.7))
@@ -115,7 +115,7 @@ struct MobileSnippetEditorSheet: View {
                     }
                 }
             }
-            .navigationTitle(snippetToEdit != nil ? "编辑摘录" : "新增笔墨")
+            .navigationTitle(excerptToEdit != nil ? "编辑摘录" : "新增笔墨")
             .navigationBarTitleDisplayMode(.inline)
             // ================= 顶部操作栏 =================
             .toolbar {
@@ -127,8 +127,8 @@ struct MobileSnippetEditorSheet: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(snippetToEdit != nil ? "保存" : "添加") {
-                        saveSnippet()
+                    Button(excerptToEdit != nil ? "保存" : "添加") {
+                        saveExcerpt()
                     }
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(canSave ? selectedCategory.themeColor : .secondary.opacity(0.4))
@@ -147,13 +147,13 @@ struct MobileSnippetEditorSheet: View {
                 }
             }
             .onAppear {
-                if let snippet = snippetToEdit {
-                    selectedCategory = snippet.category
-                    titleInput = snippet.title
-                    contentInput = snippet.content
-                    authorInput = snippet.author
-                    dynastyInput = snippet.dynasty
-                    annotationInput = snippet.annotation
+                if let excerpt = excerptToEdit {
+                    selectedCategory = excerpt.category
+                    titleInput = excerpt.title ?? ""
+                    contentInput = excerpt.content
+                    authorInput = excerpt.author
+                    dynastyInput = excerpt.dynasty
+                    annotationInput = excerpt.annotation
                 } else {
                     // 如果是新增，默认自动弹出键盘激活标题输入
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -172,19 +172,19 @@ struct MobileSnippetEditorSheet: View {
     }
     
     // MARK: - 数据保存引擎
-    private func saveSnippet() {
+    private func saveExcerpt() {
         guard !titleInput.isEmpty, !contentInput.isEmpty else { return }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         
-        if let snippet = snippetToEdit {
-            snippet.category = selectedCategory
-            snippet.title = titleInput
-            snippet.content = contentInput
-            snippet.author = showAuthor ? (authorInput.trimmingCharacters(in: .whitespaces).isEmpty ? "佚名" : authorInput) : "佚名"
-            snippet.dynasty = showDynastyAndAnnotation ? dynastyInput : ""
-            snippet.annotation = showDynastyAndAnnotation ? annotationInput : ""
+        if let excerpt = excerptToEdit {
+            excerpt.category = selectedCategory
+            excerpt.title = titleInput
+            excerpt.content = contentInput
+            excerpt.author = showAuthor ? (authorInput.trimmingCharacters(in: .whitespaces).isEmpty ? "佚名" : authorInput) : "佚名"
+            excerpt.dynasty = showDynastyAndAnnotation ? dynastyInput : ""
+            excerpt.annotation = showDynastyAndAnnotation ? annotationInput : ""
         } else {
-            let newSnippet = Snippet(
+            let newExcerpt = Excerpt(
                 title: titleInput,
                 content: contentInput,
                 author: showAuthor ? (authorInput.trimmingCharacters(in: .whitespaces).isEmpty ? "佚名" : authorInput) : "佚名",
@@ -192,21 +192,21 @@ struct MobileSnippetEditorSheet: View {
                 annotation: showDynastyAndAnnotation ? annotationInput : "",
                 category: selectedCategory
             )
-            try? ReadingDataService.shared.insertSnippet(newSnippet, context: modelContext)
+            try? ReadingDataService.shared.insertExcerpt(newExcerpt, context: modelContext)
         }
         
-        if snippetToEdit != nil { try? modelContext.save() }
+        if excerptToEdit != nil { try? modelContext.save() }
         isPresented = false
     }
 }
 
 // MARK: - 📱 预览
 #Preview("日常摘录录入弹窗") {
-    let schema = Schema([Snippet.self])
+    let schema = Schema([Excerpt.self])
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: schema, configurations: [config])
     
-    MobileSnippetEditorSheet(isPresented: .constant(true))
+    MobileExcerptEditorSheet(isPresented: .constant(true))
         .modelContainer(container)
 }
 #endif

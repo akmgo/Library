@@ -25,7 +25,7 @@ struct BookDetailView: View {
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) { selectedBook = nil }
+                    selectedBook = nil
                 }
             
             // ================= 2. 全局无界内容区 =================
@@ -44,32 +44,6 @@ struct BookDetailView: View {
                                     .foregroundColor(.primary)
                                 
                                 Spacer()
-                                
-                                HStack(spacing: 12) {
-                                    ProminentActionButton(
-                                        title: isDeleteMode ? "完成" : "管理",
-                                        systemImage: isDeleteMode ? "checkmark" : "trash",
-                                        tintColor: isDeleteMode ? .blue : .gray,
-                                        action: { withAnimation(.spring()) { isDeleteMode.toggle() } }
-                                    )
-                                    .glassEffect(isDeleteMode ? .regular.tint(.blue).interactive() : .regular.interactive(), in: .capsule)
-                                    
-                                    ProminentActionButton(
-                                        title: "笔记",
-                                        systemImage: "square.and.pencil",
-                                        tintColor: .purple,
-                                        action: { showAddNoteSheet = true }
-                                    )
-                                    .glassEffect(.regular.tint(.purple).interactive(), in: .capsule)
-                                    
-                                    ProminentActionButton(
-                                        title: "摘录",
-                                        systemImage: "quote.opening",
-                                        tintColor: .indigo,
-                                        action: { showAddExcerptSheet = true }
-                                    )
-                                    .glassEffect(.regular.tint(.indigo).interactive(), in: .capsule)
-                                }
                             }
                             Divider()
                         }
@@ -103,9 +77,7 @@ struct BookDetailView: View {
             Button("取消", role: .cancel) {}
             Button("确认删除", role: .destructive) {
                 // 1. 立即清空选中状态（触发详情页关闭动画）
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                    selectedBook = nil
-                }
+                selectedBook = nil
                 
                 // 2. 延迟执行删除（等待关闭动画完成），并强制同步
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -120,15 +92,15 @@ struct BookDetailView: View {
         }
     }
     
-    // MARK: - 记录销毁逻辑 (✨ 升级为单一模型 BookAnnotation)
+    // MARK: - 记录销毁逻辑 (✨ 升级为单一模型 Excerpt)
     
-    private func deleteRecord(_ item: BookAnnotation) {
+    private func deleteRecord(_ item: Excerpt) {
         withAnimation(.spring()) {
-            try? ReadingDataService.shared.deleteAnnotation(item, context: modelContext)
+            try? ReadingDataService.shared.deleteExcerpt(item, context: modelContext)
         }
         
         // 统计这本树下所有的批注数量（合并后的表）
-        let totalCount = book.annotations?.count ?? 0
+        let totalCount = book.excerpts?.count ?? 0
         if totalCount <= 1 {
             withAnimation { isDeleteMode = false }
         }

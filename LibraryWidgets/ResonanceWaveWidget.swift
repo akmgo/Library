@@ -43,17 +43,17 @@ struct WaveProvider: TimelineProvider {
         
         do {
             // ✨ 加上 200 条的限制，防止小组件因为内存超载而直接消失崩溃
-            var descriptor = FetchDescriptor<BookAnnotation>(
+            var descriptor = FetchDescriptor<Excerpt>(
                 sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
             )
             descriptor.fetchLimit = 200
             
-            let annotations = try context.fetch(descriptor)
+            let excerpts = try context.fetch(descriptor)
             
             // ✨ 恢复最安全的内存过滤，避开 #Predicate 导致查不到数据的 Bug
-            let excerpts = annotations.filter { $0.type == .excerpt }
+            let bookExcerpts = excerpts.filter { $0.category == .bookExcerpt }
 
-            if let random = excerpts.randomElement() {
+            if let random = bookExcerpts.randomElement() {
                 return WaveEntry(
                     date: date,
                     content: random.content,
@@ -125,4 +125,3 @@ struct ResonanceWaveWidget: Widget {
         .supportedFamilies([.systemMedium])
     }
 }
-

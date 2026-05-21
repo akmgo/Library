@@ -21,7 +21,6 @@ struct MobileContentView: View {
     @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
     
     @State private var selectedTab = 0
-    @State private var showSettingsSheet = false
     @State private var showingAddBookSheet = false
     
     private var currentMonthString: String {
@@ -40,17 +39,13 @@ struct MobileContentView: View {
             MobileGalleryView()
                 .tabItem { Label("画廊", systemImage: "books.vertical.fill") }.tag(1)
             
-            // ================= 3. 日常摘录 (✨ 取代了之前的搜索 Tab) =================
-            MobileInkGalleryView()
-                .tabItem { Label("摘录", systemImage: "text.quote") }.tag(2)
-            
-            // ================= 4. 碎片 =================
+            // ================= 3. 摘录 =================
             MobileInspirationWallView()
-                .tabItem { Label("碎片", systemImage: "quote.bubble.fill") }.tag(3)
+                .tabItem { Label("摘录", systemImage: "quote.bubble.fill") }.tag(2)
             
-            // ================= 5. 归档 =================
+            // ================= 4. 归档 =================
             MobileArchiveHostView()
-                .tabItem { Label("归档", systemImage: "clock.arrow.circlepath") }.tag(4)
+                .tabItem { Label("归档", systemImage: "clock.arrow.circlepath") }.tag(3)
         }
         .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
         .onAppear {
@@ -68,19 +63,6 @@ struct MobileContentView: View {
         }
         .sheet(isPresented: $showingAddBookSheet) {
             MobileBookEditorSheet()
-        }
-        .sheet(isPresented: $showSettingsSheet) {
-            NavigationStack {
-                MobileSettingsView()
-                    .navigationTitle("系统设置")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button("完成") { showSettingsSheet = false }.fontWeight(.bold)
-                        }
-                    }
-            }
-            .presentationDetents([.large])
         }
     }
     

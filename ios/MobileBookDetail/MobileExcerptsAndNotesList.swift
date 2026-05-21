@@ -14,12 +14,12 @@ struct MobileExcerptsAndNotesList: View {
     let isDeleteMode: Bool
     
     /// 当用户点击红色 "X" 按钮时触发的业务上移执行闭包。
-    /// ✨ 修复：传出参数统一更改为原生的 BookAnnotation
-    let onDelete: (BookAnnotation) -> Void
+    /// ✨ 修复：传出参数统一更改为原生的 Excerpt
+    let onDelete: (Excerpt) -> Void
     
     // ✨ 极简提取：由于单表合并，现在只需要一句话就能完成排序
-    private var sortedAnnotations: [BookAnnotation] {
-        (book.annotations ?? []).sorted { $0.createdAt > $1.createdAt }
+    private var sortedAnnotations: [Excerpt] {
+        (book.excerpts ?? []).sorted { $0.createdAt > $1.createdAt }
     }
     
     var body: some View {
@@ -46,7 +46,7 @@ struct MobileExcerptsAndNotesList: View {
 
 /// 将原生的笔记/摘录卡片与编辑状态下的“删除热区”复合。
 private struct MobileAnnotationCardWrapper: View {
-    let annotation: BookAnnotation
+    let annotation: Excerpt
     let isDeleteMode: Bool
     let onDelete: () -> Void
     
@@ -82,7 +82,7 @@ private struct MobileAnnotationCardWrapper: View {
 
 /// 基于衬线体 (`.serif`) 的优雅原书划线展示模块。
 private struct MobileReadingExcerptCard: View {
-    let annotation: BookAnnotation
+    let annotation: Excerpt
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
@@ -110,7 +110,7 @@ private struct MobileReadingExcerptCard: View {
 
 /// 呈现原生 Markdown 并带有橙紫暖色辨识特征的独立思考笔记视图卡片。
 private struct MobileNoteCard: View {
-    let annotation: BookAnnotation
+    let annotation: Excerpt
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

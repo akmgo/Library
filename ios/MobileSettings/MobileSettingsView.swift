@@ -17,9 +17,6 @@ struct MobileSettingsView: View {
     @AppStorage("appTheme", store: SharedDatabase.shared.sharedDefaults) private var appTheme: String = "system"
     @State private var saveTask: Task<Void, Never>? = nil
     
-    // 用于控制关闭弹窗
-    @Environment(\.dismiss) private var dismiss
-    
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
@@ -103,16 +100,6 @@ struct MobileSettingsView: View {
             }
             .navigationTitle("系统设置")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        dismiss()
-                    }) {
-                        Text("完成").font(.system(size: 16, weight: .bold))
-                    }
-                }
-            }
         }
     }
     

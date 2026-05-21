@@ -32,56 +32,23 @@ enum GalleryGridScale: Double, CaseIterable {
     }
 }
 
-enum GallerySortType: String, CaseIterable, Identifiable, CustomStringConvertible {
-    case newest = "最近添加"; case oldest = "最早添加"; case titleAsc = "书名 (A-Z)"
-    var id: String { rawValue }
-    var description: String { rawValue }
-}
-
-enum GalleryFilterTab: String, CaseIterable, CustomStringConvertible {
-    case all = "全部书籍"; case planned = "想读书籍"; case unread = "待读书籍"
-    case reading = "在读书籍"; case finished = "已读书籍"; case abandoned = "弃读书籍"
-    var description: String { rawValue }
-
-    var status: BookStatus? {
-        switch self {
-        case .all: return nil
-        case .planned: return .planned
-        case .unread: return .unread
-        case .reading: return .reading
-        case .finished: return .finished
-        case .abandoned: return .abandoned
-        }
-    }
-}
-
 // MARK: - 🌟 核心全景画廊视图
 
 struct GalleryView: View {
-    @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
     @Query private var allBooks: [Book]
     
-    @Binding var activeTab: GalleryFilterTab
-    @Binding var searchText: String
-    @Binding var sortType: GallerySortType
-    @Binding var scaleIndex: Double
-    @Binding var isBatchEditMode: Bool
-    @Binding var selectedBooksForBatch: Set<String>
-    
-    @State private var isEntranceAnimated: Bool = false
-
     private var gallerySnapshot: ReadingStatsCalculator.BookGallerySnapshot {
         ReadingStatsCalculator.bookGallerySnapshot(
             books: allBooks,
-            filterStatus: activeTab.status,
-            searchText: searchText,
-            sortKey: sortType.gallerySortKey
+            filterStatus: nil,
+            searchText: "",
+            sortKey: .newest
         )
     }
     
     private var currentScale: GalleryGridScale {
-        GalleryGridScale(rawValue: scaleIndex) ?? .large
+        .large
     }
     
     var body: some View {
@@ -90,89 +57,19 @@ struct GalleryView: View {
             ScrollView {
                 gridView(containerWidth: geo.size.width)
                     .padding(.horizontal, horizontalPadding(for: geo.size.width))
-                    .padding(.top, 140)
-                    .padding(.bottom, isBatchEditMode ? 120 : 60)
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(y: isEntranceAnimated ? 0 : 150)
-                    .scaleEffect(isEntranceAnimated ? 1.0 : 0.99, anchor: .center)
-                    .animation(.appFluidSpring, value: isEntranceAnimated)
+                    .padding(.top, AppPageHeaderMetrics.height + 12)
+                    .padding(.bottom, 60)
             }
             // 2. 顶部 Header (overlay 挂载)
             .overlay(alignment: .top) {
-                VStack(spacing: 0) {
-                    HStack(alignment: .center) {
-                        // 左侧文字区
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("全景画廊")
-                                .font(.system(size: 32, weight: .heavy, design: .rounded))
-                                .foregroundColor(.primary)
-                            Text("共收录 \(gallerySnapshot.books.count) 本图书")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
-                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                        .offset(x: isEntranceAnimated ? 0 : -200)
-                        
-                        Spacer()
-                        
-                        // 右侧数据区
-                        MiniInventoryBar(totalCount: gallerySnapshot.totalInventoryCount, dataPoints: gallerySnapshot.inventoryPoints)
-                            .frame(width: 320)
-                            .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                            .offset(x: isEntranceAnimated ? 0 : 200)
-                    }
-                    .padding(.horizontal, horizontalPadding(for: geo.size.width)).padding(.top, 45).padding(.bottom, 20)
-                    .animation(.appFluidSpring, value: isEntranceAnimated)
-                    
-                    Divider().background(Color.primary.opacity(0.05))
-                }
-                .background(Color.clear.background(.ultraThinMaterial).opacity(0.85))
-                .ignoresSafeArea(edges: .top)
-            }
-            // 3. 底部批处理控制栏
-            .overlay(alignment: .bottom) {
-                if isBatchEditMode {
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Text("已选择 \(selectedBooksForBatch.count) 本书")
-                                .font(.system(size: 14, weight: .bold))
-                            Spacer()
-                            Button("取消") {
-                                withAnimation(.appSnappy) { isBatchEditMode = false; selectedBooksForBatch.removeAll() }
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.horizontal, 8)
-                            
-                            Button(action: deleteSelectedBooks) {
-                                Text("删除选中项")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 6)
-                                    .background(selectedBooksForBatch.isEmpty ? Color.gray : Color.red)
-                                    .clipShape(Capsule())
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(selectedBooksForBatch.isEmpty)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .frame(width: 400)
-                        .background(Color(nsColor: .windowBackgroundColor).opacity(0.9))
-                        .background(.ultraThinMaterial)
-                        .clipShape(Capsule())
-                        .shadow(color: .black.opacity(0.15), radius: 20, y: 10)
-                        .padding(.bottom, 30)
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity).animation(.appSnappy))
-                }
-            }
-        }
-        .onAppear {
-            if !isEntranceAnimated {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.appFluidSpring) { isEntranceAnimated = true }
+                AppPageHeader(
+                    horizontalPadding: horizontalPadding(for: geo.size.width),
+                    contentID: "\(gallerySnapshot.books.count)-\(gallerySnapshot.totalInventoryCount)"
+                ) {
+                    AppHeaderTitle("全景画廊", subtitle: "共收录 \(gallerySnapshot.books.count) 本图书")
+                } trailingContent: {
+                    MiniInventoryBar(totalCount: gallerySnapshot.totalInventoryCount, dataPoints: gallerySnapshot.inventoryPoints)
+                        .frame(width: 320)
                 }
             }
         }
@@ -184,7 +81,7 @@ struct GalleryView: View {
             EmptyStateView(
                 systemImage: "books.vertical.fill",
                 title: "没有找到相关书籍",
-                message: searchText.isEmpty ? "试试切换分类或点击添加书籍" : "尝试更换搜索关键词",
+                message: "暂时没有可展示的图书",
                 minHeight: 400
             )
         } else {
@@ -192,41 +89,17 @@ struct GalleryView: View {
             LazyVGrid(columns: columns, spacing: currentScale.vSpacing) {
                 ForEach(gallerySnapshot.books) { book in
                     AnimatedCardGlide(
-                        book: book, activeTab: activeTab.rawValue,
-                        isBatchEditMode: isBatchEditMode, gridScale: currentScale,
-                        selectedBooksForBatch: $selectedBooksForBatch, selectedBook: $selectedBook
+                        book: book, gridScale: currentScale, selectedBook: $selectedBook
                     )
                     .transition(.appCardGlide)
                 }
             }
-            .animation(.appFluidSpring, value: scaleIndex)
         }
     }
 
     private func horizontalPadding(for width: CGFloat) -> CGFloat {
         min(max(width * 0.045, 28), 56)
     }
-    
-    private func deleteSelectedBooks() {
-        let booksToDelete = gallerySnapshot.books.filter { selectedBooksForBatch.contains($0.id) }
-        try? ReadingDataService.shared.deleteBooks(booksToDelete, context: modelContext)
-        withAnimation(.appSnappy) {
-            isBatchEditMode = false
-            selectedBooksForBatch.removeAll()
-        }
-    }
 }
 
-extension GallerySortType {
-    var gallerySortKey: BookGallerySortKey {
-        switch self {
-        case .newest:
-            return .newest
-        case .oldest:
-            return .oldest
-        case .titleAsc:
-            return .titleAscending
-        }
-    }
-}
 #endif

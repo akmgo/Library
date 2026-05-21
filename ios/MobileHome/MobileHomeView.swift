@@ -15,12 +15,9 @@ struct MobileHomeView: View {
     @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
     @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
     @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
-    @Query(sort: \BookAnnotation.createdAt, order: .reverse) private var annotations: [BookAnnotation]
+    @Query(sort: \Excerpt.createdAt, order: .reverse) private var excerpts: [Excerpt]
     
     // MARK: - 🎮 UI 交互状态
-    @State private var showAddBookSheet = false
-    @State private var showSettingsSheet = false
-    
     // ✨ 全局沉浸式底部搜索状态
     @State private var showGlobalSearch = false
     
@@ -30,7 +27,7 @@ struct MobileHomeView: View {
         ReadingStatsCalculator.dashboardSnapshot(
             books: books,
             sessions: sessions,
-            annotations: annotations
+            excerpts: excerpts
         )
     }
 
@@ -100,25 +97,6 @@ struct MobileHomeView: View {
                 }
             }
             .navigationTitle(greeting)
-            
-            // ✨ 动态隐藏导航栏和底部 TabBar
-            .toolbar(showGlobalSearch ? .hidden : .visible, for: .navigationBar)
-            .toolbar(showGlobalSearch ? .hidden : .visible, for: .tabBar)
-            
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button(action: { showAddBookSheet = true }) {
-                            Image(systemName: "plus.circle.fill").foregroundColor(.blue)
-                        }
-                        Button(action: { showSettingsSheet = true }) {
-                            Image(systemName: "gearshape.fill").foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: $showAddBookSheet) { MobileBookEditorSheet() }
-            .sheet(isPresented: $showSettingsSheet) { MobileSettingsView() }
             .groupBoxStyle(NativeWidgetGroupBoxStyle())
             
             .sheet(item: $activeBookDetail) { presentation in
@@ -142,7 +120,7 @@ private extension MobileHomeView {
 struct MobileAnnotationSearchResult: Identifiable {
     let id = UUID()
     let book: Book
-    let annotation: BookAnnotation
+    let annotation: Excerpt
 }
 
 struct MobileBottomSearchView: View {
@@ -158,7 +136,7 @@ struct MobileBottomSearchView: View {
     
     @State private var resultBooks: [Book] = []
     @State private var resultAnnotations: [MobileAnnotationSearchResult] = []
-    @State private var resultSnippets: [Snippet] = []
+    @State private var resultExcerpts: [Excerpt] = []
     
     // ✨ 核心重构：统一使用一个通用阅读载荷来接管所有的全屏阅读
     @State private var readingPayload: MobileFullscreenPayload? = nil
@@ -201,7 +179,7 @@ struct MobileBottomSearchView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
-                } else if resultBooks.isEmpty && resultAnnotations.isEmpty && resultSnippets.isEmpty {
+                } else if resultBooks.isEmpty && resultAnnotations.isEmpty && resultExcerpts.isEmpty {
                     VStack(spacing: 16) {
                         Spacer()
                         Image(systemName: "doc.text.magnifyingglass")
@@ -254,18 +232,18 @@ struct MobileBottomSearchView: View {
                             }
                             
                             // 🖋️ 3. 日常摘录卡片
-                            if !resultSnippets.isEmpty {
-                                searchResultSection(title: "日常摘录", count: resultSnippets.count) {
-                                    ForEach(resultSnippets) { snippet in
+                            if !resultExcerpts.isEmpty {
+                                searchResultSection(title: "日常摘录", count: resultExcerpts.count) {
+                                    ForEach(resultExcerpts) { excerpt in
                                         Button(action: {
                                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                             isSearchFocused = false
                                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                                 // 转化为通用 payload
-                                                readingPayload = createPayload(from: snippet)
+                                                readingPayload = createPayload(from: excerpt)
                                             }
                                         }) {
-                                            globalSearchSnippetCard(snippet: snippet)
+                                            globalSearchExcerptCard(excerpt: excerpt)
                                         }
                                         .buttonStyle(.plain)
                                     }
@@ -345,7 +323,7 @@ struct MobileBottomSearchView: View {
     
     // MARK: - 🗂️ 数据适配器 (Mapper)
     
-    private func createPayload(book: Book, annotation: BookAnnotation) -> MobileFullscreenPayload {
+    private func createPayload(book: Book, annotation: Excerpt) -> MobileFullscreenPayload {
         let validAuthor = book.author.trimmingCharacters(in: .whitespaces).isEmpty || book.author == "佚名" ? nil : book.author
         return MobileFullscreenPayload(
             title: book.title,
@@ -358,25 +336,25 @@ struct MobileBottomSearchView: View {
         )
     }
     
-    private func createPayload(from snippet: Snippet) -> MobileFullscreenPayload {
-        let showHeader = [.poetry, .lyric, .prose].contains(snippet.category)
-        let authorText = "\(snippet.author)\(snippet.dynasty.isEmpty ? "" : " (\(snippet.dynasty))")"
-        let validAuthor = (showHeader && !authorText.trimmingCharacters(in: .whitespaces).isEmpty && snippet.author != "佚名") ? authorText : nil
+    private func createPayload(from excerpt: Excerpt) -> MobileFullscreenPayload {
+        let showHeader = [.poetry, .lyric, .prose].contains(excerpt.category)
+        let authorText = "\(excerpt.author)\(excerpt.dynasty.isEmpty ? "" : " (\(excerpt.dynasty))")"
+        let validAuthor = (showHeader && !authorText.trimmingCharacters(in: .whitespaces).isEmpty && excerpt.author != "佚名") ? authorText : nil
         
         let footerText: String? = {
-            if snippet.category == .quote { return "—— \(snippet.author)" }
-            if snippet.category == .movie { return "—— \(snippet.author)（\(snippet.title)）" }
+            if excerpt.category == .quote { return "—— \(excerpt.author)" }
+            if excerpt.category == .movie { return "—— \(excerpt.author)（\(excerpt.title ?? "")）" }
             return nil
         }()
         
         return MobileFullscreenPayload(
-            title: showHeader ? snippet.title : nil,
+            title: showHeader ? excerpt.title : nil,
             author: validAuthor,
-            content: snippet.content,
-            alignment: snippet.category == .poetry ? .center : .leading,
-            isIndented: [.lyric, .prose].contains(snippet.category),
+            content: excerpt.content,
+            alignment: excerpt.category == .poetry ? .center : .leading,
+            isIndented: [.lyric, .prose].contains(excerpt.category),
             footer: footerText,
-            annotation: snippet.annotation.isEmpty ? nil : snippet.annotation
+            annotation: excerpt.annotation.isEmpty ? nil : excerpt.annotation
         )
     }
     
@@ -421,7 +399,7 @@ struct MobileBottomSearchView: View {
         .contentShape(Rectangle())
     }
     
-    private func globalSearchAnnotationCard(book: Book, annotation: BookAnnotation) -> some View {
+    private func globalSearchAnnotationCard(book: Book, annotation: Excerpt) -> some View {
         HStack(alignment: .top, spacing: 16) {
             ZStack {
                 Circle().fill(Color.orange.opacity(0.15)).frame(width: 32, height: 32)
@@ -449,16 +427,16 @@ struct MobileBottomSearchView: View {
         .contentShape(Rectangle())
     }
     
-    private func globalSearchSnippetCard(snippet: Snippet) -> some View {
+    private func globalSearchExcerptCard(excerpt: Excerpt) -> some View {
         HStack(alignment: .top, spacing: 16) {
             ZStack {
-                Circle().fill(snippet.category.themeColor.opacity(0.15)).frame(width: 32, height: 32)
-                Image(systemName: "quote.bubble.fill").font(.system(size: 13)).foregroundColor(snippet.category.themeColor)
+                Circle().fill(excerpt.category.themeColor.opacity(0.15)).frame(width: 32, height: 32)
+                Image(systemName: "quote.bubble.fill").font(.system(size: 13)).foregroundColor(excerpt.category.themeColor)
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                Text(snippet.title).font(.system(size: 15, weight: .bold, design: .serif)).foregroundColor(.primary)
-                Text(snippet.content)
+                Text(excerpt.title ?? "").font(.system(size: 15, weight: .bold, design: .serif)).foregroundColor(.primary)
+                Text(excerpt.content)
                     .font(.system(size: 14, design: .serif))
                     .foregroundColor(.secondary.opacity(0.8))
                     .lineLimit(3)
@@ -483,7 +461,7 @@ struct MobileBottomSearchView: View {
             isSearching = false
             resultBooks = []
             resultAnnotations = []
-            resultSnippets = []
+            resultExcerpts = []
             return
         }
         
@@ -499,7 +477,7 @@ struct MobileBottomSearchView: View {
     
     private func performSearch(query: String) {
         let allBooks = (try? modelContext.fetch(FetchDescriptor<Book>())) ?? []
-        let allSnippets = (try? modelContext.fetch(FetchDescriptor<Snippet>())) ?? []
+        let allExcerpts = (try? modelContext.fetch(FetchDescriptor<Excerpt>())) ?? []
         
         let matchedBooks = allBooks.filter { book in
             book.title.localizedStandardContains(query) ||
@@ -508,26 +486,26 @@ struct MobileBottomSearchView: View {
         
         var matchedAnnotations: [MobileAnnotationSearchResult] = []
         for book in allBooks {
-            if let annotations = book.annotations {
-                for annotation in annotations {
-                    if annotation.content.localizedStandardContains(query) {
-                        matchedAnnotations.append(MobileAnnotationSearchResult(book: book, annotation: annotation))
+            if let bookExcerpts = book.excerpts {
+                for excerpt in bookExcerpts {
+                    if excerpt.content.localizedStandardContains(query) {
+                        matchedAnnotations.append(MobileAnnotationSearchResult(book: book, annotation: excerpt))
                     }
                 }
             }
         }
         
-        let matchedSnippets = allSnippets.filter { snippet in
-            snippet.title.localizedStandardContains(query) ||
-            snippet.author.localizedStandardContains(query) ||
-            snippet.content.localizedStandardContains(query) ||
-            snippet.annotation.localizedStandardContains(query)
+        let matchedExcerpts = allExcerpts.filter { excerpt in
+            (excerpt.title ?? "").localizedStandardContains(query) ||
+            excerpt.author.localizedStandardContains(query) ||
+            excerpt.content.localizedStandardContains(query) ||
+            excerpt.annotation.localizedStandardContains(query)
         }
         
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
             self.resultBooks = matchedBooks
             self.resultAnnotations = matchedAnnotations
-            self.resultSnippets = matchedSnippets
+            self.resultExcerpts = matchedExcerpts
             self.isSearching = false
         }
     }

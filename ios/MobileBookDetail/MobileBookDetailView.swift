@@ -147,18 +147,6 @@ struct MobileBookDetailView: View {
         }
         .background(AppColors.primaryBackground(for: colorScheme))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button(action: { showEditSheet = true }) { Label("编辑书籍", systemImage: "pencil") }
-                    Button(role: .destructive, action: { showDeleteAlert = true }) { Label("删除书籍", systemImage: "trash") }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.primary)
-                }
-            }
-        }
         // ================= 弹窗路由引擎 =================
         .alert("删除书籍", isPresented: $showDeleteAlert) {
             Button("取消", role: .cancel) {}
@@ -177,13 +165,13 @@ struct MobileBookDetailView: View {
     // MARK: - 内部业务控制
     
     /// 执行摘录与笔记物理销毁。
-    /// ✨ 修复：适配单表大一统，直接接收 BookAnnotation 进行操作
-    private func deleteRecord(_ item: BookAnnotation) {
+    /// ✨ 修复：适配单表大一统，直接接收 Excerpt 进行操作
+    private func deleteRecord(_ item: Excerpt) {
         withAnimation(.spring()) {
-            try? ReadingDataService.shared.deleteAnnotation(item, context: modelContext)
+            try? ReadingDataService.shared.deleteExcerpt(item, context: modelContext)
         }
         
-        let count = book.annotations?.count ?? 0
+        let count = book.excerpts?.count ?? 0
         // 若删完最后一条，自动切回普通模式
         if count <= 1 {
             withAnimation { isDeleteMode = false }

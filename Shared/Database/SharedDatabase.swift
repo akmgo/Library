@@ -14,9 +14,8 @@ public class SharedDatabase {
     static let schemaModelTypes: [any PersistentModel.Type] = [
         Book.self,
         ReadingSession.self,
-        BookAnnotation.self,
-        UserConfig.self,
-        Snippet.self
+        Excerpt.self,
+        UserConfig.self
     ]
     
     /// 核心数据库上下文容器，提供给整个生命周期使用。
@@ -110,8 +109,8 @@ public class SharedDatabase {
 extension SharedDatabase {
     static func cloudKitReadinessNotes() -> [String] {
         [
-            "Book, ReadingSession, BookAnnotation, UserConfig, Snippet are all included in one shared SwiftData schema.",
-            "Book relationships to sessions and annotations use cascade delete, keeping book-scoped records consistent across devices.",
+            "Book, ReadingSession, Excerpt, UserConfig are all included in one shared SwiftData schema.",
+            "Book relationships to sessions and excerpts use cascade delete, keeping book-scoped records consistent across devices.",
             "Ebook file/location fields are absent from the schema, so CloudKit sync only carries V1 reading-record data.",
             "UserConfig can duplicate during multi-device first launch; pruneDuplicateConfigs(context:) remains the startup repair path."
         ]

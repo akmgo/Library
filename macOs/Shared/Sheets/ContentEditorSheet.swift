@@ -19,8 +19,8 @@ struct ContentEditorSheet: View {
     let book: Book?
     let mode: ContentSheetMode
     
-    // ✨ 核心修复：接收全新的统一大实体 BookAnnotation
-    var itemToEdit: BookAnnotation? = nil
+    // ✨ 核心修复：接收全新的统一大实体 Excerpt
+    var itemToEdit: Excerpt? = nil
     
     @State private var contentText: String = ""
     
@@ -117,9 +117,9 @@ struct ContentEditorSheet: View {
             try? modelContext.save()
         } else if let targetBook = book {
             // ✨ 新增模式：注入明确的 Type
-            try? ReadingDataService.shared.insertAnnotation(
+            try? ReadingDataService.shared.insertExcerpt(
                 content: contentText,
-                type: mode == .excerpt ? .excerpt : .note,
+                category: mode == .excerpt ? .bookExcerpt : .note,
                 book: targetBook,
                 context: modelContext
             )

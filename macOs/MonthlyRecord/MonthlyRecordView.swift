@@ -18,14 +18,9 @@ private struct ScrollBoundsKey: PreferenceKey {
 struct MonthlyRecordView: View {
     @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
     
-    let daysOfWeek = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-    
     @State private var visibleYear: Int = Calendar.current.component(.year, from: Date())
     @State private var visibleMonth: Int = Calendar.current.component(.month, from: Date())
     
-    // ✨ 核心机制：强制状态驱动首屏动画锁
-    @State private var isEntranceAnimated: Bool = false
-
     private var monthlySnapshot: ReadingStatsCalculator.MonthlyArchiveSnapshot {
         ReadingStatsCalculator.monthlyArchiveSnapshot(sessions: sessions)
     }
@@ -53,10 +48,6 @@ struct MonthlyRecordView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                .offset(y: isEntranceAnimated ? 0 : 200)
-                .scaleEffect(isEntranceAnimated ? 1.0 : 0.98, anchor: .center)
-                .animation(.appFluidSpring, value: isEntranceAnimated)
                 
                 // 滚动监听事件群
                 .onPreferenceChange(ScrollBoundsKey.self) { bounds in
@@ -70,26 +61,18 @@ struct MonthlyRecordView: View {
                         }
                     }
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .scrollToMonth)) { notification in
-                    if let targetID = notification.object as? String {
-                        withAnimation(.appFluidSpring) { proxy.scrollTo(targetID, anchor: .center) }
-                    }
-                }
                 .onReceive(NotificationCenter.default.publisher(for: .scrollToToday)) { _ in
                     let calendar = Calendar.current
                     let targetID = String(format: "%d-%02d", calendar.component(.year, from: Date()), calendar.component(.month, from: Date()))
                     
-                    if isEntranceAnimated {
-                        withAnimation(.appFluidSpring) { proxy.scrollTo(targetID, anchor: .center) }
-                    } else {
-                        proxy.scrollTo(targetID, anchor: .center)
-                    }
+                    withAnimation(.appDataChange) { proxy.scrollTo(targetID, anchor: .center) }
                 }
             }
             // ================= 2. 顶层悬浮玻璃 Header =================
             .overlay(alignment: .top) {
-                VStack(spacing: 0) {
-                    HStack(alignment: .center) {
+                AppPageHeader(
+                    contentID: "\(visibleYear)-\(visibleMonth)",
+                    titleContent: {
                         HStack(alignment: .lastTextBaseline, spacing: 8) {
                             Text(String(format: "%d年", visibleYear))
                                 .font(.system(size: 32, weight: .heavy, design: .rounded))
@@ -99,77 +82,24 @@ struct MonthlyRecordView: View {
                                 .foregroundColor(.secondary)
                         }
                         .frame(width: 170, alignment: .leading)
-                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                        .offset(x: isEntranceAnimated ? 0 : -200)
-                                                                                                        
+                    },
+                    trailingContent: {
                         MonthlySparklineView(year: visibleYear, month: visibleMonth, recordsDict: monthlySnapshot.durationByDay)
                             .frame(height: 36)
                             .padding(.horizontal, 20)
-                            .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                            .offset(x: isEntranceAnimated ? 0 : -200)
-                                                                                                        
-                        HStack(spacing: 12) {
-                            GlassControlButton(icon: "chevron.left") { jumpToMonth(offset: -1) }
-                            Button(action: { NotificationCenter.default.post(name: .scrollToToday, object: nil) }) {
-                                Text("今天").font(.system(size: 13, weight: .bold, design: .rounded))
-                                    .padding(.horizontal, 16).padding(.vertical, 8)
-                            }
-                            .buttonStyle(.plain)
-                            .background(Color.secondary.opacity(0.1)).clipShape(Capsule())
-                            GlassControlButton(icon: "chevron.right") { jumpToMonth(offset: 1) }
-                        }
-                        .frame(width: 160, alignment: .trailing)
-                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                        .offset(x: isEntranceAnimated ? 0 : 200)
                     }
-                    .padding(.horizontal, 40)
-                    .padding(.top, 40)
-                    .padding(.bottom, 16)
-                    .animation(.appFluidSpring, value: isEntranceAnimated)
-                    
-                    HStack(spacing: 20) {
-                        ForEach(daysOfWeek, id: \.self) { day in
-                            Text(day).font(.system(size: 13, weight: .bold)).foregroundColor(.secondary.opacity(0.6)).frame(maxWidth: .infinity)
-                        }
-                    }
-                    .padding(.horizontal, 40).padding(.bottom, 16)
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(y: isEntranceAnimated ? 0 : 20)
-                    .animation(.appFluidSpring, value: isEntranceAnimated)
-                    
-                    Divider()
-                        .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                        .animation(.appFluidSpring, value: isEntranceAnimated)
-                }
-                .background(
-                    Color.clear
-                        .background(.ultraThinMaterial)
-                        .opacity(0.85)
                 )
-                .ignoresSafeArea(edges: .top)
             }
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
         .ignoresSafeArea(edges: .top)
         .onAppear {
-            guard !isEntranceAnimated else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
                 NotificationCenter.default.post(name: .scrollToToday, object: nil)
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.11) {
-                withAnimation(.appFluidSpring) {
-                    isEntranceAnimated = true
-                }
             }
         }
     }
     
-    private func jumpToMonth(offset: Int) {
-        var newMonth = visibleMonth + offset; var newYear = visibleYear
-        if newMonth > 12 { newMonth = 1; newYear += 1 } else if newMonth < 1 { newMonth = 12; newYear -= 1 }
-        let targetID = String(format: "%d-%02d", newYear, newMonth)
-        NotificationCenter.default.post(name: .scrollToMonth, object: targetID)
-    }
 }
 
 // MARK: - 无缝网格分段
@@ -340,8 +270,8 @@ private struct DayCardView: View {
         .frame(height: 110)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.primary.opacity(isHovered ? 0.2 : 0.05), lineWidth: isHovered ? 2 : 1))
-        .shadow(color: Color.black.opacity(isHovered ? 0.12 : 0.0), radius: isHovered ? 12 : 0, y: isHovered ? 6 : 0)
-        .scaleEffect(isHovered ? 1.05 : 1.0)
+        .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.0), radius: isHovered ? 8 : 0, y: isHovered ? 3 : 0)
+        .scaleEffect(isHovered ? 1.012 : 1.0)
         .zIndex(isHovered ? 1 : 0)
         .animation(.appSnappy, value: isHovered)
         .onHover { h in

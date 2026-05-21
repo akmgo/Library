@@ -48,9 +48,9 @@ private struct PlannedBookItem: View {
             BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
                 .frame(width: 100, height: 150)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
-                .shadow(color: Color.black.opacity(isHovered ? 0.2 : 0.1), radius: isHovered ? 8 : 4, y: isHovered ? 4 : 2)
+                .shadow(color: Color.black.opacity(isHovered ? 0.14 : 0.1), radius: isHovered ? 6 : 4, y: isHovered ? 3 : 2)
                 .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover).stroke(Color.primary.opacity(0.05), lineWidth: 0.5))
-                .scaleEffect(isHovered ? 1.05 : 1.0).animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
+                .scaleEffect(isHovered ? 1.012 : 1.0).animation(.appControlFeedback, value: isHovered)
         }
         .contentShape(Rectangle())
         .onHover { h in isHovered = h; if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }

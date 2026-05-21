@@ -10,20 +10,18 @@ struct HomeView: View {
     @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
     @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
     @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
-    @Query(sort: \BookAnnotation.createdAt, order: .reverse) private var annotations: [BookAnnotation]
+    @Query(sort: \Excerpt.createdAt, order: .reverse) private var excerpts: [Excerpt]
     @Environment(\.modelContext) private var modelContext
     
     // MARK: - 🎮 视图路由状态
     
     @Binding var selectedBook: Book? // 仅保留详情页绑定
     
-    @State private var isEntranceAnimated: Bool = false
-
     private var dashboard: ReadingStatsCalculator.DashboardSnapshot {
         ReadingStatsCalculator.dashboardSnapshot(
             books: books,
             sessions: sessions,
-            annotations: annotations
+            excerpts: excerpts
         )
     }
 
@@ -40,7 +38,7 @@ struct HomeView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                withAnimation(.appFluidSpring) { self.selectedBook = heroBook }
+                                self.selectedBook = heroBook
                             }
                             .onHover { isHovered in
                                 if isHovered { NSCursor.pointingHand.push() } else { NSCursor.pop() }
@@ -84,52 +82,17 @@ struct HomeView: View {
                 .padding(.bottom, 80)
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .opacity(isEntranceAnimated ? 1.0 : 0.0)
-            .offset(y: isEntranceAnimated ? 0 : 150)
-            .scaleEffect(isEntranceAnimated ? 1.0 : 0.99, anchor: .center)
-            .animation(.appFluidSpring, value: isEntranceAnimated)
         }
         .overlay(alignment: .top) {
-            VStack(spacing: 0) {
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(greeting)
-                            .font(.system(size: 32, weight: .heavy, design: .rounded))
-                            .foregroundColor(.primary)
-                            .padding(.top, 8)
-                        Text("Read as if you've never read...")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(x: isEntranceAnimated ? 0 : -200)
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 32) {
-                        MicroMetricRing(title: "本周打卡", current: dashboard.weekCount, target: 7, color: .pink, icon: "flame.fill")
-                        MicroMetricRing(title: "本月历程", current: dashboard.monthlyDays, target: 30, color: .mint, icon: "calendar")
-                        MicroMetricRing(title: "年度阅卷", current: dashboard.yearlyCount, target: yearTarget, color: .cyan, icon: "book.pages.fill")
-                    }
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(x: isEntranceAnimated ? 0 : 200)
-                }
-                .padding(.horizontal, 40)
-                .padding(.top, 45)
-                .padding(.bottom, 20)
-                .animation(.appFluidSpring, value: isEntranceAnimated)
-                
-                Divider().background(Color.primary.opacity(0.05))
-            }
-            .frame(height: 130, alignment: .bottom)
-            .background(Color.clear.background(.ultraThinMaterial).opacity(0.85))
-            .ignoresSafeArea(edges: .top)
-        }
-        .onAppear {
-            guard !isEntranceAnimated else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
-                withAnimation(.appFluidSpring) {
-                    isEntranceAnimated = true
+            AppPageHeader(
+                contentID: "\(greeting)-\(dashboard.weekCount)-\(dashboard.monthlyDays)-\(dashboard.yearlyCount)"
+            ) {
+                AppHeaderTitle(greeting, subtitle: "Read as if you've never read...")
+            } trailingContent: {
+                HStack(spacing: 32) {
+                    MicroMetricRing(title: "本周打卡", current: dashboard.weekCount, target: 7, color: .pink, icon: "flame.fill")
+                    MicroMetricRing(title: "本月历程", current: dashboard.monthlyDays, target: 30, color: .mint, icon: "calendar")
+                    MicroMetricRing(title: "年度阅卷", current: dashboard.yearlyCount, target: yearTarget, color: .cyan, icon: "book.pages.fill")
                 }
             }
         }
@@ -145,7 +108,7 @@ extension HomeView {
         if book.status == .planned {
             try? ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
         }
-        withAnimation(.appFluidSpring) { selectedBook = book }
+        selectedBook = book
     }
 }
 

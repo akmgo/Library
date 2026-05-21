@@ -40,8 +40,8 @@ final class Book {
     @Relationship(deleteRule: .cascade, inverse: \ReadingSession.book)
     var sessions: [ReadingSession]?
 
-    @Relationship(deleteRule: .cascade, inverse: \BookAnnotation.book)
-    var annotations: [BookAnnotation]?
+    @Relationship(deleteRule: .cascade, inverse: \Excerpt.book)
+    var excerpts: [Excerpt]?
 
     init(
         title: String,
@@ -59,7 +59,7 @@ final class Book {
         currentAmount: Double = 0,
         summary: String = "",
         sessions: [ReadingSession]? = nil,
-        annotations: [BookAnnotation]? = nil
+        excerpts: [Excerpt]? = nil
     ) {
         self.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
         self.author = author.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -77,7 +77,7 @@ final class Book {
         if self.totalAmount > 0 { self.currentAmount = min(self.currentAmount, self.totalAmount) }
         self.summary = summary
         self.sessions = sessions
-        self.annotations = annotations
+        self.excerpts = excerpts
     }
 
     var progressRatio: Double {

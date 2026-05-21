@@ -3,13 +3,13 @@ import SwiftData
 import SwiftUI
 
 // MARK: - ✨ 纯净丝滑录入弹窗 (高级物理回弹滑块版)
-struct SnippetEditorSheet: View {
+struct ExcerptEditorSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var isPresented: Bool
     
-    var snippetToEdit: Snippet? = nil
+    var excerptToEdit: Excerpt? = nil
     
-    @State private var selectedCategory: SnippetCategory = .web
+    @State private var selectedCategory: ExcerptCategory = .web
     @State private var titleInput: String = ""
     @State private var contentInput: String = ""
     @State private var authorInput: String = ""
@@ -23,7 +23,7 @@ struct SnippetEditorSheet: View {
     private var showDynastyAndAnnotation: Bool { [.poetry, .lyric, .prose].contains(selectedCategory) }
     
     var body: some View {
-        let isEdit = snippetToEdit != nil
+        let isEdit = excerptToEdit != nil
         
         VStack(spacing: 0) {
             // ================= 顶栏 =================
@@ -45,7 +45,7 @@ struct SnippetEditorSheet: View {
                     
                     // ✨ 高级滑动切换条：物理回弹质感
                     HStack(spacing: 0) {
-                        ForEach(SnippetCategory.allCases, id: \.self) { category in
+                        ForEach(ExcerptCategory.allCases, id: \.self) { category in
                             Text(category.displayName)
                                 .font(.system(size: 15, weight: selectedCategory == category ? .bold : .medium))
                                 .foregroundColor(selectedCategory == category ? .white : .primary.opacity(0.7))
@@ -158,7 +158,7 @@ struct SnippetEditorSheet: View {
                 
                 let canSave = !titleInput.trimmingCharacters(in: .whitespaces).isEmpty && !contentInput.trimmingCharacters(in: .whitespaces).isEmpty
                 
-                Button(isEdit ? "保存修改" : "确认录入") { saveSnippet() }
+                Button(isEdit ? "保存修改" : "确认录入") { saveExcerpt() }
                     .buttonStyle(.plain)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
@@ -173,9 +173,9 @@ struct SnippetEditorSheet: View {
         .glassEffect(in: .rect(cornerRadius: 16.0))
         .background(WindowTransparentEffect())
         .onAppear {
-            if let snippet = snippetToEdit {
-                selectedCategory = snippet.category; titleInput = snippet.title; contentInput = snippet.content
-                authorInput = snippet.author; dynastyInput = snippet.dynasty; annotationInput = snippet.annotation
+            if let excerpt = excerptToEdit {
+                selectedCategory = excerpt.category; titleInput = excerpt.title ?? ""; contentInput = excerpt.content
+                authorInput = excerpt.author; dynastyInput = excerpt.dynasty; annotationInput = excerpt.annotation
             }
         }
     }
@@ -191,30 +191,30 @@ struct SnippetEditorSheet: View {
         }
     }
     
-    private func saveSnippet() {
+    private func saveExcerpt() {
         guard !titleInput.isEmpty, !contentInput.isEmpty else { return }
         
-        if let snippet = snippetToEdit {
-            snippet.category = selectedCategory; snippet.title = titleInput; snippet.content = contentInput
-            snippet.author = showAuthor ? (authorInput.isEmpty ? "佚名" : authorInput) : "佚名"
-            snippet.dynasty = showDynastyAndAnnotation ? dynastyInput : ""
-            snippet.annotation = showDynastyAndAnnotation ? annotationInput : ""
+        if let excerpt = excerptToEdit {
+            excerpt.category = selectedCategory; excerpt.title = titleInput; excerpt.content = contentInput
+            excerpt.author = showAuthor ? (authorInput.isEmpty ? "佚名" : authorInput) : "佚名"
+            excerpt.dynasty = showDynastyAndAnnotation ? dynastyInput : ""
+            excerpt.annotation = showDynastyAndAnnotation ? annotationInput : ""
         } else {
-            let newSnippet = Snippet(title: titleInput, content: contentInput, author: showAuthor ? (authorInput.isEmpty ? "佚名" : authorInput) : "佚名", dynasty: showDynastyAndAnnotation ? dynastyInput : "", annotation: showDynastyAndAnnotation ? annotationInput : "", category: selectedCategory)
-            try? ReadingDataService.shared.insertSnippet(newSnippet, context: modelContext)
+            let newExcerpt = Excerpt(title: titleInput, content: contentInput, author: showAuthor ? (authorInput.isEmpty ? "佚名" : authorInput) : "佚名", dynasty: showDynastyAndAnnotation ? dynastyInput : "", annotation: showDynastyAndAnnotation ? annotationInput : "", category: selectedCategory)
+            try? ReadingDataService.shared.insertExcerpt(newExcerpt, context: modelContext)
         }
         
-        if snippetToEdit != nil { try? modelContext.save() }
+        if excerptToEdit != nil { try? modelContext.save() }
         isPresented = false
     }
 }
 
 #Preview("大字号录入弹窗") {
-    let schema = Schema([Snippet.self])
+    let schema = Schema([Excerpt.self])
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: schema, configurations: [config])
     
-    SnippetEditorSheet(isPresented: .constant(true))
+    ExcerptEditorSheet(isPresented: .constant(true))
         .padding(60)
         .background(Color.blue.opacity(0.3))
         .modelContainer(container)
