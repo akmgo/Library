@@ -61,22 +61,6 @@ struct MomentumChart: View {
                 // 极度压低的高度，营造声波感
                 .frame(height: 80)
                 
-                // ================= 3. 空状态文字悬浮层 =================
-                if isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "chart.bar.xaxis")
-                            .font(.system(size: 24))
-                            .foregroundColor(.secondary.opacity(0.4))
-                        Text("近期暂无阅读动能")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.secondary.opacity(0.6))
-                    }
-                    // 加一点极微弱的毛玻璃背景，让文字在骨架屏上更清晰
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color(nsColor: .windowBackgroundColor).opacity(0.6))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
             }
             .frame(maxWidth: .infinity)
         }

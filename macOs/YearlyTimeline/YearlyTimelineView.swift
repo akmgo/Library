@@ -32,13 +32,13 @@ struct YearlyTimelineView: View {
             ZStack {
                 VStack(spacing: 0) {
                     if yearlySnapshot.books.isEmpty {
-                        ContentUnavailableView {
-                            Label("暂无 \(String(selectedYear)) 年轨迹", systemImage: "calendar.badge.exclamationmark")
-                        } description: {
-                            Text(selectedYear == Calendar.current.component(.year, from: Date()) ? "今年还没有读完的书籍，继续努力哦！" : "这一年没有留下已读记录。")
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 300)
-                        .padding(.top, 180)
+                        EmptyStateView(
+                            systemImage: "calendar.badge.exclamationmark",
+                            title: "暂无 \(String(selectedYear)) 年轨迹",
+                            message: selectedYear == Calendar.current.component(.year, from: Date()) ? "今年还没有读完的书籍，继续努力哦！" : "这一年没有留下已读记录。",
+                            minHeight: 400
+                        )
+                        .padding(.top, 140)
                     } else {
                         wallContentView
                     }

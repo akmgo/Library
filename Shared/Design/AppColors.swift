@@ -26,6 +26,10 @@ enum AppColors {
     static let success = Color(red: 111 / 255, green: 175 / 255, blue: 140 / 255)
     static let warning = Color(red: 214 / 255, green: 160 / 255, blue: 79 / 255)
     static let danger = Color(red: 217 / 255, green: 108 / 255, blue: 108 / 255)
+    static let selection = readingAmber
+    static let progress = readingAmber
+    static let excerpt = readingAmber
+    static let note = warning
 
     static func primaryBackground(for colorScheme: ColorScheme) -> Color {
         colorScheme == .dark ? Dark.primaryBackground : Light.primaryBackground
@@ -65,7 +69,7 @@ enum AppColors {
         case .finished: return success
         case .unread: return secondaryText(for: colorScheme)
         case .abandoned: return tertiaryText(for: colorScheme)
-        case .planned: return accentSoft(for: colorScheme)
+        case .planned: return readingAmber
         }
     }
 }

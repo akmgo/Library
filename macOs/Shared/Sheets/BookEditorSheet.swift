@@ -239,16 +239,17 @@ struct BookEditorSheet: View {
             book.author = cleanedAuthor
             book.coverData = selectedCoverData
             if isCoverChanged { ImageCacheManager.shared.removeImage(forKey: "cover_img_\(book.id)") }
+            ReadingDataService.shared.normalizeBook(book)
+            try? modelContext.save()
         } else {
             if existingTitles.contains(cleanedTitle) {
                 showDuplicateAlert = true
                 return
             }
             let newBook = Book(title: cleanedTitle, author: cleanedAuthor, coverData: selectedCoverData)
-            modelContext.insert(newBook)
+            try? ReadingDataService.shared.insertBook(newBook, context: modelContext)
         }
 
-        try? modelContext.save()
         isPresented = false
     }
 }

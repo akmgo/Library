@@ -192,10 +192,10 @@ struct MobileSnippetEditorSheet: View {
                 annotation: showDynastyAndAnnotation ? annotationInput : "",
                 category: selectedCategory
             )
-            modelContext.insert(newSnippet)
+            try? ReadingDataService.shared.insertSnippet(newSnippet, context: modelContext)
         }
         
-        try? modelContext.save()
+        if snippetToEdit != nil { try? modelContext.save() }
         isPresented = false
     }
 }

@@ -48,22 +48,6 @@ struct HeatmapRibbon: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
-                // ================= 3. 空状态文字悬浮层 =================
-                if isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "calendar.badge.exclamationmark")
-                            .font(.system(size: 24))
-                            .foregroundColor(.secondary.opacity(0.4))
-                        Text("今年暂无打卡记录")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.secondary.opacity(0.6))
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(Color(nsColor: .windowBackgroundColor).opacity(0.7))
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
             }
         }
     }

@@ -55,14 +55,12 @@ struct MobileAddExcerptSheet: View {
     private func saveExcerpt() {
         let cleanContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
         if !cleanContent.isEmpty {
-            // ✨ 修复：使用全新大一统模型，指定 type 为 .excerpt
-            let annotation = BookAnnotation(
+            try? ReadingDataService.shared.insertAnnotation(
                 content: cleanContent,
                 type: .excerpt,
-                book: book // 传给 SwiftData，它会自动建立两者的双向关联
+                book: book,
+                context: modelContext
             )
-            modelContext.insert(annotation)
-            try? modelContext.save()
             dismiss()
         }
     }

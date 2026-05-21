@@ -146,11 +146,7 @@ extension HomeView {
     @MainActor
     private func startReadingFromQueue(book: Book) {
         if book.status == .planned {
-            book.status = .reading
-            book.startDate = Date()
-            // ✨ 核心修复：一旦开始阅读，必须立即更新最后阅读时间，强制让它霸占焦点位！
-            book.lastReadAt = Date()
-            try? modelContext.save()
+            try? ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
         }
         withAnimation(.appFluidSpring) { selectedBook = book }
     }

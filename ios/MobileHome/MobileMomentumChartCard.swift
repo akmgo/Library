@@ -39,7 +39,14 @@ struct MobileMomentumChartCard: View {
                 
                 // 下部：折线面积图
                 if dataPoints.isEmpty {
-                    VStack { Text("暂无数据").font(.system(size: 14)).foregroundColor(.secondary) }.frame(maxWidth: .infinity, minHeight: 70)
+                    HStack(alignment: .bottom, spacing: 6) {
+                        ForEach(0..<14, id: \.self) { index in
+                            Capsule()
+                                .fill(Color.secondary.opacity(0.10))
+                                .frame(height: CGFloat((index % 5) + 1) * 8)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 70, alignment: .bottom)
                 } else {
                     Chart(dataPoints, id: \.date) { item in
                         AreaMark(x: .value("Day", item.date), y: .value("Minutes", item.minutes))

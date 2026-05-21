@@ -173,8 +173,13 @@ struct InspirationWallView: View {
     @ViewBuilder
     private func wallContentView(containerWidth: CGFloat) -> some View {
         if shuffledSnippets.isEmpty {
-            ContentUnavailableView { Label("空空如也", systemImage: searchText.isEmpty ? "leaf" : "magnifyingglass") } description: { Text(searchText.isEmpty ? "多读书，多记录，这里会长出智慧的森林。" : "尝试更换搜索关键词。") }
-                .padding(.top, 200)
+            EmptyStateView(
+                systemImage: searchText.isEmpty ? "leaf" : "magnifyingglass",
+                title: "空空如也",
+                message: searchText.isEmpty ? "多读书，多记录，这里会长出智慧的森林。" : "尝试更换搜索关键词。",
+                minHeight: 400
+            )
+            .padding(.top, 140)
         } else {
             if isRandomRoam == false {
                 groupedCatalogView(containerWidth: containerWidth)
@@ -331,20 +336,15 @@ extension InspirationWallView {
     private func deleteSnippet(snippet: InspirationSnippet) {
         let targetID = snippet.id
         if let target = allAnnotations.first(where: { $0.id == targetID }) {
-            modelContext.delete(target)
+            try? ReadingDataService.shared.deleteAnnotation(target, context: modelContext)
         }
-        try? modelContext.save()
         refreshData(animate: true)
     }
     
     @MainActor
     private func deleteSelectedSnippets() {
-        for targetID in selectedSnippetsForBatch {
-            if let target = allAnnotations.first(where: { $0.id == targetID }) {
-                modelContext.delete(target)
-            }
-        }
-        try? modelContext.save()
+        let annotationsToDelete = allAnnotations.filter { selectedSnippetsForBatch.contains($0.id) }
+        try? ReadingDataService.shared.deleteAnnotations(annotationsToDelete, context: modelContext)
         withAnimation(.appSnappy) { isBatchEditMode = false; selectedSnippetsForBatch.removeAll() }
         refreshData(animate: true)
     }

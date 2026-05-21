@@ -194,12 +194,13 @@ struct BookRatingView: View {
 struct BookStatusPicker: View {
     @Bindable var book: Book
     var animationNamespace: Namespace.ID
+    @Environment(\.modelContext) private var modelContext
     
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Label("当前状态", systemImage: "book.fill")
                 .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.blue)
+                .foregroundColor(AppColors.selection)
             
             HStack(spacing: 0) {
                 ForEach(AppConstants.statusOptions, id: \.0) { opt in
@@ -209,7 +210,7 @@ struct BookStatusPicker: View {
                             if isSelected {
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                                     .fill(Color.clear)
-                                    .glassEffect(.regular.tint(.blue), in: .rect(cornerRadius: 10)) // ✨ 着色玻璃水滴
+                                    .glassEffect(.regular.tint(AppColors.selection), in: .rect(cornerRadius: 10)) // ✨ 着色玻璃水滴
                                     .matchedGeometryEffect(id: "status-bg", in: animationNamespace)
                             }
                             Text(opt.1)
@@ -235,16 +236,7 @@ struct BookStatusPicker: View {
         let willFinish = (newStatus == .finished)
         
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            book.status = newStatus
-            let now = Date()
-            
-            if newStatus == .reading {
-                if book.startDate == nil { book.startDate = now }
-            } else if newStatus == .finished {
-                if book.startDate == nil { book.startDate = now }
-                // ✨ 恢复逻辑：切换到已读时，自动填充结束日期为当天
-                if book.finishDate == nil { book.finishDate = now }
-            }
+            try? ReadingDataService.shared.updateStatus(book, to: newStatus, context: modelContext)
         }
         
         if willFinish && !wasFinished {

@@ -79,12 +79,12 @@ enum ReadingStatsCalculator {
 
     struct InspirationSnapshot {
         let snippets: [InspirationSnippet]
-        let totalCharacters: Int
+        let totalContentCharacters: Int
         let uniqueBooksCount: Int
 
         static let empty = InspirationSnapshot(
             snippets: [],
-            totalCharacters: 0,
+            totalContentCharacters: 0,
             uniqueBooksCount: 0
         )
     }
@@ -320,7 +320,7 @@ enum ReadingStatsCalculator {
 
         return InspirationSnapshot(
             snippets: snippets,
-            totalCharacters: snippets.reduce(0) { $0 + $1.content.count },
+            totalContentCharacters: snippets.reduce(0) { $0 + $1.content.count },
             uniqueBooksCount: Set(snippets.map(\.bookID)).filter { !$0.isEmpty }.count
         )
     }

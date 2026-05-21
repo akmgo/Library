@@ -11,6 +11,13 @@ import SwiftData
 public class SharedDatabase {
     /// 数据库全局单例。
     public static let shared = SharedDatabase()
+    static let schemaModelTypes: [any PersistentModel.Type] = [
+        Book.self,
+        ReadingSession.self,
+        BookAnnotation.self,
+        UserConfig.self,
+        Snippet.self
+    ]
     
     /// 核心数据库上下文容器，提供给整个生命周期使用。
     public let container: ModelContainer
@@ -23,7 +30,7 @@ public class SharedDatabase {
 
     /// 挂载并初始化全局 SwiftData 引擎。
     private init() {
-        let schema = Schema([Book.self, ReadingSession.self, BookAnnotation.self, UserConfig.self, Snippet.self])
+        let schema = Schema(Self.schemaModelTypes)
             
         // ========================================================
         // 🛑 核心修复：Xcode 预览环境拦截器
@@ -97,6 +104,17 @@ public class SharedDatabase {
                 print("⚠️ 已启用纯内存模式兜底。")
             }
         }
+    }
+}
+
+extension SharedDatabase {
+    static func cloudKitReadinessNotes() -> [String] {
+        [
+            "Book, ReadingSession, BookAnnotation, UserConfig, Snippet are all included in one shared SwiftData schema.",
+            "Book relationships to sessions and annotations use cascade delete, keeping book-scoped records consistent across devices.",
+            "Ebook file/location fields are absent from the schema, so CloudKit sync only carries V1 reading-record data.",
+            "UserConfig can duplicate during multi-device first launch; pruneDuplicateConfigs(context:) remains the startup repair path."
+        ]
     }
 }
 

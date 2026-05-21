@@ -243,12 +243,13 @@ struct MobileInspirationWallView: View {
     // MARK: - 内部组件与逻辑
     
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("空空如也", systemImage: "leaf")
-        } description: {
-            Text("多读书，多记录，这里会长出智慧的森林。")
-        }
-        .padding(.top, 60)
+        EmptyStateView(
+            systemImage: "leaf",
+            title: "空空如也",
+            message: "多读书，多记录，这里会长出智慧的森林。",
+            minHeight: 320
+        )
+        .padding(.top, 24)
     }
     
     private var batchActionBar: some View {
@@ -287,12 +288,8 @@ struct MobileInspirationWallView: View {
     
     private func deleteSelectedSnippets() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-        for targetID in selectedSnippetsForBatch {
-            if let target = allAnnotations.first(where: { $0.id == targetID }) {
-                modelContext.delete(target)
-            }
-        }
-        try? modelContext.save()
+        let annotationsToDelete = allAnnotations.filter { selectedSnippetsForBatch.contains($0.id) }
+        try? ReadingDataService.shared.deleteAnnotations(annotationsToDelete, context: modelContext)
         withAnimation {
             isBatchEditMode = false
             selectedSnippetsForBatch.removeAll()
@@ -301,8 +298,7 @@ struct MobileInspirationWallView: View {
     
     private func deleteSnippet(_ id: String) {
         if let target = allAnnotations.first(where: { $0.id == id }) {
-            modelContext.delete(target)
-            try? modelContext.save()
+            try? ReadingDataService.shared.deleteAnnotation(target, context: modelContext)
         }
     }
 }

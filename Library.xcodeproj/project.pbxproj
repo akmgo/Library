@@ -22,7 +22,7 @@
 		C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819272F9F385D006D5686 /* GoalSettingsView.swift */; };
 		C548192E2F9F38AC006D5686 /* DataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548192D2F9F38AC006D5686 /* DataSettingsView.swift */; };
 		C54819312F9F38C6006D5686 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819302F9F38C6006D5686 /* AboutSettingsView.swift */; };
-		C54819832FA09BEC006D5686 /* LocalBookManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819822FA09BEC006D5686 /* LocalBookManager.swift */; };
+		C54819832FA09BEC006D5686 /* ReadingDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819822FA09BEC006D5686 /* ReadingDataService.swift */; };
 		C54819852FA0E765006D5686 /* LiquidGlassButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819842FA0E765006D5686 /* LiquidGlassButton.swift */; };
 		C54819892FA19CA7006D5686 /* TopToastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819882FA19CA7006D5686 /* TopToastManager.swift */; };
 		C54819C52FA34065006D5686 /* MobileButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819C42FA34065006D5686 /* MobileButtons.swift */; };
@@ -149,7 +149,7 @@
 		C54819272F9F385D006D5686 /* GoalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalSettingsView.swift; sourceTree = "<group>"; };
 		C548192D2F9F38AC006D5686 /* DataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsView.swift; sourceTree = "<group>"; };
 		C54819302F9F38C6006D5686 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
-		C54819822FA09BEC006D5686 /* LocalBookManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalBookManager.swift; sourceTree = "<group>"; };
+		C54819822FA09BEC006D5686 /* ReadingDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingDataService.swift; sourceTree = "<group>"; };
 		C54819842FA0E765006D5686 /* LiquidGlassButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassButton.swift; sourceTree = "<group>"; };
 		C54819882FA19CA7006D5686 /* TopToastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopToastManager.swift; sourceTree = "<group>"; };
 		C54819C42FA34065006D5686 /* MobileButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileButtons.swift; sourceTree = "<group>"; };
@@ -433,6 +433,7 @@
 				C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */,
 				C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */,
 				C54818F02F97C47F006D5686 /* ReadingDataPoints.swift */,
+				C54819822FA09BEC006D5686 /* ReadingDataService.swift */,
 			);
 			path = Database;
 			sourceTree = "<group>";
@@ -519,7 +520,6 @@
 				C5FD83222F934C250003A500 /* Background.swift */,
 				C5FD83232F934C250003A500 /* ConfettiView.swift */,
 				C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */,
-				C54819822FA09BEC006D5686 /* LocalBookManager.swift */,
 			);
 			path = CommonUI;
 			sourceTree = "<group>";
@@ -895,7 +895,7 @@
 				C54819C52FA34065006D5686 /* MobileButtons.swift in Sources */,
 				C5FD82BB2F90C5B70003A500 /* MobileMonthlyRecordView.swift in Sources */,
 				C5FD83502F9513210003A500 /* AmbientClock.swift in Sources */,
-				C54819832FA09BEC006D5686 /* LocalBookManager.swift in Sources */,
+				C54819832FA09BEC006D5686 /* ReadingDataService.swift in Sources */,
 				C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */,
 				C5FD83C12F9536B50003A500 /* MobileArchiveHostView.swift in Sources */,
 				C548190C2F9C44EA006D5686 /* BookMetadataSearchManager.swift in Sources */,

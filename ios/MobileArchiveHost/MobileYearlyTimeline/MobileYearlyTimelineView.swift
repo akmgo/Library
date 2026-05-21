@@ -89,16 +89,14 @@ struct MobileYearlyTimelineView: View {
     }
     
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "calendar.badge.exclamationmark")
-                .font(.system(size: 56))
-                .foregroundColor(Color.gray.opacity(0.4))
-            Text(selectedYear == Calendar.current.component(.year, from: Date()) ? "今年还没有读完的书籍，继续努力哦！" : "这一年没有留下已读记录。")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 100)
+        EmptyStateView(
+            systemImage: "calendar.badge.exclamationmark",
+            title: "暂无 \(String(selectedYear)) 年轨迹",
+            message: selectedYear == Calendar.current.component(.year, from: Date()) ? "今年还没有读完的书籍，继续努力哦！" : "这一年没有留下已读记录。",
+            iconSize: 56,
+            minHeight: 320
+        )
+        .padding(.top, 24)
     }
     
 }

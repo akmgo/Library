@@ -163,7 +163,7 @@ struct MobileBookDetailView: View {
         .alert("删除书籍", isPresented: $showDeleteAlert) {
             Button("取消", role: .cancel) {}
             Button("确认删除", role: .destructive) {
-                modelContext.delete(book)
+                try? ReadingDataService.shared.deleteBookAndSave(book, context: modelContext)
                 dismiss() // 返回上一级画廊
             }
         } message: { Text("确定要删除《\(book.title)》吗？相关的读书笔记也会一并清除。") }
@@ -180,7 +180,7 @@ struct MobileBookDetailView: View {
     /// ✨ 修复：适配单表大一统，直接接收 BookAnnotation 进行操作
     private func deleteRecord(_ item: BookAnnotation) {
         withAnimation(.spring()) {
-            modelContext.delete(item)
+            try? ReadingDataService.shared.deleteAnnotation(item, context: modelContext)
         }
         
         let count = book.annotations?.count ?? 0

@@ -201,10 +201,10 @@ struct SnippetEditorSheet: View {
             snippet.annotation = showDynastyAndAnnotation ? annotationInput : ""
         } else {
             let newSnippet = Snippet(title: titleInput, content: contentInput, author: showAuthor ? (authorInput.isEmpty ? "佚名" : authorInput) : "佚名", dynasty: showDynastyAndAnnotation ? dynastyInput : "", annotation: showDynastyAndAnnotation ? annotationInput : "", category: selectedCategory)
-            modelContext.insert(newSnippet)
+            try? ReadingDataService.shared.insertSnippet(newSnippet, context: modelContext)
         }
         
-        try? modelContext.save()
+        if snippetToEdit != nil { try? modelContext.save() }
         isPresented = false
     }
 }

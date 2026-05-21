@@ -116,7 +116,6 @@ struct MobileGalleryView: View {
                         .padding(.top, 16)
                         .padding(.bottom, 120)
                     }
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: processedBooks)
                 }
             }
             .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
@@ -193,13 +192,12 @@ struct MobileGalleryView: View {
     }
     
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: "books.vertical").font(.system(size: 56)).foregroundColor(.secondary.opacity(0.4))
-            Text("这里还没有书籍记录哦").font(.system(size: 18, weight: .bold)).foregroundColor(.secondary)
-            Spacer(); Spacer()
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(
+            systemImage: "books.vertical",
+            title: "这里还没有书籍记录哦",
+            message: "添加第一本书后，画廊会在这里展开。",
+            iconSize: 56
+        )
     }
     
     private func toggleSelection(for id: String) {
@@ -209,8 +207,8 @@ struct MobileGalleryView: View {
     
     private func deleteSelectedBooks() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-        for book in allBooks where selectedBooks.contains(book.id) { modelContext.delete(book) }
-        try? modelContext.save()
+        let booksToDelete = allBooks.filter { selectedBooks.contains($0.id) }
+        try? ReadingDataService.shared.deleteBooks(booksToDelete, context: modelContext)
         selectedBooks.removeAll()
         isBatchEditing = false
     }
@@ -272,7 +270,7 @@ struct MobileBookGridCell: View {
                         .font(.system(size: 10, weight: .black, design: .rounded))
                         .foregroundColor(.white)
                         .padding(.horizontal, 6).padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.9).background(.ultraThinMaterial))
+                        .background(AppColors.progress.opacity(0.9).background(.ultraThinMaterial))
                         .clipShape(Capsule())
                         .offset(x: -8, y: 8)
                 }

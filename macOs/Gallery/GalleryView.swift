@@ -181,8 +181,12 @@ struct GalleryView: View {
     @ViewBuilder
     private func gridView(containerWidth: CGFloat) -> some View {
         if gallerySnapshot.books.isEmpty {
-            ContentUnavailableView { Label("没有找到相关书籍", systemImage: "books.vertical.fill") } description: { Text(searchText.isEmpty ? "试试切换分类或点击添加书籍" : "尝试更换搜索关键词") }
-                .frame(maxWidth: .infinity, minHeight: 400)
+            EmptyStateView(
+                systemImage: "books.vertical.fill",
+                title: "没有找到相关书籍",
+                message: searchText.isEmpty ? "试试切换分类或点击添加书籍" : "尝试更换搜索关键词",
+                minHeight: 400
+            )
         } else {
             let columns = [GridItem(.adaptive(minimum: currentScale.width, maximum: currentScale.width), spacing: currentScale.hSpacing)]
             LazyVGrid(columns: columns, spacing: currentScale.vSpacing) {
@@ -195,16 +199,13 @@ struct GalleryView: View {
                     .transition(.appCardGlide)
                 }
             }
-            .animation(.appFluidSpring, value: gallerySnapshot.books.map(\.id))
             .animation(.appFluidSpring, value: scaleIndex)
         }
     }
     
     private func deleteSelectedBooks() {
-        for book in gallerySnapshot.books where selectedBooksForBatch.contains(book.id) {
-            LocalBookManager.shared.deleteBook(book, context: modelContext)
-        }
-        try? modelContext.save()
+        let booksToDelete = gallerySnapshot.books.filter { selectedBooksForBatch.contains($0.id) }
+        try? ReadingDataService.shared.deleteBooks(booksToDelete, context: modelContext)
         withAnimation(.appSnappy) {
             isBatchEditMode = false
             selectedBooksForBatch.removeAll()

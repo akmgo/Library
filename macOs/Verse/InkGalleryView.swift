@@ -116,12 +116,13 @@ struct InkGalleryView: View {
                 Group {
                     if displaySnippets.isEmpty {
                         ScrollView {
-                            ContentUnavailableView {
-                                Label("未找到墨迹", systemImage: "scroll")
-                            } description: {
-                                Text(searchText.isEmpty ? "当前分类下暂无摘录，快去录入第一篇吧" : "没有找到与“\(searchText)”相关的内容")
-                            }
-                            .frame(maxWidth: .infinity, minHeight: geo.size.height)
+                            EmptyStateView(
+                                systemImage: "scroll",
+                                title: "未找到墨迹",
+                                message: searchText.isEmpty ? "当前分类下暂无摘录，快去录入第一篇吧" : "没有找到与“\(searchText)”相关的内容",
+                                minHeight: 400
+                            )
+                            .padding(.top, 140)
                         }
                     } else {
                         if isCarouselMode {
@@ -199,7 +200,6 @@ struct InkGalleryView: View {
                 
                 // 统一弹簧动画参数
                 .animation(.appFluidSpring, value: isEntranceAnimated)
-                .animation(.appFluidSpring, value: displaySnippets)
                 .animation(.appFluidSpring, value: isCarouselMode)
                 
                 // ================= 顶部悬浮头 (联动加强) =================
@@ -389,8 +389,7 @@ struct InkGalleryView: View {
     
     private func deleteSelectedSnippets() {
         let toDelete = displaySnippets.filter { selectedSnippetsForBatch.contains($0.id) }
-        for snippet in toDelete { modelContext.delete(snippet) }
-        try? modelContext.save()
+        try? ReadingDataService.shared.deleteSnippets(toDelete, context: modelContext)
         withAnimation(.appSnappy) { isBatchEditMode = false; selectedSnippetsForBatch.removeAll() }
     }
 }

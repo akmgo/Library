@@ -25,7 +25,9 @@ struct MobilePlannedStatusToggle: View {
     
     private func handleToggle() {
         if book.status == .planned {
-            withAnimation(.spring()) { book.status = .unread }
+            withAnimation(.spring()) {
+                try? ReadingDataService.shared.updateStatus(book, to: .unread, context: modelContext)
+            }
         } else {
             do {
                 // ✨ 安全过滤：在内存中过滤以防 #Predicate 引起 SQLite 崩溃
@@ -36,7 +38,9 @@ struct MobilePlannedStatusToggle: View {
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                     showMaxAlert = true
                 } else {
-                    withAnimation(.spring()) { book.status = .planned }
+                    withAnimation(.spring()) {
+                        try? ReadingDataService.shared.updateStatus(book, to: .planned, context: modelContext)
+                    }
                 }
             } catch { print("想读状态查询失败: \(error)") }
         }
@@ -61,9 +65,9 @@ struct MobileCompactStatusPicker: View {
                     handleStatusChange(to: opt.0)
                 }) {
                     ZStack {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(Color.blue)
+                            if isSelected {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(AppColors.selection)
                                 .matchedGeometryEffect(id: "mobile-status-bg", in: animationNamespace)
                         }
                         Text(opt.1)
@@ -83,20 +87,7 @@ struct MobileCompactStatusPicker: View {
     
     private func handleStatusChange(to newStatus: BookStatus) {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            book.status = newStatus
-            let now = Date()
-            
-            if newStatus == .reading {
-                if book.startDate == nil { book.startDate = now }
-            } else if newStatus == .finished {
-                if book.startDate == nil { book.startDate = now }
-                if book.finishDate == nil { book.finishDate = now }
-                if book.totalAmount > 0 { book.currentAmount = book.totalAmount }
-            } else if newStatus == .unread {
-                book.currentAmount = 0
-                book.startDate = nil
-                book.finishDate = nil
-            }
+            try? ReadingDataService.shared.updateStatus(book, to: newStatus, context: modelContext)
         }
     }
 }

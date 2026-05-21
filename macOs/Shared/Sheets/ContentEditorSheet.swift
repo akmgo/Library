@@ -114,18 +114,17 @@ struct ContentEditorSheet: View {
         if let item = itemToEdit {
             // ✨ 编辑模式：直接更新单体字段，逻辑极致简单
             item.content = contentText
+            try? modelContext.save()
         } else if let targetBook = book {
             // ✨ 新增模式：注入明确的 Type
-            let newAnnotation = BookAnnotation(
+            try? ReadingDataService.shared.insertAnnotation(
                 content: contentText,
-                type: mode == .excerpt ? .excerpt : .note
+                type: mode == .excerpt ? .excerpt : .note,
+                book: targetBook,
+                context: modelContext
             )
-            
-            if targetBook.annotations == nil { targetBook.annotations = [] }
-            targetBook.annotations?.append(newAnnotation)
         }
         
-        try? modelContext.save()
         isPresented = false
     }
 }

@@ -48,7 +48,7 @@ struct BookCard: View {
                 .frame(width: gridScale.width, height: gridScale.width * 1.5)
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous).stroke(Color.white.opacity(0.15), lineWidth: 0.5))
-                .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous).stroke(isSelected ? Color.blue : Color.clear, lineWidth: 3).padding(-2))
+                .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous).stroke(isSelected ? AppColors.selection : Color.clear, lineWidth: 3).padding(-2))
                 .overlay(alignment: .topTrailing) {
                     if activeTab == GalleryFilterTab.reading.rawValue && book.status == .reading {
                         progressCapsule(progress: book.progressRatio)
@@ -114,8 +114,7 @@ struct BookCard: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            LocalBookManager.shared.deleteBook(book, context: modelContext)
-                            try? modelContext.save()
+                            try? ReadingDataService.shared.deleteBookAndSave(book, context: modelContext)
                         } label: { Label("删除此书", systemImage: "trash") }
                     } label: {
                         Image(systemName: "ellipsis")
@@ -148,7 +147,7 @@ struct BookCard: View {
     }
     
     private func changeStatus(to newStatus: BookStatus) {
-        book.status = newStatus; try? modelContext.save()
+        try? ReadingDataService.shared.updateStatus(book, to: newStatus, context: modelContext)
     }
     
     private func progressCapsule(progress: Double) -> some View {
@@ -157,7 +156,7 @@ struct BookCard: View {
             Text("\(Int(progress * 100))%").font(.system(size: 11, weight: .black, design: .rounded))
         }
         .foregroundColor(.white).padding(.horizontal, 8).padding(.vertical, 4)
-        .background(Color.black.opacity(0.65)).background(.ultraThinMaterial).clipShape(Capsule()).padding(8)
+        .background(AppColors.progress.opacity(0.85)).background(.ultraThinMaterial).clipShape(Capsule()).padding(8)
     }
 }
 
@@ -195,9 +194,9 @@ struct GalleryStatsView: View {
                 
                 Spacer()
                 Text("历时 \(calculateDays(start: book.startDate, end: book.finishDate)) 天")
-                    .font(.system(size: 10 * gridScale.uiScale, weight: .bold)).foregroundColor(.blue)
+                    .font(.system(size: 10 * gridScale.uiScale, weight: .bold)).foregroundColor(AppColors.progress)
                     .padding(.horizontal, 6 * gridScale.uiScale).padding(.vertical, 2 * gridScale.uiScale)
-                    .background(Color.blue.opacity(0.1)).clipShape(RoundedRectangle(cornerRadius: AppRadius.xs)).lineLimit(1)
+                    .background(AppColors.progress.opacity(0.12)).clipShape(RoundedRectangle(cornerRadius: AppRadius.xs)).lineLimit(1)
             }
             
             if !book.tags.isEmpty {

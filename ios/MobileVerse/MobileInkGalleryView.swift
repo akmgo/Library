@@ -97,12 +97,13 @@ struct MobileInkGalleryView: View {
                         
                         // ================= 瀑布流内容 =================
                         if displaySnippets.isEmpty {
-                            ContentUnavailableView {
-                                Label("未找到墨迹", systemImage: "scroll")
-                            } description: {
-                                Text("当前分类下暂无摘录，快去录入第一篇吧")
-                            }
-                            .padding(.top, 60)
+                            EmptyStateView(
+                                systemImage: "scroll",
+                                title: "未找到墨迹",
+                                message: "当前分类下暂无摘录，快去录入第一篇吧",
+                                minHeight: 320
+                            )
+                            .padding(.top, 24)
                             .opacity(isEntranceAnimated ? 1.0 : 0.0)
                         } else {
                             LazyVStack(spacing: 16) {
@@ -118,7 +119,6 @@ struct MobileInkGalleryView: View {
                     }
                 }
                 .animation(.spring(response: 0.5, dampingFraction: 0.8), value: isEntranceAnimated)
-                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: displaySnippets)
                 
                 // ================= 底部批处理控制台 =================
                 if isBatchEditMode {
@@ -346,8 +346,7 @@ struct MobileInkGalleryView: View {
     private func deleteSelectedSnippets() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         let toDelete = displaySnippets.filter { selectedSnippetsForBatch.contains($0.id) }
-        for snippet in toDelete { modelContext.delete(snippet) }
-        try? modelContext.save()
+        try? ReadingDataService.shared.deleteSnippets(toDelete, context: modelContext)
         withAnimation(.snappy) { isBatchEditMode = false; selectedSnippetsForBatch.removeAll() }
     }
 }

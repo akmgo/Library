@@ -109,13 +109,8 @@ struct BookDetailView: View {
                 
                 // 2. 延迟执行删除（等待关闭动画完成），并强制同步
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    // ✨ 核心操作：调用 LocalBookManager 进行物理超度
-                    LocalBookManager.shared.deleteBook(book, context: modelContext)
-                            
                     do {
-                        // ✨ 核心操作：强制持久化到磁盘，确保画廊读取的是最新状态
-                        try modelContext.save()
-                                
+                        try ReadingDataService.shared.deleteBookAndSave(book, context: modelContext)
                         print("✅ 书籍及物理文件已彻底销毁")
                     } catch {
                         print("❌ 删除保存失败: \(error.localizedDescription)")
@@ -129,8 +124,7 @@ struct BookDetailView: View {
     
     private func deleteRecord(_ item: BookAnnotation) {
         withAnimation(.spring()) {
-            // 直接删除该实体，无需再走 switch 缝合逻辑
-            modelContext.delete(item)
+            try? ReadingDataService.shared.deleteAnnotation(item, context: modelContext)
         }
         
         // 统计这本树下所有的批注数量（合并后的表）

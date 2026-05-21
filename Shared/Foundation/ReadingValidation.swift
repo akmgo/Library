@@ -15,6 +15,19 @@ enum ReadingValidation {
         max(endedAt.timeIntervalSince(startedAt), 0)
     }
 
+    static func normalizedManualSession(
+        startedAt: Date,
+        duration: TimeInterval,
+        calendar: Calendar = .current
+    ) -> (date: Date, endedAt: Date, duration: TimeInterval) {
+        let safeDuration = max(duration, 0)
+        return (
+            date: calendar.startOfDay(for: startedAt),
+            endedAt: startedAt.addingTimeInterval(safeDuration),
+            duration: safeDuration
+        )
+    }
+
     static func trimmedRequiredText(_ value: String) -> String {
         value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
