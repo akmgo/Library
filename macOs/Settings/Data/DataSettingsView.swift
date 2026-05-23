@@ -68,21 +68,32 @@ struct DataSettingsView: View {
                             Button(action: revealBackupFolderInFinder) {
                                 Label("在 Finder 中打开", systemImage: "folder").font(.system(size: 12, weight: .medium))
                             }
-                            
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+
                             Spacer()
-                            
-                            // ✨ 核心优化：将恢复快照的逻辑直接外提到数据安全中心
+
                             Button(action: restoreFromBackup) {
-                                Text("恢复快照").font(.system(size: 12, weight: .medium)).foregroundColor(.indigo)
+                                Text("恢复快照").font(.system(size: 12, weight: .medium))
                             }
-                            
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+
                             Button(action: triggerManualBackup) {
                                 Text("立即快照").font(.system(size: 12, weight: .medium))
                             }
-                            
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+
                             Button(action: clearAllBackups) {
-                                Text("清空历史").font(.system(size: 12, weight: .medium)).foregroundColor(.red)
+                                Text("清空历史").font(.system(size: 12, weight: .medium))
                             }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
                         }
                     }
                     .padding(.leading, 40)
@@ -98,7 +109,11 @@ struct DataSettingsView: View {
                         Button(action: performRealCacheClear) {
                             Text("清理缓存").font(.system(size: 12, weight: .medium))
                         }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
                         .disabled(currentCacheSizeMB <= 0.1)
+                        .opacity(currentCacheSizeMB <= 0.1 ? 0.4 : 1.0)
                     }
                 }
             } header: { Text("存储管理").font(.system(size: 13, weight: .bold)) }

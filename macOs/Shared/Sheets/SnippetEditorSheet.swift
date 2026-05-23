@@ -15,8 +15,8 @@ private enum ExcerptInputMetrics {
     static let fieldHorizontalPadding: CGFloat = 14
     static let fieldVerticalPadding: CGFloat = 12
     static let contentPadding: CGFloat = 13
-    static let fieldCornerRadius: CGFloat = 10
-    static let contentCornerRadius: CGFloat = 12
+    static let fieldCornerRadius: CGFloat = 8
+    static let contentCornerRadius: CGFloat = 8
 }
 
 private struct ExcerptCategoryFormConfig {
@@ -243,7 +243,7 @@ struct ExcerptEditorSheet: View {
             }
         }
         .frame(width: 760, height: 620)
-        .glassEffect(in: .rect(cornerRadius: 18))
+        .glassEffect(in: .rect(cornerRadius: 16))
         .background(WindowTransparentEffect())
         .onAppear(perform: loadInitialValues)
         .onChange(of: selectedCategory) { _, _ in

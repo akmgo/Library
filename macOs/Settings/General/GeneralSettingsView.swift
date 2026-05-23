@@ -33,14 +33,18 @@ struct GeneralSettingsView: View {
             
             // ================= 2. 操作指引 (纯展示) =================
             Section {
-                SettingsControlRow(icon: "plus.square.fill", iconColor: .gray, title: "快速录入", subtitle: "脑暴时刻，迅速记录闪念或添加新书籍") {
+                SettingsControlRow(icon: "magnifyingglass", iconColor: .blue, title: "全局搜索", subtitle: "在任意页面快速搜索书籍、摘录与笔记") {
+                    ShortcutBadge(text: "⌘ K")
+                }
+
+                SettingsControlRow(icon: "plus.square.fill", iconColor: .orange, title: "快速录入", subtitle: "脑暴时刻，迅速记录闪念或添加新书籍") {
                     ShortcutBadge(text: "⌘ N")
                 }
-                
+
                 SettingsControlRow(icon: "cursorarrow.click.2", iconColor: .gray, title: "编辑内容实体", subtitle: "在画廊或碎片的瀑布流中，快速修改具体内容") {
                     ShortcutBadge(text: "双击卡片")
                 }
-                
+
                 SettingsControlRow(icon: "arrow.down.right.and.arrow.up.left", iconColor: .gray, title: "退出全屏沉浸", subtitle: "在长文沉浸阅读模式下，快速返回主界面的流") {
                     ShortcutBadge(text: "Esc")
                 }
@@ -76,7 +80,7 @@ private struct ShortcutBadge: View {
             .padding(.vertical, 4)
             // 模拟真实键帽的立体感
             .background(Color(nsColor: .windowBackgroundColor))
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.2), lineWidth: 1))
             .shadow(color: Color.black.opacity(0.06), radius: 1, x: 0, y: 1)
     }
 }

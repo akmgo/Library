@@ -88,7 +88,7 @@ private struct MobileReadingExcerptCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // ✨ 修复：模型里的 content 已经是必填项，干掉了冗余的 ?? ""
-            Text(LocalizedStringKey(annotation.content))
+            Text(annotation.content)
                 .font(.system(size: 15, weight: .regular, design: .serif))
                 .lineSpacing(6)
                 .foregroundColor(.primary)
@@ -115,7 +115,7 @@ private struct MobileNoteCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // 🍏 SwiftUI 底层自动接管 markdown 的多级 Header 和无序列表样式映射
-            Text(LocalizedStringKey(annotation.content))
+            Text(annotation.content)
                 .font(.system(size: 14))
                 .lineSpacing(4)
                 .foregroundColor(.primary)

@@ -40,7 +40,7 @@ struct ExcerptWallCardView: View {
             }
             
             // 2. 核心文本内容
-            Text(LocalizedStringKey(excerpt.content))
+            Text(excerpt.content)
                 .font(.system(size: 14, weight: .medium, design: .serif))
                 .lineSpacing(6)
                 .foregroundColor(.primary.opacity(0.9))

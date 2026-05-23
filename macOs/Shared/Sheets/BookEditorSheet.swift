@@ -23,42 +23,76 @@ struct BookEditorSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // 标题栏
             HStack(spacing: 10) {
                 Image(systemName: "book.closed.fill")
                     .font(.system(size: 18))
                     .foregroundColor(.blue)
-
                 Text("编辑档案")
                     .font(.system(size: 16, weight: .bold))
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 28)
+            .padding(.top, 24)
+            .padding(.bottom, 16)
 
             Divider().opacity(0.5)
 
-            HStack(spacing: 32) {
+            // 内容区
+            VStack(spacing: 24) {
                 coverEditorView
-                    .frame(width: 160, height: 240)
+                    .frame(width: 180, height: 270)
 
-                rightInfoPanel
-                    .frame(width: 260, height: 240)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("书名")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary)
+                    TextField("书名", text: $titleInput)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 15, weight: .medium))
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Color.primary.opacity(0.04))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+                        )
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("作者")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary)
+                    TextField("可留空", text: $authorInput)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 15, weight: .medium))
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Color.primary.opacity(0.04))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+                        )
+                }
             }
-            .padding(.horizontal, 32)
-            .frame(maxWidth: .infinity, minHeight: 340, alignment: .center)
+            .padding(.horizontal, 48)
+            .padding(.vertical, 28)
 
             Divider().opacity(0.5)
 
+            // 底部操作栏
             HStack {
                 Spacer()
-
                 Button("取消") { isPresented = false }
                     .keyboardShortcut(.cancelAction)
                     .buttonStyle(.plain)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 8))
 
                 let isFormEmpty = titleInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 let hasChanges = titleInput != bookToEdit.title || authorInput != bookToEdit.author || selectedCoverData != bookToEdit.coverData
@@ -70,12 +104,12 @@ struct BookEditorSheet: View {
                     .disabled(!canSave)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .glassEffect(canSave ? .regular.tint(.blue).interactive() : .clear.interactive(), in: .rect(cornerRadius: 6))
+                    .glassEffect(canSave ? .regular.tint(.blue).interactive() : .clear.interactive(), in: .rect(cornerRadius: 8))
                     .opacity(canSave ? 1.0 : 0.4)
             }
             .padding(16)
         }
-        .frame(width: 520)
+        .frame(width: 420)
         .glassEffect(in: .rect(cornerRadius: 16.0))
         .background(WindowTransparentEffect())
         .onAppear {
@@ -94,7 +128,7 @@ struct BookEditorSheet: View {
                 Image(nsImage: nsImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 160, height: 240)
+                    .frame(width: 180, height: 270)
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .shadow(color: Color.black.opacity(0.2), radius: 6, y: 3)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.1), lineWidth: 1))
@@ -115,7 +149,7 @@ struct BookEditorSheet: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                .frame(width: 160, height: 240)
+                .frame(width: 180, height: 270)
             }
         }
         .buttonStyle(.plain)
@@ -131,38 +165,6 @@ struct BookEditorSheet: View {
             if selectedCoverData != nil {
                 Button("移除自定义封面") { withAnimation { selectedCoverData = nil } }
             }
-        }
-    }
-
-    private var rightInfoPanel: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("书名")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.secondary)
-                HStack(spacing: 8) {
-                    TextField("书名", text: $titleInput)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 14, weight: .medium))
-                }
-                .padding(10)
-                .glassEffect(in: .rect(cornerRadius: 6))
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("作者")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.secondary)
-                TextField("可留空", text: $authorInput)
-                    .textFieldStyle(.plain)
-                    .padding(10)
-                    .glassEffect(in: .rect(cornerRadius: 6))
-                    .font(.system(size: 14))
-            }
-
-            Text("V1 仅保存书籍记录，不绑定或解析本地电子书文件。")
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
         }
     }
 

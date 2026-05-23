@@ -249,7 +249,7 @@ struct MobileUnifiedExcerptCardView: View {
                     .clipShape(Capsule())
             }
             
-            Text(LocalizedStringKey(excerpt.content))
+            Text(excerpt.content)
                 .font(.system(size: 15, weight: .medium, design: .serif))
                 .lineSpacing(6)
                 .foregroundColor(.primary.opacity(0.9))

@@ -119,9 +119,7 @@ private struct FluidCapsuleStepper: View {
             .opacity(value >= range.upperBound ? 0.3 : 1.0)
         }
         // 整体宽度被绝对固定为：28 + 56 + 28 = 112
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(Capsule())
-        .overlay(Capsule().stroke(Color.secondary.opacity(0.1), lineWidth: 1))
+        .glassEffect(in: Capsule(style: .continuous))
     }
 }
 
