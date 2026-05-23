@@ -30,32 +30,11 @@ struct BookDetailView: View {
             
             // ================= 2. 全局无界内容区 =================
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 80) {
-                    // 👆 上大模块
-                    BookDossier(book: book)
-                        .zIndex(1)
-                    
-                    // 👇 下大模块
-                    VStack(spacing: 30) {
-                        VStack(spacing: 16) {
-                            HStack(alignment: .center) {
-                                Text("思考的痕迹")
-                                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                            }
-                            Divider()
-                        }
-                        
-                        BookExcerpts(
-                            book: book,
-                            isDeleteMode: isDeleteMode,
-                            onDelete: { itemToDelete in deleteRecord(itemToDelete) }
-                        )
-                    }
-                    .frame(maxWidth: .infinity)
-                }
+                BookDossier(
+                    book: book,
+                    isDeleteMode: $isDeleteMode,
+                    onDeleteExcerpt: { deleteRecord($0) }
+                )
                 .padding(.horizontal, 60)
                 .padding(.bottom, 100)
                 .padding(.top, 100)

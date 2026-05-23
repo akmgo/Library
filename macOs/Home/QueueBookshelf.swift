@@ -36,16 +36,7 @@ struct QueueBookshelf: View {
                 .frame(maxHeight: .infinity, alignment: .center).padding(.top, 8)
             }
         }
-        .padding(AppSpacing.xl)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
-            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-        )
-        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
-        )
+        .glassCard(cornerRadius: AppRadius.panel)
     }
 }
 

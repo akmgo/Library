@@ -180,7 +180,7 @@ private struct StatCapsule: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Capsule(style: .continuous).fill(fillColor))
-        .background(.ultraThinMaterial, in: Capsule(style: .continuous))
+        .glassEffect(in: Capsule(style: .continuous))
         .overlay(
             Capsule(style: .continuous)
                 .stroke(borderColor, lineWidth: 1)

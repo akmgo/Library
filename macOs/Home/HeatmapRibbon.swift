@@ -42,17 +42,7 @@ struct HeatmapRibbon: View {
                 
             }
         }
-        .padding(AppSpacing.xl)
-        .frame(maxWidth: .infinity)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
-            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-        )
-        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
-        )
+        .glassCard(cornerRadius: AppRadius.panel)
     }
 }
 #endif

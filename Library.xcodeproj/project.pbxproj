@@ -53,6 +53,7 @@
 		C5FD83282F934C250003A500 /* BookCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83242F934C250003A500 /* BookCoverView.swift */; };
 		C5FD83292F934C250003A500 /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83222F934C250003A500 /* Background.swift */; };
 		C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83232F934C250003A500 /* ConfettiView.swift */; };
+		C5FD84502F9700000003A500 /* GlassCardModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD84512F9700000003A500 /* GlassCardModifier.swift */; };
 		C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834C2F9513080003A500 /* ReadingHero.swift */; };
 		C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83522F9513340003A500 /* MomentumChart.swift */; };
 		C5FD83572F95134E0003A500 /* HeatmapRibbon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */; };
@@ -70,6 +71,7 @@
 		C5FD83812F9519930003A500 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83802F9519930003A500 /* BookDetailView.swift */; };
 		C5FD83832F9519B60003A500 /* BookDossier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83822F9519B60003A500 /* BookDossier.swift */; };
 		C5FD83882F9519EB0003A500 /* BookExcerpts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83872F9519EB0003A500 /* BookExcerpts.swift */; };
+
 		C5FD83992F952F7C0003A500 /* MobileHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83982F952F7C0003A500 /* MobileHomeView.swift */; };
 		C5FD839B2F952F930003A500 /* MobileReadingHeroCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD839A2F952F930003A500 /* MobileReadingHeroCard.swift */; };
 		C5FD839F2F952FC40003A500 /* MobileDashboardCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD839E2F952FC30003A500 /* MobileDashboardCard.swift */; };
@@ -179,6 +181,7 @@
 		C5FD83232F934C250003A500 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		C5FD83242F934C250003A500 /* BookCoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCoverView.swift; sourceTree = "<group>"; };
 		C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWidgetGroupBoxStyle.swift; sourceTree = "<group>"; };
+		C5FD84512F9700000003A500 /* GlassCardModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCardModifier.swift; sourceTree = "<group>"; };
 		C5FD834C2F9513080003A500 /* ReadingHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHero.swift; sourceTree = "<group>"; };
 		C5FD83522F9513340003A500 /* MomentumChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentumChart.swift; sourceTree = "<group>"; };
 		C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatmapRibbon.swift; sourceTree = "<group>"; };
@@ -196,6 +199,7 @@
 		C5FD83802F9519930003A500 /* BookDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDetailView.swift; sourceTree = "<group>"; };
 		C5FD83822F9519B60003A500 /* BookDossier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookDossier.swift; sourceTree = "<group>"; };
 		C5FD83872F9519EB0003A500 /* BookExcerpts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookExcerpts.swift; sourceTree = "<group>"; };
+
 		C5FD83982F952F7C0003A500 /* MobileHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHomeView.swift; sourceTree = "<group>"; };
 		C5FD839A2F952F930003A500 /* MobileReadingHeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileReadingHeroCard.swift; sourceTree = "<group>"; };
 		C5FD839E2F952FC30003A500 /* MobileDashboardCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileDashboardCard.swift; sourceTree = "<group>"; };
@@ -517,6 +521,7 @@
 				C5FD83222F934C250003A500 /* Background.swift */,
 				C5FD83232F934C250003A500 /* ConfettiView.swift */,
 				C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */,
+				C5FD84512F9700000003A500 /* GlassCardModifier.swift */,
 			);
 			path = CommonUI;
 			sourceTree = "<group>";
@@ -825,6 +830,7 @@
 				C54819082F9B775B006D5686 /* VisualEngines.swift in Sources */,
 				C5FD82CC2F90C6150003A500 /* SettingsComponents.swift in Sources */,
 				C5FD83882F9519EB0003A500 /* BookExcerpts.swift in Sources */,
+
 				C5FD839B2F952F930003A500 /* MobileReadingHeroCard.swift in Sources */,
 				C5FD83BD2F9535DD0003A500 /* MobileBookDetailComponents.swift in Sources */,
 				C54819042F9B684C006D5686 /* AppFormatters.swift in Sources */,
@@ -841,6 +847,7 @@
 				C5FD83282F934C250003A500 /* BookCoverView.swift in Sources */,
 				C5FD83292F934C250003A500 /* Background.swift in Sources */,
 				C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */,
+				C5FD84502F9700000003A500 /* GlassCardModifier.swift in Sources */,
 				C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */,
 				C54819022F9B67EC006D5686 /* AppConstants.swift in Sources */,
 				C6A100022FA80000006D5686 /* Book.swift in Sources */,

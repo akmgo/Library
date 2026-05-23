@@ -65,16 +65,7 @@ struct ReadingHero: View {
                     .frame(width: secondaryListWidth, height: heroContentHeight)
             }
         }
-        .padding(AppSpacing.xl)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
-            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-        )
-        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
-        )
+        .glassCard(cornerRadius: AppRadius.panel)
     }
 
     private var secondaryReadingList: some View {
@@ -209,16 +200,8 @@ struct ReadingTimerCard: View {
                 .frame(height: timerContentHeight)
                 .frame(maxWidth: .infinity)
         }
-        .padding(AppSpacing.xl)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
-            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-        )
-        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
-        )
+        .padding(24)
+        .glassEffect(in: .rect(cornerRadius: 16.0))
         .onReceive(timer) { now in
             elapsedSeconds = timerStore.elapsedSeconds(for: book.id, now: now)
         }
@@ -887,16 +870,7 @@ struct EmptyReadingTimerCard: View {
 
             Spacer()
         }
-        .padding(AppSpacing.xl)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
-            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-        )
-        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
-        )
+        .glassCard(cornerRadius: AppRadius.panel)
     }
 }
 

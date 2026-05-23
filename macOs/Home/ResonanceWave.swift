@@ -66,16 +66,7 @@ struct ResonanceWave: View {
             }
             .frame(maxHeight: .infinity)
         }
-        .padding(AppSpacing.xl)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
-            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-        )
-        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
-        )
+        .glassCard(cornerRadius: AppRadius.panel)
         .onHover { h in if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
         .onTapGesture { switchExcerpt() }
         .onReceive(timer) { _ in switchExcerpt() }
