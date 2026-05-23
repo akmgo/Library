@@ -191,15 +191,15 @@ struct InspirationWallView: View {
     private var excerptHeaderStats: [AppHeaderStatItem] {
         let counts = Dictionary(grouping: allExcerpts, by: \.category).mapValues(\.count)
         return [
-            AppHeaderStatItem(allExcerpts.count, label: "全部", unit: "条"),
-            AppHeaderStatItem(counts[.bookExcerpt, default: 0], label: ExcerptCategory.bookExcerpt.displayName, unit: "条"),
-            AppHeaderStatItem(counts[.note, default: 0], label: ExcerptCategory.note.displayName, unit: "条"),
-            AppHeaderStatItem(counts[.poetry, default: 0], label: ExcerptCategory.poetry.displayName, unit: "条"),
-            AppHeaderStatItem(counts[.lyric, default: 0], label: ExcerptCategory.lyric.displayName, unit: "条"),
-            AppHeaderStatItem(counts[.prose, default: 0], label: ExcerptCategory.prose.displayName, unit: "条"),
-            AppHeaderStatItem(counts[.quote, default: 0], label: ExcerptCategory.quote.displayName, unit: "条"),
-            AppHeaderStatItem(counts[.web, default: 0], label: ExcerptCategory.web.displayName, unit: "条"),
-            AppHeaderStatItem(counts[.movie, default: 0], label: ExcerptCategory.movie.displayName, unit: "条")
+            AppHeaderStatItem(allExcerpts.count, label: "全部"),
+            AppHeaderStatItem(counts[.bookExcerpt, default: 0], label: ExcerptCategory.bookExcerpt.displayName),
+            AppHeaderStatItem(counts[.note, default: 0], label: ExcerptCategory.note.displayName),
+            AppHeaderStatItem(counts[.poetry, default: 0], label: ExcerptCategory.poetry.displayName),
+            AppHeaderStatItem(counts[.lyric, default: 0], label: ExcerptCategory.lyric.displayName),
+            AppHeaderStatItem(counts[.prose, default: 0], label: ExcerptCategory.prose.displayName),
+            AppHeaderStatItem(counts[.quote, default: 0], label: ExcerptCategory.quote.displayName),
+            AppHeaderStatItem(counts[.web, default: 0], label: ExcerptCategory.web.displayName),
+            AppHeaderStatItem(counts[.movie, default: 0], label: ExcerptCategory.movie.displayName)
         ]
     }
 

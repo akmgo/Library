@@ -8,6 +8,7 @@ final class ReadingTimerStore: ObservableObject {
 
     @Published private(set) var activeBookID: String?
     @Published private(set) var startedAt: Date?
+    @Published private(set) var targetDuration: TimeInterval?
 
     private init() {}
 
@@ -22,11 +23,19 @@ final class ReadingTimerStore: ObservableObject {
     func start(bookID: String, at date: Date = Date()) {
         activeBookID = bookID
         startedAt = date
+        targetDuration = nil
+    }
+
+    func startTimed(bookID: String, duration: TimeInterval, at date: Date = Date()) {
+        activeBookID = bookID
+        startedAt = date
+        targetDuration = duration
     }
 
     func cancel() {
         activeBookID = nil
         startedAt = nil
+        targetDuration = nil
     }
 
     func startedAt(for bookID: String) -> Date? {

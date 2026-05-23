@@ -103,10 +103,9 @@ struct YearlyTimelineView: View {
 
     private var yearlyHeaderStats: [AppHeaderStatItem] {
         [
-            AppHeaderStatItem(yearlySnapshot.books.count, label: "完结作品", unit: "本"),
-            AppHeaderStatItem(yearlySnapshot.totalDaysRead, label: "打卡天数", unit: "天"),
-            AppHeaderStatItem(yearlySnapshot.totalReadingHours, label: "阅读时长", unit: "小时"),
-            AppHeaderStatItem(yearlySnapshot.longestStreak, label: "最高连续", unit: "天")
+            AppHeaderStatItem(yearlySnapshot.books.count, label: "完结作品"),
+            AppHeaderStatItem(yearlySnapshot.totalDaysRead, label: "打卡天数"),
+            AppHeaderStatItem(yearlySnapshot.totalReadingHours, label: "阅读时长")
         ]
     }
     

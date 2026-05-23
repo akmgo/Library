@@ -158,6 +158,7 @@ struct ReadingHero: View {
 
 struct ReadingTimerCard: View {
     @Bindable var book: Book
+    let todayTotalSeconds: TimeInterval
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
@@ -165,6 +166,8 @@ struct ReadingTimerCard: View {
     @State private var elapsedSeconds: TimeInterval = 0
     @State private var isManualPopoverPresented = false
     @State private var isTimerProgressPopoverPresented = false
+    @State private var isTimedDurationPopoverPresented = false
+    @State private var timedDurationMinutes = 30
     @State private var manualMinutes = 25
     @State private var manualProgressDraft: ReadingProgressDraft
     @State private var timerProgressDraft: ReadingProgressDraft
@@ -178,8 +181,9 @@ struct ReadingTimerCard: View {
     private let controlSpacing: CGFloat = 10
     private let gaugeHeight: CGFloat = 118
 
-    init(book: Book) {
+    init(book: Book, todayTotalSeconds: TimeInterval) {
         self.book = book
+        self.todayTotalSeconds = todayTotalSeconds
         _manualProgressDraft = State(initialValue: ReadingProgressDraft.sessionDefault(for: book))
         _timerProgressDraft = State(initialValue: ReadingProgressDraft.sessionDefault(for: book))
     }
@@ -232,8 +236,10 @@ struct ReadingTimerCard: View {
     private var timerContent: some View {
         VStack(alignment: .center, spacing: 0) {
             ReadingTimerGauge(
+                todayTotalSeconds: todayTotalSeconds,
+                dailyTargetMinutes: 30,
                 elapsedSeconds: elapsedSeconds,
-                targetMinutes: 30,
+                timedTargetSeconds: timerStore.targetDuration,
                 isTiming: isTiming
             )
             .frame(maxWidth: .infinity)
@@ -242,22 +248,60 @@ struct ReadingTimerCard: View {
             Spacer(minLength: 0)
 
             VStack(spacing: controlSpacing) {
-                Button {
-                    toggleTimer()
-                } label: {
-                    Text(isTiming ? "结束阅读" : "开始阅读")
-                        .font(.system(size: 17, weight: .bold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: controlHeight)
-                }
-                .buttonStyle(
-                    ReadingHeroCapsuleButtonStyle(
-                        tint: isTiming ? AppColors.danger : AppColors.readingAmber,
-                        isFilled: true
+                if isTiming {
+                    Button {
+                        stopTimer()
+                    } label: {
+                        Text("结束阅读")
+                            .font(.system(size: 17, weight: .bold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: controlHeight)
+                    }
+                    .buttonStyle(
+                        ReadingHeroCapsuleButtonStyle(
+                            tint: AppColors.danger,
+                            isFilled: true
+                        )
                     )
-                )
-                .popover(isPresented: $isTimerProgressPopoverPresented, arrowEdge: .bottom) {
-                    timerCompletionPopover
+                    .popover(isPresented: $isTimerProgressPopoverPresented, arrowEdge: .bottom) {
+                        timerCompletionPopover
+                    }
+                } else {
+                    HStack(spacing: controlSpacing) {
+                        Button {
+                            startFreeTimer()
+                        } label: {
+                            Text("开始阅读")
+                                .font(.system(size: 17, weight: .bold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: controlHeight)
+                        }
+                        .buttonStyle(
+                            ReadingHeroCapsuleButtonStyle(
+                                tint: AppColors.readingAmber,
+                                isFilled: true
+                            )
+                        )
+
+                        Button {
+                            timedDurationMinutes = 30
+                            isTimedDurationPopoverPresented = true
+                        } label: {
+                            Text("定时阅读")
+                                .font(.system(size: 17, weight: .bold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: controlHeight)
+                        }
+                        .buttonStyle(
+                            ReadingHeroCapsuleButtonStyle(
+                                tint: AppColors.readingAmber,
+                                isFilled: true
+                            )
+                        )
+                        .popover(isPresented: $isTimedDurationPopoverPresented, arrowEdge: .bottom) {
+                            timedDurationPopover
+                        }
+                    }
                 }
 
                 Button {
@@ -400,16 +444,98 @@ struct ReadingTimerCard: View {
         .frame(width: 320)
     }
 
-    private func toggleTimer() {
-        if timerStore.isTiming(bookID: book.id) {
-            pendingTimerEndAt = Date()
-            timerProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
-            elapsedSeconds = timerStore.elapsedSeconds(for: book.id, now: pendingTimerEndAt ?? Date())
-            isTimerProgressPopoverPresented = true
-        } else {
-            timerStore.start(bookID: book.id)
-            elapsedSeconds = 0
+    private var timedDurationPopover: some View {
+        VStack(alignment: .center, spacing: 14) {
+            Text("设定阅读时长")
+                .font(.system(size: 13, weight: .bold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 8) {
+                ForEach([15, 25, 30, 45, 60], id: \.self) { minutes in
+                    Button {
+                        timedDurationMinutes = minutes
+                    } label: {
+                        Text("\(minutes)分")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 28)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(timedDurationMinutes == minutes ? Color.white : AppColors.readingAmber)
+                    .background(
+                        timedDurationMinutes == minutes
+                            ? AppColors.readingAmber
+                            : AppColors.readingAmber.opacity(0.1),
+                        in: Capsule()
+                    )
+                }
+            }
+
+            HStack(spacing: 16) {
+                Button {
+                    timedDurationMinutes = max(5, timedDurationMinutes - 5)
+                } label: {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+
+                Text("\(timedDurationMinutes) 分钟")
+                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .frame(maxWidth: .infinity)
+
+                Button {
+                    timedDurationMinutes = min(240, timedDurationMinutes + 5)
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, AppSpacing.m)
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+
+            Button {
+                isTimedDurationPopoverPresented = false
+                timerStore.startTimed(bookID: book.id, duration: TimeInterval(timedDurationMinutes * 60))
+                elapsedSeconds = 0
+            } label: {
+                Text("开始计时")
+                    .font(.system(size: 13, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 32)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .background(AppColors.readingAmber, in: Capsule())
+            .keyboardShortcut(.defaultAction)
+
+            Button("取消") {
+                isTimedDurationPopoverPresented = false
+            }
+            .keyboardShortcut(.cancelAction)
+            .frame(width: 0, height: 0)
+            .opacity(0)
         }
+        .padding(18)
+        .frame(width: 300)
+    }
+
+    private func startFreeTimer() {
+        timerStore.start(bookID: book.id)
+        elapsedSeconds = 0
+    }
+
+    private func stopTimer() {
+        pendingTimerEndAt = Date()
+        timerProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
+        elapsedSeconds = timerStore.elapsedSeconds(for: book.id, now: pendingTimerEndAt ?? Date())
+        isTimerProgressPopoverPresented = true
     }
 
     private func finishTimerSession() {
@@ -468,26 +594,37 @@ struct ReadingTimerCard: View {
 }
 
 private struct ReadingTimerGauge: View {
+    let todayTotalSeconds: TimeInterval
+    let dailyTargetMinutes: Int
     let elapsedSeconds: TimeInterval
-    let targetMinutes: Int
+    let timedTargetSeconds: TimeInterval?
     let isTiming: Bool
 
+    private var isTimedMode: Bool { timedTargetSeconds != nil }
+
+    private var displaySeconds: TimeInterval {
+        isTiming ? elapsedSeconds : todayTotalSeconds
+    }
+
     private var targetSeconds: TimeInterval {
-        max(TimeInterval(targetMinutes * 60), 1)
+        if let timed = timedTargetSeconds {
+            return max(timed, 1)
+        }
+        return max(TimeInterval(dailyTargetMinutes * 60), 1)
     }
 
     private var progress: Double {
-        min(max(elapsedSeconds / targetSeconds, 0), 1)
+        min(max(displaySeconds / targetSeconds, 0), 1)
     }
 
     private var minutesText: String {
-        let total = Int(elapsedSeconds)
+        let total = Int(displaySeconds)
         let minutes = total / 60
         return String(format: "%02d", minutes)
     }
 
     private var secondsText: String {
-        let total = Int(elapsedSeconds)
+        let total = Int(displaySeconds)
         let seconds = total % 60
         return String(format: "%02d", seconds)
     }
@@ -541,7 +678,7 @@ private struct ReadingTimerGauge: View {
                 .foregroundStyle(.primary.opacity(0.9))
                 .contentTransition(.numericText())
 
-                Text("今日目标 \(targetMinutes) 分钟")
+                Text(isTimedMode ? "定时 \(Int((timedTargetSeconds ?? 0) / 60)) 分钟" : "今日目标 \(dailyTargetMinutes) 分钟")
                     .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(.secondary.opacity(0.62))
                     .padding(.horizontal, 10)
@@ -853,17 +990,29 @@ struct ReadingTimerGauge_Previews: PreviewProvider {
         Group {
             VStack(spacing: 18) {
                 ReadingTimerGauge(
-                    elapsedSeconds: 18 * 60 + 36,
-                    targetMinutes: 30,
-                    isTiming: true
+                    todayTotalSeconds: 18 * 60 + 36,
+                    dailyTargetMinutes: 30,
+                    elapsedSeconds: 0,
+                    timedTargetSeconds: nil,
+                    isTiming: false
                 )
 
                 VStack(spacing: 12) {
-                    Text("开始阅读")
-                        .font(.system(size: 17, weight: .bold))
-                        .frame(width: 220, height: 48)
-                        .foregroundStyle(.white)
-                        .background(AppColors.readingAmber, in: Capsule())
+                    HStack(spacing: 10) {
+                        Text("开始阅读")
+                            .font(.system(size: 17, weight: .bold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .foregroundStyle(.white)
+                            .background(AppColors.readingAmber, in: Capsule())
+
+                        Text("定时阅读")
+                            .font(.system(size: 17, weight: .bold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .foregroundStyle(.white)
+                            .background(AppColors.warning, in: Capsule())
+                    }
 
                     Text("手动录入")
                         .font(.system(size: 17, weight: .bold))
@@ -881,8 +1030,10 @@ struct ReadingTimerGauge_Previews: PreviewProvider {
 
             VStack(spacing: 18) {
                 ReadingTimerGauge(
-                    elapsedSeconds: 42 * 60 + 12,
-                    targetMinutes: 60,
+                    todayTotalSeconds: 42 * 60 + 12,
+                    dailyTargetMinutes: 60,
+                    elapsedSeconds: 22 * 60 + 45,
+                    timedTargetSeconds: 60 * 60,
                     isTiming: true
                 )
 
@@ -924,7 +1075,8 @@ struct ReadingTimerCard_Previews: PreviewProvider {
                     progressUnit: .page,
                     totalAmount: 356,
                     currentAmount: 86
-                )
+                ),
+                todayTotalSeconds: 18 * 60 + 36
             )
             .frame(width: 284, height: 300)
             .padding()

@@ -69,7 +69,7 @@ struct HomeView: View {
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                                ReadingTimerCard(book: heroBook)
+                                ReadingTimerCard(book: heroBook, todayTotalSeconds: todayTotalSeconds)
                                     .frame(width: 280)
                             }
                         } else {
@@ -148,13 +148,22 @@ extension HomeView {
 
 extension HomeView {
     private var dailyTarget: Int { max(configs.first?.dailyMinutesGoal ?? 30, 1) }
+
+    private var todayTotalSeconds: TimeInterval {
+        let calendar = Calendar.current
+        let today = Date()
+        return sessions.filter {
+            calendar.isDate($0.date, inSameDayAs: today)
+        }.reduce(0) {
+            $0 + max($1.duration, 0)
+        }
+    }
     private var yearTarget: Int { configs.first?.yearlyBooksGoal ?? 50 }
     private var homeHeaderStats: [AppHeaderStatItem] {
         [
-            AppHeaderStatItem(current: dashboard.todayMinutes, target: dailyTarget, label: "今日阅读", unit: "分钟"),
-            AppHeaderStatItem(current: dashboard.weekCount, target: 7, label: "本周打卡", unit: "天"),
-            AppHeaderStatItem(current: dashboard.monthlyDays, target: 30, label: "本月历程", unit: "天"),
-            AppHeaderStatItem(current: dashboard.yearlyCount, target: yearTarget, label: "年度阅卷", unit: "本")
+            AppHeaderStatItem(current: dashboard.weekCount, target: 7, label: "本周打卡"),
+            AppHeaderStatItem(current: dashboard.monthlyDays, target: 30, label: "本月历程"),
+            AppHeaderStatItem(current: dashboard.yearlyCount, target: yearTarget, label: "年度阅卷")
         ]
     }
 

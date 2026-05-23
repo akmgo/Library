@@ -121,12 +121,12 @@ struct GalleryView: View {
     private var galleryHeaderStats: [AppHeaderStatItem] {
         let counts = Dictionary(grouping: allBooks, by: \.status).mapValues(\.count)
         return [
-            AppHeaderStatItem(allBooks.count, label: "全部", unit: "本"),
-            AppHeaderStatItem(counts[.reading, default: 0], label: "在读", unit: "本"),
-            AppHeaderStatItem(counts[.finished, default: 0], label: "已读", unit: "本"),
-            AppHeaderStatItem(counts[.planned, default: 0], label: "想读", unit: "本"),
-            AppHeaderStatItem(counts[.unread, default: 0], label: "未读", unit: "本"),
-            AppHeaderStatItem(counts[.abandoned, default: 0], label: "弃读", unit: "本")
+            AppHeaderStatItem(allBooks.count, label: "全部"),
+            AppHeaderStatItem(counts[.reading, default: 0], label: "在读"),
+            AppHeaderStatItem(counts[.finished, default: 0], label: "已读"),
+            AppHeaderStatItem(counts[.planned, default: 0], label: "想读"),
+            AppHeaderStatItem(counts[.unread, default: 0], label: "未读"),
+            AppHeaderStatItem(counts[.abandoned, default: 0], label: "弃读")
         ]
     }
 

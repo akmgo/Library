@@ -13,7 +13,7 @@ enum AppPageHeaderMetrics {
     static let statsValueFontSize: CGFloat = 24
     static let statsLabelFontSize: CGFloat = 12
     static let statsValueLabelSpacing: CGFloat = 4
-    static let statsVerticalOffset: CGFloat = -10
+    static let statsVerticalOffset: CGFloat = -3
 }
 
 struct AppPageHeader<TitleContent: View, TrailingContent: View, SecondaryContent: View>: View {
@@ -100,60 +100,91 @@ struct AppHeaderStatItem: Identifiable, Hashable {
     let id: String
     let value: String
     let label: String
-    let isVisible: Bool
 
-    init(_ value: String, label: String, isVisible: Bool = true) {
+    init(_ value: String, label: String) {
         self.id = label
         self.value = value
         self.label = label
-        self.isVisible = isVisible
     }
 
-    init(_ value: Int, label: String, unit: String? = nil) {
+    init(_ value: Int, label: String) {
         self.id = label
         self.value = "\(value)"
-        self.label = unit.map { "\(label)(\($0))" } ?? label
-        self.isVisible = value > 0
+        self.label = label
     }
 
-    init(current: Int, target: Int, label: String, unit: String) {
+    init(current: Int, target: Int, label: String) {
         self.id = label
         self.value = "\(current)/\(target)"
-        self.label = "\(label)(\(unit))"
-        self.isVisible = current > 0
+        self.label = label
+    }
+
+    var numericValue: Int {
+        if let slashIndex = value.firstIndex(of: "/") {
+            return Int(value[..<slashIndex]) ?? 0
+        }
+        return Int(value) ?? 0
     }
 }
 
 struct AppHeaderStatsView: View {
     let items: [AppHeaderStatItem]
-    let compact: Bool
 
-    init(_ items: [AppHeaderStatItem], compact: Bool = false) {
+    @Environment(\.colorScheme) private var colorScheme
+
+    init(_ items: [AppHeaderStatItem]) {
         self.items = items
-        self.compact = compact
     }
 
     var body: some View {
-        let visibleItems = items.filter(\.isVisible)
-        HStack(alignment: .bottom, spacing: AppPageHeaderMetrics.statsItemSpacing) {
-            ForEach(visibleItems) { item in
-                VStack(alignment: .center, spacing: AppPageHeaderMetrics.statsValueLabelSpacing) {
-                    Text(item.value)
-                        .font(.system(size: AppPageHeaderMetrics.statsValueFontSize, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-
-                    Text(item.label)
-                        .font(.system(size: AppPageHeaderMetrics.statsLabelFontSize, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-                .frame(height: AppPageHeaderMetrics.statsItemHeight, alignment: .bottom)
-                .frame(minWidth: AppPageHeaderMetrics.statsItemMinWidth, alignment: .bottom)
+        let topItems = items.sorted { $0.numericValue > $1.numericValue }.prefix(3)
+        HStack(spacing: 10) {
+            ForEach(Array(topItems)) { item in
+                StatCapsule(item: item)
             }
         }
         .offset(y: AppPageHeaderMetrics.statsVerticalOffset)
         .accessibilityElement(children: .combine)
+    }
+}
+
+private struct StatCapsule: View {
+    let item: AppHeaderStatItem
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var borderColor: Color {
+        colorScheme == .dark
+            ? Color.white.opacity(0.08)
+            : Color.black.opacity(0.05)
+    }
+
+    private var fillColor: Color {
+        colorScheme == .dark
+            ? Color.white.opacity(0.03)
+            : Color.white.opacity(0.22)
+    }
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(item.value)
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+
+            Text(item.label)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Capsule(style: .continuous).fill(fillColor))
+        .background(.ultraThinMaterial, in: Capsule(style: .continuous))
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(borderColor, lineWidth: 1)
+        )
     }
 }
 #endif

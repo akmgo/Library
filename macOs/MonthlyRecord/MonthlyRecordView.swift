@@ -91,9 +91,19 @@ struct MonthlyRecordView: View {
 
     private var monthlyHeaderStats: [AppHeaderStatItem] {
         [
-            AppHeaderStatItem(visibleMonthReadingMinutes, label: "本月阅读", unit: "分钟"),
-            AppHeaderStatItem(visibleMonthReadingDays, label: "阅读天数", unit: "天")
+            AppHeaderStatItem(visibleMonthReadingMinutes, label: "本月阅读"),
+            AppHeaderStatItem(visibleMonthReadingDays, label: "阅读天数"),
+            AppHeaderStatItem(visibleMonthLongestStreak, label: "最高连续")
         ]
+    }
+
+    private var visibleMonthLongestStreak: Int {
+        let calendar = Calendar.current
+        let daysWithReading = visibleMonthEntries
+            .filter { $0.1 > 0 }
+            .map { calendar.startOfDay(for: $0.0) }
+            .sorted()
+        return ReadingStatsCalculator.longestStreak(in: daysWithReading, calendar: calendar)
     }
 
     private var visibleMonthEntries: [(Date, TimeInterval)] {
