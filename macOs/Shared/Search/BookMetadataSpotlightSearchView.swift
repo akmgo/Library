@@ -24,6 +24,8 @@ struct BookMetadataSpotlightSearchView: View {
     @State private var isContentExpanded = false
     @State private var shouldRenderContent = false
     @State private var visibleResultIDs: Set<UUID> = []
+    @State private var selectedResultIndex = 0
+    @State private var progressOpenSignal = 0
     @FocusState private var isSearchFocused: Bool
 
     private var trimmedQuery: String {
@@ -102,7 +104,7 @@ struct BookMetadataSpotlightSearchView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 28, weight: .medium))
                 .focused($isSearchFocused)
-                .onSubmit { performSearch() }
+                .onSubmit { handleReturn() }
                 .onChange(of: query) { _, _ in
                     duplicateTitle = nil
                     if errorMessage != nil && !isSearching {
@@ -143,11 +145,16 @@ struct BookMetadataSpotlightSearchView: View {
                     ForEach(Array(results.prefix(10).enumerated()), id: \.element.id) { index, result in
                         BookMetadataSpotlightResultRow(
                             result: result,
+                            isSelected: index == selectedResultIndex,
                             isDimmed: importingID != nil && importingID != result.id,
                             isImporting: importingID == result.id,
-                            isImported: importedID == result.id
-                        ) { coverData in
-                            importResult(result, coverData: coverData)
+                            isImported: importedID == result.id,
+                            openProgressSignal: progressOpenSignal
+                        ) { coverData, progressDraft in
+                            importResult(result, coverData: coverData, progressDraft: progressDraft)
+                        }
+                        .onTapGesture {
+                            selectedResultIndex = index
                         }
                         .opacity(visibleResultIDs.contains(result.id) ? 1 : 0)
                         .animation(.easeOut(duration: 0.16).delay(Double(index) * 0.018), value: visibleResultIDs)
@@ -213,6 +220,7 @@ struct BookMetadataSpotlightSearchView: View {
             isSearching = true
             isContentExpanded = false
             shouldRenderContent = false
+            selectedResultIndex = 0
         }
         Task { @MainActor in
             await search(cleaned)
@@ -226,6 +234,7 @@ struct BookMetadataSpotlightSearchView: View {
             guard cleaned == trimmedQuery else { return }
             let limitedResults = Array(fetched.prefix(10))
             results = limitedResults
+            selectedResultIndex = 0
             visibleResultIDs.removeAll()
             shouldRenderContent = true
             withAnimation(.spring(response: 0.50, dampingFraction: 0.90)) {
@@ -237,6 +246,7 @@ struct BookMetadataSpotlightSearchView: View {
         } catch {
             guard cleaned == trimmedQuery else { return }
             results.removeAll()
+            selectedResultIndex = 0
             visibleResultIDs.removeAll()
             shouldRenderContent = true
             withAnimation(.spring(response: 0.50, dampingFraction: 0.90)) {
@@ -247,12 +257,13 @@ struct BookMetadataSpotlightSearchView: View {
         }
     }
 
-    private func importResult(_ result: BookSearchResult, coverData: Data?) {
+    private func importResult(_ result: BookSearchResult, coverData: Data?, progressDraft: ReadingProgressDraft) {
         guard importingID == nil else { return }
 
         let cleanedTitle = result.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanedAuthor = result.author.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanedTitle.isEmpty else { return }
+        guard progressDraft.isValidForBookImport else { return }
 
         if books.contains(where: { $0.title == cleanedTitle }) {
             withAnimation(.spring(response: 0.30, dampingFraction: 0.9)) {
@@ -271,7 +282,14 @@ struct BookMetadataSpotlightSearchView: View {
             } else {
                 finalCoverData = await BookMetadataSearchManager.shared.fetchCoverData(from: result.coverURL)
             }
-            let book = Book(title: cleanedTitle, author: cleanedAuthor, coverData: finalCoverData)
+            let book = Book(
+                title: cleanedTitle,
+                author: cleanedAuthor,
+                coverData: finalCoverData,
+                progressUnit: progressDraft.unit,
+                totalAmount: progressDraft.totalAmount,
+                currentAmount: 0
+            )
 
             do {
                 try ReadingDataService.shared.insertBook(book, context: modelContext)
@@ -299,6 +317,32 @@ struct BookMetadataSpotlightSearchView: View {
         }
     }
 
+    private func handleReturn() {
+        if isContentExpanded, !results.isEmpty {
+            selectedResultIndex = min(max(selectedResultIndex, 0), results.prefix(10).count - 1)
+            progressOpenSignal += 1
+        } else {
+            performSearch()
+        }
+    }
+
+    private var shortcuts: some View {
+        Group {
+            Button("") { handleEscape() }
+                .keyboardShortcut(.cancelAction)
+            Button("") { moveSelection(1) }
+                .keyboardShortcut(.downArrow, modifiers: [])
+            Button("") { moveSelection(-1) }
+                .keyboardShortcut(.upArrow, modifiers: [])
+        }
+        .opacity(0)
+    }
+
+    private func moveSelection(_ delta: Int) {
+        guard isContentExpanded, !results.isEmpty else { return }
+        selectedResultIndex = min(max(selectedResultIndex + delta, 0), results.prefix(10).count - 1)
+    }
+
     private func collapseContent() {
         searchTask?.cancel()
         query = ""
@@ -310,6 +354,7 @@ struct BookMetadataSpotlightSearchView: View {
             didImport = false
             importedID = nil
             importingID = nil
+            selectedResultIndex = 0
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.38) {
@@ -358,52 +403,51 @@ private struct BookMetadataSpotlightResultRow: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let result: BookSearchResult
+    let isSelected: Bool
     let isDimmed: Bool
     let isImporting: Bool
     let isImported: Bool
-    let onSelect: (Data?) -> Void
+    let openProgressSignal: Int
+    let onImport: (Data?, ReadingProgressDraft) -> Void
 
     @State private var coverData: Data?
     @State private var coverImage: NSImage?
     @State private var isLoadingCover = false
     @State private var isHovered = false
+    @State private var isProgressPopoverPresented = false
+    @State private var progressDraft = ReadingProgressDraft.bookImportDefault
 
     var body: some View {
-        Button {
-            onSelect(coverData)
-        } label: {
-            HStack(spacing: AppSpacing.m) {
-                coverView
+        HStack(spacing: AppSpacing.m) {
+            coverView
 
-                VStack(alignment: .leading, spacing: 7) {
-                    Text(result.title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
+            VStack(alignment: .leading, spacing: 7) {
+                Text(result.title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
 
-                    Text(result.author.isEmpty ? "未知作者" : result.author)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                Text(result.author.isEmpty ? "未知作者" : result.author)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
 
-                    Text(publisherText)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
-
-                Spacer(minLength: AppSpacing.s)
-
-                trailingState
+                Text(publisherText)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
-            .padding(.horizontal, AppSpacing.m)
-            .padding(.vertical, 10)
-            .frame(minHeight: 82, alignment: .center)
-            .contentShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
-            .background(rowBackground)
-            .opacity(isDimmed ? 0.38 : 1)
+
+            Spacer(minLength: AppSpacing.s)
+
+            trailingState
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, AppSpacing.m)
+        .padding(.vertical, 10)
+        .frame(minHeight: 82, alignment: .center)
+        .contentShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+        .background(rowBackground)
+        .opacity(isDimmed ? 0.38 : 1)
         .disabled(isDimmed || isImporting || isImported)
         .onHover { hovering in
             withAnimation(.easeOut(duration: 0.12)) { isHovered = hovering }
@@ -417,6 +461,11 @@ private struct BookMetadataSpotlightResultRow: View {
                 coverImage = NSImage(data: fetchedData)
             }
             isLoadingCover = false
+        }
+        .onChange(of: openProgressSignal) { _, _ in
+            guard isSelected, !isDimmed, !isImporting, !isImported else { return }
+            progressDraft = .bookImportDefault
+            isProgressPopoverPresented = true
         }
     }
 
@@ -449,7 +498,72 @@ private struct BookMetadataSpotlightResultRow: View {
         } else if isImporting {
             ProgressView()
                 .controlSize(.small)
+        } else {
+            Button {
+                progressDraft = .bookImportDefault
+                isProgressPopoverPresented = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(AppColors.readingAmber)
+                    .frame(width: 30, height: 30)
+                    .background(AppColors.readingAmber.opacity(isHovered ? 0.18 : 0.11), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isDimmed)
+            .popover(isPresented: $isProgressPopoverPresented, arrowEdge: .trailing) {
+                importProgressPopover
+            }
         }
+    }
+
+    private var importProgressPopover: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.m) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("设置进度单位")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.primary)
+                Text(result.title)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            ReadingProgressInputView(
+                draft: $progressDraft,
+                mode: .bookImport
+            )
+
+            Button {
+                var normalized = progressDraft
+                normalized.normalize()
+                guard normalized.isValidForBookImport else { return }
+                isProgressPopoverPresented = false
+                onImport(coverData, normalized)
+            } label: {
+                Text("确认导入")
+                    .font(.system(size: 13, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 34)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .background(
+                progressDraft.isValidForBookImport ? AppColors.readingAmber : Color.secondary.opacity(0.35),
+                in: Capsule()
+            )
+            .disabled(!progressDraft.isValidForBookImport)
+            .keyboardShortcut(.defaultAction)
+
+            Button("取消") {
+                isProgressPopoverPresented = false
+            }
+            .keyboardShortcut(.cancelAction)
+            .frame(width: 0, height: 0)
+            .opacity(0)
+        }
+        .padding(18)
+        .frame(width: 292)
     }
 
     private var coverView: some View {
@@ -481,7 +595,7 @@ private struct BookMetadataSpotlightResultRow: View {
 
     private var rowBackground: some View {
         RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-            .fill(isHovered ? AppColors.accentSoft(for: colorScheme).opacity(0.36) : Color.clear)
+            .fill(isSelected ? AppColors.accentSoft(for: colorScheme).opacity(0.42) : (isHovered ? AppColors.accentSoft(for: colorScheme).opacity(0.36) : Color.clear))
     }
 }
 

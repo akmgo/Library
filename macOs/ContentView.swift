@@ -9,7 +9,7 @@ import UniformTypeIdentifiers
 enum NavigationModule: String, CaseIterable, Identifiable {
     case home = "阅读主页"
     case gallery = "全景画廊"
-    case excerpts = "摘录"
+    case excerpts = "摘录长廊"
     case yearly = "年度轨迹"
     case monthly = "月度记录"
 
@@ -58,6 +58,16 @@ struct ContentView: View {
     @State private var showGlobalSpotlight = false
 
     @State private var showOPDSBrowser = false
+    @State private var galleryFilterStatus: BookStatus?
+    @State private var gallerySortKey: BookGallerySortKey = .newest
+    @State private var galleryGridScale: GalleryGridScale = .large
+    @State private var isGalleryBatchDeletePresented = false
+    @State private var selectedGalleryBookIDs: Set<String> = []
+    @State private var excerptFilterCategory: ExcerptCategory?
+    @State private var excerptSortKey: AnnotationSortKey = .newest
+    @State private var excerptDisplayMode: ExcerptWallDisplayMode = .artistic
+    @State private var isExcerptBatchDeletePresented = false
+    @State private var selectedExcerptIDs: Set<String> = []
 
     var body: some View {
         ZStack {
@@ -92,22 +102,15 @@ struct ContentView: View {
                 .zIndex(30)
             }
         }
-        .background(
-            Button("") {
-                withAnimation(.easeOut(duration: 0.16)) {
-                    showGlobalSpotlight = true
-                }
-            }
-            .keyboardShortcut("k", modifiers: .command)
-            .opacity(0)
-        )
+        .background { shortcutHost }
+        .toolbar {
+            pageToolbarItems
+        }
         .onChange(of: selectedModule) { _, _ in
             selectedBook = nil
         }
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-                showBookMetadataSpotlight = true
-            }
+            openAddBookSpotlight()
         }
         .onAppear {
             applyTheme(appTheme)
@@ -130,6 +133,39 @@ struct ContentView: View {
         }
     }
 
+    private var shortcutHost: some View {
+        Group {
+            Button("") {
+                withAnimation(.easeOut(duration: 0.16)) {
+                    showGlobalSpotlight = true
+                }
+            }
+            .keyboardShortcut("k", modifiers: .command)
+
+            Button("") {
+                performPrimaryAddAction()
+            }
+            .keyboardShortcut("n", modifiers: .command)
+        }
+        .opacity(0)
+    }
+
+    private func performPrimaryAddAction() {
+        if selectedBook == nil, selectedModule == .excerpts {
+            showAddExcerptModal = true
+        } else {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+                showBookMetadataSpotlight = true
+            }
+        }
+    }
+
+    private func openAddBookSpotlight() {
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
+            showBookMetadataSpotlight = true
+        }
+    }
+
     private var sidebarContent: some View {
         List(selection: $selectedModule) {
             Section(header: Text("探索").font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)) {
@@ -147,16 +183,6 @@ struct ContentView: View {
         .font(.system(size: 15, weight: .medium))
         .environment(\.defaultMinListRowHeight, 38)
         .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 260)
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 0) {
-                Divider()
-                HStack(spacing: 12) {
-                    DailyProgressRingView().frame(width: 18, height: 18)
-                    Text("今日阅读目标").font(.system(size: 12, weight: .medium)).foregroundColor(.secondary)
-                    Spacer()
-                }.padding(.horizontal, 16).padding(.vertical, 12)
-            }
-        }
     }
 
     @ViewBuilder
@@ -185,9 +211,23 @@ struct ContentView: View {
         case .home:
             HomeView(selectedBook: $selectedBook)
         case .gallery:
-            GalleryView(selectedBook: $selectedBook)
+            GalleryView(
+                selectedBook: $selectedBook,
+                filterStatus: galleryFilterStatus,
+                sortKey: gallerySortKey,
+                gridScale: galleryGridScale,
+                isBatchDeletePresented: $isGalleryBatchDeletePresented,
+                selectedBookIDs: $selectedGalleryBookIDs
+            )
         case .excerpts:
-            InspirationWallView(selectedBook: $selectedBook)
+            InspirationWallView(
+                selectedBook: $selectedBook,
+                filterCategory: excerptFilterCategory,
+                sortKey: excerptSortKey,
+                displayMode: excerptDisplayMode,
+                isBatchDeletePresented: $isExcerptBatchDeletePresented,
+                selectedExcerptIDs: $selectedExcerptIDs
+            )
         case .yearly:
             YearlyTimelineView(selectedBook: $selectedBook, selectedYear: $yearlySelectedYear, availableYears: $yearlyAvailableYears)
         case .monthly:
@@ -195,6 +235,183 @@ struct ContentView: View {
         case .none:
             ContentUnavailableView("请在左侧选择一个模块", systemImage: "sidebar.left")
         }
+    }
+
+    @ToolbarContentBuilder
+    private var pageToolbarItems: some ToolbarContent {
+        if selectedBook == nil, selectedModule == .home {
+            ToolbarItem { Spacer() }
+
+            ToolbarItem {
+                ControlGroup {
+                    Button {
+                        openAddBookSpotlight()
+                    } label: {
+                        toolbarIcon("plus")
+                    }
+                    .help("添加书籍")
+                }
+            }
+        }
+
+        if selectedBook == nil, selectedModule == .gallery {
+            ToolbarItem { Spacer() }
+
+            ToolbarItem {
+                ControlGroup {
+                    Menu {
+                        Button("全部") { galleryFilterStatus = nil }
+                        Divider()
+                        ForEach(BookStatus.allCases, id: \.self) { status in
+                            Button(status.displayName) { galleryFilterStatus = status }
+                        }
+                    } label: {
+                        toolbarIcon("line.3.horizontal.decrease.circle")
+                    }
+                    .menuIndicator(.hidden)
+                    .help("分类")
+
+                    Menu {
+                        Button("最新加入") { gallerySortKey = .newest }
+                        Button("最早加入") { gallerySortKey = .oldest }
+                        Button("标题") { gallerySortKey = .title }
+                        Button("进度") { gallerySortKey = .progress }
+                        Button("最近阅读") { gallerySortKey = .lastRead }
+                    } label: {
+                        toolbarIcon("arrow.up.arrow.down")
+                    }
+                    .menuIndicator(.hidden)
+                    .help("排序")
+                }
+            }
+
+            ToolbarItem {
+                Menu {
+                    ForEach(GalleryGridScale.allCases, id: \.self) { scale in
+                        Button(scale.displayName) { galleryGridScale = scale }
+                    }
+                } label: {
+                    toolbarIcon("rectangle.grid.2x2")
+                }
+                .menuIndicator(.hidden)
+                .help("封面大小")
+            }
+
+            ToolbarItem {
+                Button {
+                    withAnimation(.appContentFade) {
+                        isGalleryBatchDeletePresented.toggle()
+                        if !isGalleryBatchDeletePresented {
+                            selectedGalleryBookIDs.removeAll()
+                        }
+                    }
+                } label: {
+                    toolbarIcon(isGalleryBatchDeletePresented ? "checkmark.circle.fill" : "checkmark.circle")
+                }
+                .help("批量删除")
+            }
+
+            ToolbarItem {
+                ControlGroup {
+                    Button {
+                        openAddBookSpotlight()
+                    } label: {
+                        toolbarIcon("plus")
+                    }
+                    .help("添加书籍")
+                }
+            }
+        }
+
+        if selectedBook == nil, selectedModule == .excerpts {
+            ToolbarItem { Spacer() }
+
+            ToolbarItem {
+                ControlGroup {
+                    Menu {
+                        Button("全部") { excerptFilterCategory = nil }
+                        Divider()
+                        ForEach(ExcerptCategory.allCases, id: \.self) { category in
+                            Button(category.displayName) { excerptFilterCategory = category }
+                        }
+                    } label: {
+                        toolbarIcon("line.3.horizontal.decrease.circle")
+                    }
+                    .menuIndicator(.hidden)
+                    .help("分类")
+
+                    Menu {
+                        Button("最新") { excerptSortKey = .newest }
+                        Button("最早") { excerptSortKey = .oldest }
+                        Button("书名") { excerptSortKey = .bookTitle }
+                    } label: {
+                        toolbarIcon("arrow.up.arrow.down")
+                    }
+                    .menuIndicator(.hidden)
+                    .help("排序")
+                }
+            }
+
+            ToolbarItem {
+                Button {
+                    withAnimation(.appContentFade) {
+                        excerptDisplayMode = excerptDisplayMode == .compact ? .artistic : .compact
+                    }
+                } label: {
+                    toolbarIcon(excerptDisplayMode == .compact ? "rectangle.grid.1x2" : "sparkles")
+                }
+                .help("切换视图")
+            }
+
+            ToolbarItem {
+                Button {
+                    withAnimation(.appContentFade) {
+                        isExcerptBatchDeletePresented.toggle()
+                        if !isExcerptBatchDeletePresented {
+                            selectedExcerptIDs.removeAll()
+                        }
+                    }
+                } label: {
+                    toolbarIcon(isExcerptBatchDeletePresented ? "checkmark.circle.fill" : "checkmark.circle")
+                }
+                .help("批量删除")
+            }
+
+            ToolbarItem {
+                ControlGroup {
+                    Button {
+                        showAddExcerptModal = true
+                    } label: {
+                        toolbarIcon("plus")
+                    }
+                    .help("添加摘录")
+                }
+            }
+        }
+
+        if selectedBook == nil, selectedModule == .yearly {
+            ToolbarItem { Spacer() }
+
+            ToolbarItem {
+                Menu {
+                    ForEach(yearlyAvailableYears, id: \.self) { year in
+                        Button {
+                            yearlySelectedYear = year
+                        } label: {
+                            Text(verbatim: String(year))
+                        }
+                    }
+                } label: {
+                    toolbarIcon("calendar")
+                }
+                .menuIndicator(.hidden)
+                .help("切换年份")
+            }
+        }
+    }
+
+    private func toolbarIcon(_ systemName: String) -> some View {
+        Image(systemName: systemName)
     }
 }
 

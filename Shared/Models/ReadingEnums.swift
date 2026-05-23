@@ -50,7 +50,7 @@ enum ExcerptCategory: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .bookExcerpt: return "读书摘录"
+        case .bookExcerpt: return "书摘"
         case .note: return "笔记"
         case .poetry: return "诗歌"
         case .lyric: return "词曲"

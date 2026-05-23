@@ -6,6 +6,7 @@ import SwiftUI
 struct QueueBookshelf: View {
     let displayBooks: [Book] // 直接接收真正的 Book 实体
     var onBookTap: (Book) -> Void // 暴露点击回调
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.m) {
@@ -35,7 +36,16 @@ struct QueueBookshelf: View {
                 .frame(maxHeight: .infinity, alignment: .center).padding(.top, 8)
             }
         }
-        .padding(AppSpacing.xl).glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .padding(AppSpacing.xl)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
     }
 }
 

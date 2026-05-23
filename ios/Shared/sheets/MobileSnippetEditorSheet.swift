@@ -115,7 +115,7 @@ struct MobileExcerptEditorSheet: View {
                     }
                 }
             }
-            .navigationTitle(excerptToEdit != nil ? "编辑摘录" : "新增笔墨")
+            .navigationTitle(excerptToEdit != nil ? "编辑摘录" : "新增摘录")
             .navigationBarTitleDisplayMode(.inline)
             // ================= 顶部操作栏 =================
             .toolbar {

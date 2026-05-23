@@ -16,6 +16,7 @@ struct HomeView: View {
     // MARK: - 🎮 视图路由状态
     
     @Binding var selectedBook: Book? // 仅保留详情页绑定
+    @State private var focusedReadingBookID: String?
     
     private var dashboard: ReadingStatsCalculator.DashboardSnapshot {
         ReadingStatsCalculator.dashboardSnapshot(
@@ -25,41 +26,69 @@ struct HomeView: View {
         )
     }
 
+    private var orderedReadingBooks: [Book] {
+        books
+            .filter { $0.status == .reading }
+            .sorted { lhs, rhs in
+                readingPriorityDate(for: lhs) > readingPriorityDate(for: rhs)
+            }
+    }
+
+    private var focusedReadingBook: Book? {
+        if let focusedReadingBookID,
+           let focused = orderedReadingBooks.first(where: { $0.id == focusedReadingBookID }) {
+            return focused
+        }
+        return orderedReadingBooks.first
+    }
+
+    private var secondaryReadingBooks: [Book] {
+        guard let focusedReadingBook else { return Array(orderedReadingBooks.prefix(3)) }
+        return Array(orderedReadingBooks.filter { $0.id != focusedReadingBook.id }.prefix(3))
+    }
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             ZStack {
-                LazyVStack(spacing: 40) {
+                LazyVStack(spacing: 24) {
                     Spacer().frame(height: 120)
                         
                     // 🌟 Row 1: 核心操作区 (Hero Section) - UI 布局严格保留你的原样
-                    HStack {
-                        if let heroBook = dashboard.activeReadingBook {
-                            ReadingHero(book: heroBook)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                self.selectedBook = heroBook
-                            }
-                            .onHover { isHovered in
-                                if isHovered { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+                    Group {
+                        if let heroBook = focusedReadingBook {
+                            HStack(spacing: 24) {
+                                ReadingHero(
+                                    book: heroBook,
+                                    secondaryBooks: secondaryReadingBooks,
+                                    onOpenBookDetail: {
+                                        selectedBook = heroBook
+                                    },
+                                    onSelectSecondaryBook: { book in
+                                        focusedReadingBookID = book.id
+                                    }
+                                )
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                                ReadingTimerCard(book: heroBook)
+                                    .frame(width: 280)
                             }
                         } else {
-                            EmptyReadingHero()
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            HStack(spacing: 24) {
+                                EmptyReadingHero()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                EmptyReadingTimerCard()
+                                    .frame(width: 280)
+                            }
                         }
-                        
-                        AmbientClock()
-                            .frame(maxWidth: .infinity, alignment: .trailing)
                     }
-                    .frame(height: 280)
+                    .frame(height: 320)
                         
                     // 🌟 Row 2: 视觉数据双轨
-                    VStack(spacing: 32) {
+                    VStack(spacing: 24) {
                         MomentumChart(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
                         HeatmapRibbon(columns: dashboard.heatmapColumns, activeDays: dashboard.heatmapActiveDays)
                     }
-                    .padding(.top, 10)
-                    .padding(.bottom, 20)
                         
                     // 🌟 Row 3: 思想碰撞与未来队列
                     HStack(spacing: 24) {
@@ -87,13 +116,9 @@ struct HomeView: View {
             AppPageHeader(
                 contentID: "\(greeting)-\(dashboard.weekCount)-\(dashboard.monthlyDays)-\(dashboard.yearlyCount)"
             ) {
-                AppHeaderTitle(greeting, subtitle: "Read as if you've never read...")
+                AppHeaderTitle("阅读主页", subtitle: greeting)
             } trailingContent: {
-                HStack(spacing: 32) {
-                    MicroMetricRing(title: "本周打卡", current: dashboard.weekCount, target: 7, color: .pink, icon: "flame.fill")
-                    MicroMetricRing(title: "本月历程", current: dashboard.monthlyDays, target: 30, color: .mint, icon: "calendar")
-                    MicroMetricRing(title: "年度阅卷", current: dashboard.yearlyCount, target: yearTarget, color: .cyan, icon: "book.pages.fill")
-                }
+                AppHeaderStatsView(homeHeaderStats)
             }
         }
     }
@@ -108,12 +133,31 @@ extension HomeView {
         if book.status == .planned {
             try? ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
         }
+        focusedReadingBookID = book.id
         selectedBook = book
+    }
+
+    private func readingPriorityDate(for book: Book) -> Date {
+        let latestSessionDate = sessions
+            .filter { $0.book?.id == book.id }
+            .map(\.startedAt)
+            .max()
+        return latestSessionDate ?? book.lastReadAt ?? book.startDate ?? book.createdAt
     }
 }
 
 extension HomeView {
+    private var dailyTarget: Int { max(configs.first?.dailyMinutesGoal ?? 30, 1) }
     private var yearTarget: Int { configs.first?.yearlyBooksGoal ?? 50 }
+    private var homeHeaderStats: [AppHeaderStatItem] {
+        [
+            AppHeaderStatItem(current: dashboard.todayMinutes, target: dailyTarget, label: "今日阅读", unit: "分钟"),
+            AppHeaderStatItem(current: dashboard.weekCount, target: 7, label: "本周打卡", unit: "天"),
+            AppHeaderStatItem(current: dashboard.monthlyDays, target: 30, label: "本月历程", unit: "天"),
+            AppHeaderStatItem(current: dashboard.yearlyCount, target: yearTarget, label: "年度阅卷", unit: "本")
+        ]
+    }
+
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
         if hour < 9 { return "晨光正好，宜卷开新章。" }
@@ -123,24 +167,4 @@ extension HomeView {
     }
 }
 
-private struct MicroMetricRing: View {
-    let title: String; let current: Int; let target: Int; let color: Color; let icon: String
-    var body: some View {
-        let progress = min(Double(current) / Double(max(target, 1)), 1.0)
-        HStack(spacing: 12) {
-            ZStack {
-                Circle().stroke(Color.secondary.opacity(0.15), lineWidth: 5)
-                Circle().trim(from: 0, to: CGFloat(progress)).stroke(color.gradient, style: StrokeStyle(lineWidth: 5, lineCap: .round)).rotationEffect(.degrees(-90)).animation(.appFluidSpring, value: progress)
-                Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundColor(color)
-            }.frame(width: 38, height: 38)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .lastTextBaseline, spacing: 2) {
-                    Text("\(current)").font(.system(size: 16, weight: .bold, design: .rounded)).foregroundColor(.primary)
-                    Text("/\(target)").font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.secondary.opacity(0.6))
-                }
-                Text(title).font(.system(size: 11, weight: .medium)).foregroundColor(.secondary)
-            }
-        }
-    }
-}
 #endif

@@ -137,6 +137,49 @@ final class ReadingDataService {
         try context.save()
     }
 
+    func insertTimerReadingSession(
+        for book: Book,
+        startedAt: Date,
+        endedAt: Date,
+        endAmount: Double? = nil,
+        context: ModelContext,
+        calendar: Calendar = .current
+    ) throws {
+        let duration = max(endedAt.timeIntervalSince(startedAt), 0)
+        guard duration > 0 else { return }
+
+        let safeStart = ReadingValidation.clampedAmount(book.currentAmount, total: book.totalAmount)
+        let safeEnd = ReadingValidation.clampedAmount(endAmount ?? book.currentAmount, total: book.totalAmount)
+        let session = ReadingSession(
+            date: calendar.startOfDay(for: startedAt),
+            inputMode: .timer,
+            startedAt: startedAt,
+            endedAt: endedAt,
+            duration: duration,
+            progressUnit: book.progressUnit,
+            startAmount: safeStart,
+            endAmount: max(safeEnd, safeStart),
+            book: book
+        )
+
+        context.insert(session)
+        book.lastReadAt = endedAt
+        book.currentAmount = max(book.currentAmount, session.endAmount)
+        if book.status == .unread || book.status == .planned {
+            try updateStatus(
+                book,
+                to: .reading,
+                at: startedAt,
+                markFinishedProgress: false,
+                resetProgressWhenUnread: false
+            )
+        } else {
+            normalizeBook(book)
+        }
+
+        try context.save()
+    }
+
     func insertExcerpt(
         content: String,
         category: ExcerptCategory,

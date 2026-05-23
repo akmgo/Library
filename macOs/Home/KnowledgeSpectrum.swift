@@ -9,6 +9,7 @@ import SwiftUI
 struct KnowledgeSpectrum: View {
     /// 1. 彻底解耦：只接收纯粹的 UI 数据点
     let dataPoints: [SpectrumDataPoint]
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         // ✨ 核心重构：抛弃 GroupBox，换上原生的液态玻璃舱
@@ -84,7 +85,15 @@ struct KnowledgeSpectrum: View {
             }
         }
         .padding(AppSpacing.xl)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
         .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
     }
 }
 

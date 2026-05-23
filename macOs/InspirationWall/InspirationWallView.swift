@@ -3,33 +3,38 @@ import AppKit
 import SwiftData
 import SwiftUI
 
+enum ExcerptWallDisplayMode: Equatable {
+    case compact
+    case artistic
+}
+
 // MARK: - ✨ 灵感画廊 (核心视图)
 
 struct InspirationWallView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
+    let filterCategory: ExcerptCategory?
+    let sortKey: AnnotationSortKey
+    let displayMode: ExcerptWallDisplayMode
+    @Binding var isBatchDeletePresented: Bool
+    @Binding var selectedExcerptIDs: Set<String>
     @Query private var allExcerpts: [Excerpt]
     @Query private var allBooks: [Book]
     
     @State private var shuffledExcerpts: [ExcerptListItem] = []
     
     @State private var recordToEdit: Excerpt? = nil
-    @State private var bookForEdit: Book? = nil
     
     private var annotationFingerprint: String {
         allExcerpts
             .map { "\($0.id)|\($0.type.rawValue)|\($0.createdAt.timeIntervalSince1970)|\($0.content.hashValue)|\($0.book?.id ?? "")" }
             .joined(separator: ";")
-    }
-    
-    private var subtitleText: String {
-        "共收集 \(shuffledExcerpts.count) 条内容"
+            + "|\(filterCategory?.rawValue ?? "all")|\(sortKey)|\(displayMode)"
     }
     
     var body: some View {
         let totalExcerptCharacters = shuffledExcerpts.reduce(0) { $0 + $1.content.count }
         let uniqueBooksCount = Set(shuffledExcerpts.map { $0.bookTitle }).count
-        let formattedKCount = String(format: "%.1f", Double(totalExcerptCharacters) / 1000.0)
         
         GeometryReader { geo in
             ScrollView(.vertical, showsIndicators: false) {
@@ -41,31 +46,22 @@ struct InspirationWallView: View {
             }
             .overlay(alignment: .top) {
                 AppPageHeader(
-                    contentID: "\(shuffledExcerpts.count)-\(totalExcerptCharacters)-\(uniqueBooksCount)"
+                    contentID: "\(shuffledExcerpts.count)-\(totalExcerptCharacters)-\(uniqueBooksCount)-\(filterCategory?.rawValue ?? "all")-\(sortKey)-\(displayMode)"
                 ) {
-                    AppHeaderTitle("灵感碎片", subtitle: subtitleText)
+                    AppHeaderTitle("摘录长廊", subtitle: "书中摘录与日常片段汇集于此。")
                 } trailingContent: {
-                    HStack(spacing: 32) {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                                Text(totalExcerptCharacters > 1000 ? formattedKCount : "\(totalExcerptCharacters)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
-                                Text(totalExcerptCharacters > 1000 ? "k" : "").font(.system(size: 14, weight: .bold)).foregroundColor(.indigo)
-                            }
-                            Text("字沉淀").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary.opacity(0.8))
-                        }
-                        Rectangle().fill(Color.primary.opacity(0.08)).frame(width: 1, height: 32)
-                        VStack(alignment: .trailing, spacing: 2) {
-                            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                                Text("\(uniqueBooksCount)").font(.system(size: 32, weight: .heavy, design: .serif)).foregroundColor(.primary)
-                                Text("本").font(.system(size: 14, weight: .bold)).foregroundColor(.orange)
-                            }
-                            Text("知识源泉").font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary.opacity(0.8))
-                        }
-                    }
+                    AppHeaderStatsView(excerptHeaderStats)
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if isBatchDeletePresented {
+                    excerptBatchDeleteCapsule
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .sheet(item: $recordToEdit) { record in
-                ContentEditorSheet(
+                ExcerptEditorSheet(
                     isPresented: Binding(
                         get: { recordToEdit != nil },
                         set: { isPresented in
@@ -75,9 +71,7 @@ struct InspirationWallView: View {
                             }
                         }
                     ),
-                    book: bookForEdit,
-                    mode: record.isNote ? .note : .excerpt,
-                    itemToEdit: record
+                    excerptToEdit: record
                 )
             }
             .onAppear {
@@ -98,7 +92,12 @@ struct InspirationWallView: View {
             )
             .padding(.top, AppPageHeaderMetrics.height + 12)
         } else {
-            masonryGrid(containerWidth: containerWidth)
+            switch displayMode {
+            case .compact:
+                groupedCatalogView(containerWidth: containerWidth)
+            case .artistic:
+                masonryGrid(containerWidth: containerWidth)
+            }
         }
     }
 
@@ -141,12 +140,7 @@ struct InspirationWallView: View {
                     
                     LazyVStack(spacing: 16) {
                         ForEach(excerpts) { excerpt in
-                            ExcerptWallCardView(
-                                excerpt: excerpt, isMasonry: false,
-                                onDelete: deleteExcerpt,
-                                onEdit: { s in triggerEdit(for: s) },
-                                onLocate: locateBook
-                            )
+                            selectableExcerptCard(excerpt, isMasonry: false)
                             .transition(.appCardGlide)
                         }
                     }
@@ -171,12 +165,7 @@ struct InspirationWallView: View {
             ForEach(0 ..< columnsCount, id: \.self) { colIndex in
                 LazyVStack(spacing: spacing) {
                     ForEach(columns[colIndex]) { excerpt in
-                        ExcerptWallCardView(
-                            excerpt: excerpt, isMasonry: true,
-                            onDelete: deleteExcerpt,
-                            onEdit: { s in triggerEdit(for: s) },
-                            onLocate: locateBook
-                        )
+                        selectableExcerptCard(excerpt, isMasonry: true)
                         .transition(.appCardGlide)
                     }
                 }
@@ -198,6 +187,45 @@ struct InspirationWallView: View {
         }
         return columns
     }
+
+    private var excerptHeaderStats: [AppHeaderStatItem] {
+        let counts = Dictionary(grouping: allExcerpts, by: \.category).mapValues(\.count)
+        return [
+            AppHeaderStatItem(allExcerpts.count, label: "全部", unit: "条"),
+            AppHeaderStatItem(counts[.bookExcerpt, default: 0], label: ExcerptCategory.bookExcerpt.displayName, unit: "条"),
+            AppHeaderStatItem(counts[.note, default: 0], label: ExcerptCategory.note.displayName, unit: "条"),
+            AppHeaderStatItem(counts[.poetry, default: 0], label: ExcerptCategory.poetry.displayName, unit: "条"),
+            AppHeaderStatItem(counts[.lyric, default: 0], label: ExcerptCategory.lyric.displayName, unit: "条"),
+            AppHeaderStatItem(counts[.prose, default: 0], label: ExcerptCategory.prose.displayName, unit: "条"),
+            AppHeaderStatItem(counts[.quote, default: 0], label: ExcerptCategory.quote.displayName, unit: "条"),
+            AppHeaderStatItem(counts[.web, default: 0], label: ExcerptCategory.web.displayName, unit: "条"),
+            AppHeaderStatItem(counts[.movie, default: 0], label: ExcerptCategory.movie.displayName, unit: "条")
+        ]
+    }
+
+    private func selectableExcerptCard(_ excerpt: ExcerptListItem, isMasonry: Bool) -> some View {
+        ExcerptWallCardView(
+            excerpt: excerpt,
+            isMasonry: isMasonry,
+            onDelete: deleteExcerpt,
+            onEdit: { item in triggerEdit(for: item) },
+            onLocate: { item in
+                if isBatchDeletePresented {
+                    toggleSelection(for: item)
+                } else {
+                    locateBook(excerpt: item)
+                }
+            }
+        )
+        .overlay(alignment: .topTrailing) {
+            if isBatchDeletePresented {
+                Image(systemName: selectedExcerptIDs.contains(excerpt.id) ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(selectedExcerptIDs.contains(excerpt.id) ? AppColors.readingAmber : Color.secondary)
+                    .padding(12)
+            }
+        }
+    }
 }
 
 // MARK: - ✨ 核心数据引擎调度与方法
@@ -208,7 +236,6 @@ extension InspirationWallView {
     private func triggerEdit(for excerpt: ExcerptListItem) {
         let targetID = excerpt.id
         if let target = allExcerpts.first(where: { $0.id == targetID }) {
-            self.bookForEdit = target.book
             self.recordToEdit = target
         }
     }
@@ -229,10 +256,10 @@ extension InspirationWallView {
     private func fetchAndProcessExcerpts() -> [ExcerptListItem] {
         ReadingStatsCalculator.inspirationSnapshot(
             excerpts: allExcerpts,
-            type: nil,
+            type: filterCategory,
             searchText: "",
-            sortKey: .newest,
-            randomize: true
+            sortKey: sortKey,
+            randomize: displayMode == .artistic
         ).excerpts
     }
     
@@ -250,6 +277,70 @@ extension InspirationWallView {
         let targetID = excerpt.bookID
         if let book = allBooks.first(where: { $0.id == targetID }) {
             selectedBook = book
+        }
+    }
+
+    private func toggleSelection(for excerpt: ExcerptListItem) {
+        withAnimation(.appControlFeedback) {
+            if selectedExcerptIDs.contains(excerpt.id) {
+                selectedExcerptIDs.remove(excerpt.id)
+            } else {
+                selectedExcerptIDs.insert(excerpt.id)
+            }
+        }
+    }
+
+    private var selectedExcerpts: [Excerpt] {
+        allExcerpts.filter { selectedExcerptIDs.contains($0.id) }
+    }
+
+    private var excerptBatchDeleteCapsule: some View {
+        HStack(spacing: 14) {
+            Button {
+                withAnimation(.appContentFade) {
+                    selectedExcerptIDs.removeAll()
+                    isBatchDeletePresented = false
+                }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .help("取消")
+
+            Text("已选择 \(selectedExcerptIDs.count) 条")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .frame(minWidth: 88)
+
+            Button(role: .destructive) {
+                deleteSelectedExcerpts()
+            } label: {
+                Image(systemName: "trash")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .disabled(selectedExcerptIDs.isEmpty)
+            .help("删除")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+    }
+
+    private func deleteSelectedExcerpts() {
+        do {
+            try ReadingDataService.shared.deleteExcerpts(selectedExcerpts, context: modelContext)
+            withAnimation(.appContentFade) {
+                selectedExcerptIDs.removeAll()
+                isBatchDeletePresented = false
+                refreshData(animate: true)
+            }
+        } catch {
+            print("删除摘录失败: \(error.localizedDescription)")
         }
     }
 }

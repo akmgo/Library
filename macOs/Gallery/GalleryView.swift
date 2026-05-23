@@ -7,6 +7,15 @@ import SwiftUI
 
 enum GalleryGridScale: Double, CaseIterable {
     case small = 0.0; case medium = 1.0; case large = 2.0; case extraLarge = 3.0
+    var displayName: String {
+        switch self {
+        case .small: return "小"
+        case .medium: return "中"
+        case .large: return "大"
+        case .extraLarge: return "特大"
+        }
+    }
+
     var width: CGFloat {
         switch self { case .small: 118; case .medium: 152; case .large: 188; case .extraLarge: 238 }
     }
@@ -35,20 +44,22 @@ enum GalleryGridScale: Double, CaseIterable {
 // MARK: - 🌟 核心全景画廊视图
 
 struct GalleryView: View {
+    @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
+    let filterStatus: BookStatus?
+    let sortKey: BookGallerySortKey
+    let gridScale: GalleryGridScale
+    @Binding var isBatchDeletePresented: Bool
+    @Binding var selectedBookIDs: Set<String>
     @Query private var allBooks: [Book]
     
     private var gallerySnapshot: ReadingStatsCalculator.BookGallerySnapshot {
         ReadingStatsCalculator.bookGallerySnapshot(
             books: allBooks,
-            filterStatus: nil,
+            filterStatus: filterStatus,
             searchText: "",
-            sortKey: .newest
+            sortKey: sortKey
         )
-    }
-    
-    private var currentScale: GalleryGridScale {
-        .large
     }
     
     var body: some View {
@@ -56,20 +67,25 @@ struct GalleryView: View {
             // 1. 主体滚动区
             ScrollView {
                 gridView(containerWidth: geo.size.width)
-                    .padding(.horizontal, horizontalPadding(for: geo.size.width))
+                    .padding(.horizontal, AppPageHeaderMetrics.titleLeadingInset)
                     .padding(.top, AppPageHeaderMetrics.height + 12)
                     .padding(.bottom, 60)
             }
             // 2. 顶部 Header (overlay 挂载)
             .overlay(alignment: .top) {
                 AppPageHeader(
-                    horizontalPadding: horizontalPadding(for: geo.size.width),
-                    contentID: "\(gallerySnapshot.books.count)-\(gallerySnapshot.totalInventoryCount)"
+                    contentID: "\(gallerySnapshot.books.count)-\(gallerySnapshot.totalInventoryCount)-\(filterStatus?.rawValue ?? "all")-\(sortKey)"
                 ) {
-                    AppHeaderTitle("全景画廊", subtitle: "共收录 \(gallerySnapshot.books.count) 本图书")
+                    AppHeaderTitle("全景画廊", subtitle: "你的阅读对象与状态总览。")
                 } trailingContent: {
-                    MiniInventoryBar(totalCount: gallerySnapshot.totalInventoryCount, dataPoints: gallerySnapshot.inventoryPoints)
-                        .frame(width: 320)
+                    AppHeaderStatsView(galleryHeaderStats)
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if isBatchDeletePresented {
+                    galleryBatchDeleteCapsule
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
         }
@@ -85,11 +101,16 @@ struct GalleryView: View {
                 minHeight: 400
             )
         } else {
-            let columns = [GridItem(.adaptive(minimum: currentScale.width, maximum: currentScale.width), spacing: currentScale.hSpacing)]
-            LazyVGrid(columns: columns, spacing: currentScale.vSpacing) {
+            let columns = [GridItem(.adaptive(minimum: gridScale.width, maximum: gridScale.width), spacing: gridScale.hSpacing)]
+            LazyVGrid(columns: columns, spacing: gridScale.vSpacing) {
                 ForEach(gallerySnapshot.books) { book in
                     AnimatedCardGlide(
-                        book: book, gridScale: currentScale, selectedBook: $selectedBook
+                        book: book,
+                        gridScale: gridScale,
+                        selectedBook: $selectedBook,
+                        isBatchMode: isBatchDeletePresented,
+                        isSelected: selectedBookIDs.contains(book.id),
+                        onToggleSelection: { toggleSelection(for: book) }
                     )
                     .transition(.appCardGlide)
                 }
@@ -97,8 +118,79 @@ struct GalleryView: View {
         }
     }
 
-    private func horizontalPadding(for width: CGFloat) -> CGFloat {
-        min(max(width * 0.045, 28), 56)
+    private var galleryHeaderStats: [AppHeaderStatItem] {
+        let counts = Dictionary(grouping: allBooks, by: \.status).mapValues(\.count)
+        return [
+            AppHeaderStatItem(allBooks.count, label: "全部", unit: "本"),
+            AppHeaderStatItem(counts[.reading, default: 0], label: "在读", unit: "本"),
+            AppHeaderStatItem(counts[.finished, default: 0], label: "已读", unit: "本"),
+            AppHeaderStatItem(counts[.planned, default: 0], label: "想读", unit: "本"),
+            AppHeaderStatItem(counts[.unread, default: 0], label: "未读", unit: "本"),
+            AppHeaderStatItem(counts[.abandoned, default: 0], label: "弃读", unit: "本")
+        ]
+    }
+
+    private var selectedBooks: [Book] {
+        allBooks.filter { selectedBookIDs.contains($0.id) }
+    }
+
+    private var galleryBatchDeleteCapsule: some View {
+        HStack(spacing: 14) {
+            Button {
+                withAnimation(.appContentFade) {
+                    selectedBookIDs.removeAll()
+                    isBatchDeletePresented = false
+                }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .help("取消")
+
+            Text("已选择 \(selectedBookIDs.count) 本")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .frame(minWidth: 88)
+
+            Button(role: .destructive) {
+                deleteSelectedBooks()
+            } label: {
+                Image(systemName: "trash")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .disabled(selectedBookIDs.isEmpty)
+            .help("删除")
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+    }
+
+    private func toggleSelection(for book: Book) {
+        withAnimation(.appControlFeedback) {
+            if selectedBookIDs.contains(book.id) {
+                selectedBookIDs.remove(book.id)
+            } else {
+                selectedBookIDs.insert(book.id)
+            }
+        }
+    }
+
+    private func deleteSelectedBooks() {
+        do {
+            try ReadingDataService.shared.deleteBooks(selectedBooks, context: modelContext)
+            withAnimation(.appContentFade) {
+                selectedBookIDs.removeAll()
+                isBatchDeletePresented = false
+            }
+        } catch {
+            print("删除书籍失败: \(error.localizedDescription)")
+        }
     }
 }
 

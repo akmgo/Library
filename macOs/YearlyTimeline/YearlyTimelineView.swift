@@ -48,23 +48,9 @@ struct YearlyTimelineView: View {
         // ================= ✨ 顶层悬浮高定玻璃 Header (使用 Overlay 挂载) =================
         .overlay(alignment: .top) {
             AppPageHeader(contentID: "\(selectedYear)-\(yearlySnapshot.books.count)-\(yearlySnapshot.totalDaysRead)") {
-                VStack(alignment: .leading, spacing: 8) {
-                        Text("\(String(selectedYear)) 年度报告")
-                            .font(.system(size: 32, weight: .heavy, design: .rounded))
-                            .foregroundColor(.primary)
-                            .contentTransition(.opacity)
-                        
-                        Text("岁月留痕，阅有所获")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.secondary)
-                }
+                AppHeaderTitle("\(String(selectedYear)) 年度轨迹", subtitle: "以年份回看阅读留下的路径。")
             } trailingContent: {
-                HStack(spacing: 32) {
-                    HeaderStatItem(title: "完结作品", value: "\(yearlySnapshot.books.count)", unit: "部", icon: "book.closed.fill", color: .indigo)
-                    HeaderStatItem(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", unit: "天", icon: "calendar", color: .orange)
-                    HeaderStatItem(title: "阅读时长", value: "\(yearlySnapshot.totalReadingHours)", unit: "小时", icon: "clock.fill", color: .teal)
-                    HeaderStatItem(title: "最高连续", value: "\(yearlySnapshot.longestStreak)", unit: "天", icon: "flame.fill", color: .pink)
-                }
+                AppHeaderStatsView(yearlyHeaderStats)
             }
         }
         .onAppear {
@@ -114,46 +100,16 @@ struct YearlyTimelineView: View {
         .id(selectedYear)
         .transition(.opacity)
     }
-    
-}
 
-// MARK: - ✨ 子组件：极致微缩数据块
-
-private struct HeaderStatItem: View {
-    let title: String
-    let value: String
-    let unit: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(color.opacity(0.1))
-                    .frame(width: 32, height: 32)
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(color.opacity(0.8))
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundColor(.secondary)
-                HStack(alignment: .lastTextBaseline, spacing: 2) {
-                    Text(value)
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                        .contentTransition(.numericText(value: Double(value) ?? 0))
-                    if !unit.isEmpty {
-                        Text(unit)
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.secondary.opacity(0.6))
-                    }
-                }
-            }
-        }
+    private var yearlyHeaderStats: [AppHeaderStatItem] {
+        [
+            AppHeaderStatItem(yearlySnapshot.books.count, label: "完结作品", unit: "本"),
+            AppHeaderStatItem(yearlySnapshot.totalDaysRead, label: "打卡天数", unit: "天"),
+            AppHeaderStatItem(yearlySnapshot.totalReadingHours, label: "阅读时长", unit: "小时"),
+            AppHeaderStatItem(yearlySnapshot.longestStreak, label: "最高连续", unit: "天")
+        ]
     }
+    
 }
 
 // MARK: - ✨ 子组件：时间轴行容器

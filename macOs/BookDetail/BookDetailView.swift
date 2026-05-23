@@ -73,6 +73,59 @@ struct BookDetailView: View {
         .sheet(isPresented: $showEditSheet) {
             BookEditorSheet(isPresented: $showEditSheet, bookToEdit: book)
         }
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    selectedBook = nil
+                } label: {
+                    toolbarIcon("chevron.backward")
+                }
+                .help("返回")
+                .keyboardShortcut("[", modifiers: .command)
+            }
+
+            ToolbarItem { Spacer() }
+
+            ToolbarItem {
+                ControlGroup {
+                    Button {
+                        showEditSheet = true
+                    } label: {
+                        toolbarIcon("square.and.pencil")
+                    }
+                    .help("编辑书籍")
+                    .keyboardShortcut("e", modifiers: .command)
+
+                    Button(role: .destructive) {
+                        showDeleteAlert = true
+                    } label: {
+                        toolbarIcon("trash")
+                    }
+                    .help("删除书籍")
+                    .keyboardShortcut(.delete, modifiers: [])
+                }
+            }
+
+            ToolbarItem {
+                ControlGroup {
+                    Button {
+                        showAddExcerptSheet = true
+                    } label: {
+                        toolbarIcon("text.quote")
+                    }
+                    .help("添加摘录")
+
+                    Button {
+                        withAnimation(.appContentFade) {
+                            isDeleteMode.toggle()
+                        }
+                    } label: {
+                        toolbarIcon(isDeleteMode ? "checkmark.circle.fill" : "slider.horizontal.3")
+                    }
+                    .help("管理摘录")
+                }
+            }
+        }
         .alert("删除书籍", isPresented: $showDeleteAlert) {
             Button("取消", role: .cancel) {}
             Button("确认删除", role: .destructive) {
@@ -90,6 +143,10 @@ struct BookDetailView: View {
                 }
             }
         }
+    }
+
+    private func toolbarIcon(_ systemName: String) -> some View {
+        Image(systemName: systemName)
     }
     
     // MARK: - 记录销毁逻辑 (✨ 升级为单一模型 Excerpt)

@@ -6,28 +6,20 @@ import SwiftUI
 struct HeatmapRibbon: View {
     let columns: [[HeatmapDataPoint]]
     let activeDays: Int
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        let isEmpty = activeDays == 0
-        
         VStack(alignment: .leading, spacing: 16) {
             // ================= 1. 头部标题与统计 =================
-            HStack(alignment: .bottom) {
-                Text("365 DAYS JOURNEY")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .foregroundColor(isEmpty ? .secondary.opacity(0.4) : .secondary)
-                    .tracking(2)
+            HStack {
+                Text("年度热力图")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
                 
                 Spacer()
-                
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(activeDays)")
-                        .font(.system(size: 18, weight: .heavy, design: .rounded))
-                        .foregroundColor(isEmpty ? .secondary.opacity(0.3) : .primary)
-                    Text("Days")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundColor(isEmpty ? .secondary.opacity(0.3) : .secondary)
-                }
+
+                Image(systemName: "square.grid.3x3.fill")
+                    .foregroundColor(.indigo)
             }
             
             // ================= 2. 矩阵渲染区域 =================
@@ -50,6 +42,17 @@ struct HeatmapRibbon: View {
                 
             }
         }
+        .padding(AppSpacing.xl)
+        .frame(maxWidth: .infinity)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
     }
 }
 #endif

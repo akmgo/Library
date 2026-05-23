@@ -1,4 +1,5 @@
 #if os(macOS)
+internal import Combine
 import SwiftData
 import SwiftUI
 
@@ -6,35 +7,668 @@ import SwiftUI
 
 struct ReadingHero: View {
     @Bindable var book: Book
+    let secondaryBooks: [Book]
+    let onOpenBookDetail: () -> Void
+    let onSelectSecondaryBook: (Book) -> Void
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private let heroContentHeight: CGFloat = 238
+    private let secondaryRowHeight: CGFloat = 68
+    private let secondaryRowSpacing: CGFloat = 17
+    private let secondaryListWidth: CGFloat = 220
     
     var body: some View {
-        HStack(alignment: .center, spacing: 24) {
-            BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
-                .frame(width: 170, height: 245)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .shadow(color: Color.black.opacity(0.15), radius: 12, y: 8)
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text(book.title)
-                    .font(.system(size: 36, weight: .heavy, design: .serif))
+        VStack(alignment: .leading, spacing: AppSpacing.m) {
+            HStack {
+                Text("当前在读")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
-                    .lineLimit(2)
 
-                Text(book.author)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                Spacer()
+
+                Image(systemName: "book.fill")
+                    .foregroundColor(AppColors.readingAmber)
             }
-            .frame(height: 245)
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(alignment: .center, spacing: 24) {
+                Button(action: onOpenBookDetail) {
+                    BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+                        .frame(width: 166, height: heroContentHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .shadow(color: Color.black.opacity(0.15), radius: 12, y: 8)
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
+                }
+                .buttonStyle(.plain)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(book.title)
+                            .font(.system(size: 31, weight: .heavy, design: .serif))
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+
+                        Text(book.author.isEmpty ? "未知作者" : book.author)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    progressRow
+                }
+                .frame(height: heroContentHeight)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                secondaryReadingList
+                    .frame(width: secondaryListWidth, height: heroContentHeight)
+            }
         }
+        .padding(AppSpacing.xl)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
+    }
+
+    private var secondaryReadingList: some View {
+        VStack(spacing: secondaryRowSpacing) {
+            ForEach(secondaryBooks) { candidate in
+                SecondaryReadingBookRow(book: candidate) {
+                    onSelectSecondaryBook(candidate)
+                }
+                .frame(height: secondaryRowHeight)
+            }
+
+            if secondaryBooks.count < 3 {
+                ForEach(0 ..< (3 - secondaryBooks.count), id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                        .fill(Color.primary.opacity(0.025))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                                .stroke(Color.primary.opacity(0.035), lineWidth: 1)
+                        )
+                        .frame(maxWidth: 300)
+                        .frame(height: secondaryRowHeight)
+                }
+            }
+        }
+        .frame(height: heroContentHeight)
+    }
+
+    private var progressRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(progressDetailText)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary.opacity(0.82))
+                    .lineLimit(1)
+
+                Spacer()
+
+                Text("\(Int(book.progressRatio * 100))%")
+                    .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .foregroundStyle(AppColors.readingAmber)
+                    .monospacedDigit()
+            }
+
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.primary.opacity(0.08))
+
+                    Capsule()
+                        .fill(AppColors.readingAmber)
+                        .frame(width: proxy.size.width * book.progressRatio)
+                        .animation(.appContentFade, value: book.progressRatio)
+                }
+            }
+            .frame(height: 8)
+        }
+    }
+    
+    private var progressDetailText: String {
+        guard book.totalAmount > 0 else {
+            switch book.progressUnit {
+            case .page:
+                return "页数未设置"
+            case .chapter:
+                return "章节数未设置"
+            case .percent:
+                return "当前进度"
+            }
+        }
+
+        switch book.progressUnit {
+        case .page:
+            return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 页"
+        case .chapter:
+            return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 章"
+        case .percent:
+            return "当前进度"
+        }
+    }
+}
+
+struct ReadingTimerCard: View {
+    @Bindable var book: Book
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var timerStore = ReadingTimerStore.shared
+    @State private var elapsedSeconds: TimeInterval = 0
+    @State private var isManualPopoverPresented = false
+    @State private var isTimerProgressPopoverPresented = false
+    @State private var manualMinutes = 25
+    @State private var manualProgressDraft: ReadingProgressDraft
+    @State private var timerProgressDraft: ReadingProgressDraft
+    @State private var pendingTimerEndAt: Date?
+
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    // 和 ReadingHero 的 heroContentHeight 保持一致
+    private let timerContentHeight: CGFloat = 238
+    private let controlHeight: CGFloat = 44
+    private let controlSpacing: CGFloat = 10
+    private let gaugeHeight: CGFloat = 118
+
+    init(book: Book) {
+        self.book = book
+        _manualProgressDraft = State(initialValue: ReadingProgressDraft.sessionDefault(for: book))
+        _timerProgressDraft = State(initialValue: ReadingProgressDraft.sessionDefault(for: book))
+    }
+
+    private var isTiming: Bool {
+        timerStore.isTiming(bookID: book.id)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.m) {
+            HStack {
+                Text("阅读计时")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+
+                Spacer()
+
+                Image(systemName: "timer")
+                    .foregroundColor(AppColors.readingAmber)
+            }
+
+            timerContent
+                .frame(height: timerContentHeight)
+                .frame(maxWidth: .infinity)
+        }
+        .padding(AppSpacing.xl)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
+        .onReceive(timer) { now in
+            elapsedSeconds = timerStore.elapsedSeconds(for: book.id, now: now)
+        }
+        .onChange(of: book.id) { _, _ in
+            pendingTimerEndAt = nil
+            manualProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
+            timerProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
+            elapsedSeconds = timerStore.elapsedSeconds(for: book.id)
+        }
+        .onAppear {
+            elapsedSeconds = timerStore.elapsedSeconds(for: book.id)
+        }
+    }
+
+    private var timerContent: some View {
+        VStack(alignment: .center, spacing: 0) {
+            ReadingTimerGauge(
+                elapsedSeconds: elapsedSeconds,
+                targetMinutes: 30,
+                isTiming: isTiming
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: gaugeHeight)
+
+            Spacer(minLength: 0)
+
+            VStack(spacing: controlSpacing) {
+                Button {
+                    toggleTimer()
+                } label: {
+                    Text(isTiming ? "结束阅读" : "开始阅读")
+                        .font(.system(size: 17, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: controlHeight)
+                }
+                .buttonStyle(
+                    ReadingHeroCapsuleButtonStyle(
+                        tint: isTiming ? AppColors.danger : AppColors.readingAmber,
+                        isFilled: true
+                    )
+                )
+                .popover(isPresented: $isTimerProgressPopoverPresented, arrowEdge: .bottom) {
+                    timerCompletionPopover
+                }
+
+                Button {
+                    manualProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
+                    isManualPopoverPresented = true
+                } label: {
+                    Text("手动录入")
+                        .font(.system(size: 17, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: controlHeight)
+                }
+                .buttonStyle(
+                    ReadingHeroCapsuleButtonStyle(
+                        tint: AppColors.success,
+                        isFilled: true
+                    )
+                )
+                .popover(isPresented: $isManualPopoverPresented, arrowEdge: .bottom) {
+                    manualSessionPopover
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .frame(height: timerContentHeight)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var manualSessionPopover: some View {
+        VStack(alignment: .center, spacing: 14) {
+            Text("本次阅读时长")
+                .font(.system(size: 13, weight: .bold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 16) {
+                Button {
+                    manualMinutes = max(5, manualMinutes - 5)
+                } label: {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+
+                Text("\(manualMinutes) 分钟")
+                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .frame(maxWidth: .infinity)
+
+                Button {
+                    manualMinutes = min(240, manualMinutes + 5)
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .frame(width: 32, height: 32)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, AppSpacing.m)
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+
+            Divider().opacity(0.28)
+
+            ReadingProgressInputView(
+                draft: $manualProgressDraft,
+                mode: .sessionUpdate,
+                lockedUnit: true,
+                minimumCurrentAmount: book.currentAmount
+            )
+
+            Button {
+                insertManualSession()
+            } label: {
+                Text("保存记录")
+                    .font(.system(size: 13, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 32)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .background(AppColors.readingAmber, in: Capsule())
+            .keyboardShortcut(.defaultAction)
+
+            Button("取消") {
+                isManualPopoverPresented = false
+            }
+            .keyboardShortcut(.cancelAction)
+            .frame(width: 0, height: 0)
+            .opacity(0)
+        }
+        .padding(18)
+        .frame(width: 320)
+    }
+
+    private var timerCompletionPopover: some View {
+        VStack(alignment: .center, spacing: 14) {
+            VStack(alignment: .center, spacing: 4) {
+                Text("结束本次阅读")
+                    .font(.system(size: 14, weight: .bold))
+
+                Text(formattedDuration(elapsedSeconds))
+                    .font(.system(size: 24, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(AppColors.readingAmber)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+
+            ReadingProgressInputView(
+                draft: $timerProgressDraft,
+                mode: .sessionUpdate,
+                lockedUnit: true,
+                minimumCurrentAmount: book.currentAmount
+            )
+
+            Button {
+                finishTimerSession()
+            } label: {
+                Text("完成记录")
+                    .font(.system(size: 13, weight: .bold))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 34)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .background(AppColors.readingAmber, in: Capsule())
+            .keyboardShortcut(.defaultAction)
+
+            Button("取消") {
+                isTimerProgressPopoverPresented = false
+                pendingTimerEndAt = nil
+            }
+            .keyboardShortcut(.cancelAction)
+            .frame(width: 0, height: 0)
+            .opacity(0)
+        }
+        .padding(18)
+        .frame(width: 320)
+    }
+
+    private func toggleTimer() {
+        if timerStore.isTiming(bookID: book.id) {
+            pendingTimerEndAt = Date()
+            timerProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
+            elapsedSeconds = timerStore.elapsedSeconds(for: book.id, now: pendingTimerEndAt ?? Date())
+            isTimerProgressPopoverPresented = true
+        } else {
+            timerStore.start(bookID: book.id)
+            elapsedSeconds = 0
+        }
+    }
+
+    private func finishTimerSession() {
+        guard let timerStartedAt = timerStore.startedAt(for: book.id), let pendingTimerEndAt else { return }
+
+        var normalized = timerProgressDraft
+        normalized.normalize()
+
+        try? ReadingDataService.shared.insertTimerReadingSession(
+            for: book,
+            startedAt: timerStartedAt,
+            endedAt: pendingTimerEndAt,
+            endAmount: normalized.currentAmount,
+            context: modelContext
+        )
+
+        timerStore.cancel()
+        self.pendingTimerEndAt = nil
+        elapsedSeconds = 0
+        isTimerProgressPopoverPresented = false
+    }
+
+    private func insertManualSession() {
+        let endedAt = Date()
+        let duration = TimeInterval(manualMinutes * 60)
+        let startedAt = endedAt.addingTimeInterval(-duration)
+
+        var normalized = manualProgressDraft
+        normalized.normalize()
+
+        try? ReadingDataService.shared.insertManualReadingSession(
+            for: book,
+            startedAt: startedAt,
+            duration: duration,
+            progressUnit: book.progressUnit,
+            startAmount: book.currentAmount,
+            endAmount: normalized.currentAmount,
+            context: modelContext
+        )
+
+        isManualPopoverPresented = false
+    }
+
+    private func formattedDuration(_ seconds: TimeInterval) -> String {
+        let total = Int(seconds)
+        let minutes = total / 60
+        let secs = total % 60
+
+        if minutes >= 60 {
+            let hours = minutes / 60
+            return "\(hours):\(String(format: "%02d", minutes % 60))"
+        }
+
+        return "\(String(format: "%02d", minutes)):\(String(format: "%02d", secs))"
+    }
+}
+
+private struct ReadingTimerGauge: View {
+    let elapsedSeconds: TimeInterval
+    let targetMinutes: Int
+    let isTiming: Bool
+
+    private var targetSeconds: TimeInterval {
+        max(TimeInterval(targetMinutes * 60), 1)
+    }
+
+    private var progress: Double {
+        min(max(elapsedSeconds / targetSeconds, 0), 1)
+    }
+
+    private var minutesText: String {
+        let total = Int(elapsedSeconds)
+        let minutes = total / 60
+        return String(format: "%02d", minutes)
+    }
+
+    private var secondsText: String {
+        let total = Int(elapsedSeconds)
+        let seconds = total % 60
+        return String(format: "%02d", seconds)
+    }
+
+    var body: some View {
+        ZStack {
+            ReadingSemiCircleArc(progress: 1)
+                .stroke(
+                    Color.primary.opacity(0.075),
+                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                )
+
+            ReadingSemiCircleArc(progress: progress)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            AppColors.readingAmber.opacity(0.68),
+                            AppColors.readingAmber
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    ),
+                    style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                )
+                .shadow(
+                    color: AppColors.readingAmber.opacity(isTiming ? 0.16 : 0.06),
+                    radius: 8,
+                    y: 4
+                )
+                .animation(.appContentFade, value: progress)
+
+            VStack(spacing: 4) {
+                HStack(alignment: .center, spacing: 4) {
+                    Text(minutesText)
+                        .font(.system(size: 40, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .frame(width: 58, height: 48, alignment: .center)
+
+                    Text(":")
+                        .font(.system(size: 40, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(AppColors.readingAmber.opacity(0.82))
+                        .frame(width: 14, height: 48, alignment: .center)
+                        .offset(y: -3)
+
+                    Text(secondsText)
+                        .font(.system(size: 40, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .frame(width: 58, height: 48, alignment: .center)
+                }
+                .foregroundStyle(.primary.opacity(0.9))
+                .contentTransition(.numericText())
+
+                Text("今日目标 \(targetMinutes) 分钟")
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(.secondary.opacity(0.62))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(Color.secondary.opacity(0.10))
+                    )
+            }
+            .offset(y: 20)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct ReadingSemiCircleArc: Shape {
+    var progress: Double
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        let clampedProgress = min(max(progress, 0), 1)
+
+        let center = CGPoint(
+            x: rect.midX,
+            y: rect.maxY - 10
+        )
+
+        let radius = min(rect.width * 0.48, rect.height * 0.92)
+
+        let startAngle = Angle.degrees(180)
+        let endAngle = Angle.degrees(180 + 180 * clampedProgress)
+
+        path.addArc(
+            center: center,
+            radius: radius,
+            startAngle: startAngle,
+            endAngle: endAngle,
+            clockwise: false
+        )
+
+        return path
+    }
+}
+
+private struct SecondaryReadingBookRow: View {
+    @Bindable var book: Book
+    let onSelect: () -> Void
+    private let contentHeight: CGFloat = 56
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+                .frame(width: 38, height: contentHeight)
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .stroke(Color.primary.opacity(0.06), lineWidth: 0.5)
+                )
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text(book.title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.primary.opacity(0.08))
+                        Capsule()
+                            .fill(AppColors.readingAmber.opacity(0.82))
+                            .frame(width: proxy.size.width * book.progressRatio)
+                    }
+                }
+                .frame(height: 8)
+            }
+            .frame(height: contentHeight, alignment: .center)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onSelect) {
+                Image(systemName: "arrow.left.circle.fill")
+                    .font(.system(size: 27, weight: .semibold))
+                    .foregroundStyle(AppColors.readingAmber)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .frame(maxWidth: 300, maxHeight: .infinity)
+        .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+        )
+    }
+}
+
+private struct ReadingHeroCapsuleButtonStyle: ButtonStyle {
+    let tint: Color
+    let isFilled: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(isFilled ? Color.white : tint)
+            .background(
+                Capsule()
+                    .fill(isFilled ? tint.opacity(configuration.isPressed ? 0.82 : 1) : tint.opacity(configuration.isPressed ? 0.18 : 0.11))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isFilled ? Color.clear : tint.opacity(0.28), lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
 // MARK: - 🎨 空状态视图
 
 struct EmptyReadingHero: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         HStack(alignment: .center, spacing: 24) {
             ZStack {
@@ -70,7 +704,240 @@ struct EmptyReadingHero: View {
             .frame(height: 245)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding()
+        .padding(.horizontal, AppSpacing.l)
+        .padding(.vertical, 16)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
     }
 }
+
+struct EmptyReadingTimerCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.m) {
+            HStack {
+                Text("阅读计时")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary.opacity(0.5))
+
+                Spacer()
+
+                Image(systemName: "timer")
+                    .foregroundColor(AppColors.readingAmber.opacity(0.45))
+            }
+
+            Spacer()
+
+            VStack(spacing: 12) {
+                Text("00:00")
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary.opacity(0.45))
+
+                Text("选择一本在读书籍后开始计时")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary.opacity(0.55))
+            }
+            .frame(maxWidth: .infinity)
+
+            Spacer()
+        }
+        .padding(AppSpacing.xl)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
+    }
+}
+
+struct ReadingHero_Previews: PreviewProvider {
+
+    static var previews: some View {
+
+        Group {
+
+            ReadingHero(
+
+                book: sampleBook,
+
+                secondaryBooks: [sampleBook2, sampleBook3, sampleBook4],
+
+                onOpenBookDetail: {},
+
+                onSelectSecondaryBook: { _ in }
+
+            )
+
+            .previewDisplayName("主在读示例")
+
+            EmptyReadingHero()
+
+                .previewDisplayName("空状态示例")
+
+        }
+
+        .frame(width: 1200, height: 400)
+
+        .padding()
+
+        .previewLayout(.sizeThatFits)
+
+    }
+
+    static var sampleBook: Book {
+
+        Book(title: "置身事内",
+
+             author: "兰小欢",
+
+             totalAmount: 356,
+
+             currentAmount: 86)
+
+    }
+
+    static var sampleBook2: Book {
+
+        Book(title: "人类简史",
+
+             author: "尤瓦尔·赫拉利",
+
+             totalAmount: 100,
+
+             currentAmount: 42)
+
+    }
+
+    static var sampleBook3: Book {
+
+        Book(title: "活着",
+
+             author: "余华",
+
+             totalAmount: 100,
+
+             currentAmount: 18)
+
+    }
+
+    static var sampleBook4: Book {
+
+        Book(title: "思考，快与慢",
+
+             author: "丹尼尔·卡尼曼",
+
+             totalAmount: 100,
+
+             currentAmount: 61)
+
+    }
+
+}
+
+#if DEBUG
+struct ReadingTimerGauge_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            VStack(spacing: 18) {
+                ReadingTimerGauge(
+                    elapsedSeconds: 18 * 60 + 36,
+                    targetMinutes: 30,
+                    isTiming: true
+                )
+
+                VStack(spacing: 12) {
+                    Text("开始阅读")
+                        .font(.system(size: 17, weight: .bold))
+                        .frame(width: 220, height: 48)
+                        .foregroundStyle(.white)
+                        .background(AppColors.readingAmber, in: Capsule())
+
+                    Text("手动录入")
+                        .font(.system(size: 17, weight: .bold))
+                        .frame(width: 220, height: 48)
+                        .foregroundStyle(.white)
+                        .background(AppColors.success, in: Capsule())
+                }
+            }
+            .padding(AppSpacing.xl)
+            .background(
+                AppColors.secondaryBackground(for: .light).opacity(0.72),
+                in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+            )
+            .previewDisplayName("仪表盘计时器 · 浅色")
+
+            VStack(spacing: 18) {
+                ReadingTimerGauge(
+                    elapsedSeconds: 42 * 60 + 12,
+                    targetMinutes: 60,
+                    isTiming: true
+                )
+
+                VStack(spacing: 12) {
+                    Text("结束阅读")
+                        .font(.system(size: 17, weight: .bold))
+                        .frame(width: 220, height: 48)
+                        .foregroundStyle(.white)
+                        .background(AppColors.danger, in: Capsule())
+
+                    Text("手动录入")
+                        .font(.system(size: 17, weight: .bold))
+                        .frame(width: 220, height: 48)
+                        .foregroundStyle(.white)
+                        .background(AppColors.success, in: Capsule())
+                }
+            }
+            .padding(AppSpacing.xl)
+            .background(
+                AppColors.secondaryBackground(for: .dark).opacity(0.72),
+                in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+            )
+            .preferredColorScheme(.dark)
+            .previewDisplayName("仪表盘计时器 · 深色")
+        }
+        .padding()
+        .previewLayout(.sizeThatFits)
+    }
+}
+
+struct ReadingTimerCard_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            ReadingTimerCard(
+                book: Book(
+                    title: "置身事内",
+                    author: "兰小欢",
+                    status: .reading,
+                    progressUnit: .page,
+                    totalAmount: 356,
+                    currentAmount: 86
+                )
+            )
+            .frame(width: 284, height: 300)
+            .padding()
+            .previewDisplayName("阅读计时卡片")
+
+            EmptyReadingTimerCard()
+                .frame(width: 284, height: 300)
+                .padding()
+                .previewDisplayName("阅读计时空状态")
+        }
+        .previewLayout(.sizeThatFits)
+    }
+}
+#endif
+
 #endif

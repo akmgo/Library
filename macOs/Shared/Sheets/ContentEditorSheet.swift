@@ -10,6 +10,12 @@ enum ContentSheetMode {
     case note
 }
 
+private enum ContentEditorInputMetrics {
+    static let font = Font.system(size: 15, weight: .regular)
+    static let lineSpacing: CGFloat = 6
+    static let editorPadding: CGFloat = 16
+}
+
 // MARK: - ✨ 内容增改通用弹窗
 
 struct ContentEditorSheet: View {
@@ -50,9 +56,10 @@ struct ContentEditorSheet: View {
                 
                 if mode == .excerpt {
                     TextEditor(text: $contentText)
-                        .font(.system(size: 15))
+                        .font(ContentEditorInputMetrics.font)
+                        .lineSpacing(ContentEditorInputMetrics.lineSpacing)
                         .scrollContentBackground(.hidden)
-                        .padding(16)
+                        .padding(ContentEditorInputMetrics.editorPadding)
                 } else {
                     MarkdownEditor(text: $contentText)
                         .padding(.horizontal, 8)
@@ -61,11 +68,10 @@ struct ContentEditorSheet: View {
                 
                 if contentText.isEmpty {
                     Text(mode == .excerpt ? "输入那些值得被铭记的内容..." : "敲击 # 输入大标题\n敲击 - 或 1. 记录要点\n\n按下回车即可自然换行...")
-                        .font(.system(size: 15))
+                        .font(ContentEditorInputMetrics.font)
                         .foregroundColor(.secondary.opacity(0.6))
-                        .lineSpacing(6)
-                        .padding(.top, mode == .excerpt ? 16 : 24)
-                        .padding(.leading, mode == .excerpt ? 20 : 32)
+                        .lineSpacing(ContentEditorInputMetrics.lineSpacing)
+                        .padding(mode == .excerpt ? ContentEditorInputMetrics.editorPadding : 24)
                         .allowsHitTesting(false)
                 }
             }

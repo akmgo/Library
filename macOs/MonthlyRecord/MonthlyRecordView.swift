@@ -1,6 +1,5 @@
 #if os(macOS)
 import AppKit
-import Charts
 import SwiftData
 import SwiftUI
 
@@ -73,20 +72,10 @@ struct MonthlyRecordView: View {
                 AppPageHeader(
                     contentID: "\(visibleYear)-\(visibleMonth)",
                     titleContent: {
-                        HStack(alignment: .lastTextBaseline, spacing: 8) {
-                            Text(String(format: "%d年", visibleYear))
-                                .font(.system(size: 32, weight: .heavy, design: .rounded))
-                                .foregroundColor(.primary)
-                            Text("\(visibleMonth)月")
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(width: 170, alignment: .leading)
+                        AppHeaderTitle("\(visibleYear)年 \(visibleMonth)月", subtitle: "按月份查看每天的阅读痕迹。")
                     },
                     trailingContent: {
-                        MonthlySparklineView(year: visibleYear, month: visibleMonth, recordsDict: monthlySnapshot.durationByDay)
-                            .frame(height: 36)
-                            .padding(.horizontal, 20)
+                        AppHeaderStatsView(monthlyHeaderStats)
                     }
                 )
             }
@@ -98,6 +87,33 @@ struct MonthlyRecordView: View {
                 NotificationCenter.default.post(name: .scrollToToday, object: nil)
             }
         }
+    }
+
+    private var monthlyHeaderStats: [AppHeaderStatItem] {
+        [
+            AppHeaderStatItem(visibleMonthReadingMinutes, label: "本月阅读", unit: "分钟"),
+            AppHeaderStatItem(visibleMonthReadingDays, label: "阅读天数", unit: "天")
+        ]
+    }
+
+    private var visibleMonthEntries: [(Date, TimeInterval)] {
+        let calendar = Calendar.current
+        return monthlySnapshot.durationByDay.filter { date, _ in
+            calendar.component(.year, from: date) == visibleYear
+                && calendar.component(.month, from: date) == visibleMonth
+        }
+    }
+
+    private var visibleMonthReadingDays: Int {
+        visibleMonthEntries.filter { $0.1 > 0 }.count
+    }
+
+    private var visibleMonthDuration: TimeInterval {
+        visibleMonthEntries.reduce(0) { $0 + max($1.1, 0) }
+    }
+
+    private var visibleMonthReadingMinutes: Int {
+        Int(visibleMonthDuration / 60)
     }
     
 }
@@ -147,64 +163,6 @@ private struct MonthGridSection: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - 顶部玻璃区专属：月度动态微缩曲线图
-
-private struct MonthlySparklineView: View {
-    let year: Int
-    let month: Int
-    let recordsDict: [Date: TimeInterval]
-    
-    @State private var chartData: [(day: Int, minutes: Double)] = []
-    
-    var body: some View {
-        Chart(chartData, id: \.day) { item in
-            LineMark(
-                x: .value("Day", item.day),
-                y: .value("Minutes", item.minutes)
-            )
-            .interpolationMethod(.catmullRom)
-            .foregroundStyle(Color.indigo.gradient)
-            .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
-            
-            AreaMark(
-                x: .value("Day", item.day),
-                y: .value("Minutes", item.minutes)
-            )
-            .interpolationMethod(.catmullRom)
-            .foregroundStyle(
-                LinearGradient(colors: [Color.indigo.opacity(0.3), Color.clear], startPoint: .top, endPoint: .bottom)
-            )
-        }
-        .chartXAxis(.hidden)
-        .chartYAxis(.hidden)
-        .animation(.appFluidSpring, value: chartData.map { $0.minutes })
-        .onAppear { updateData() }
-        .onChange(of: year) { _, _ in updateData() }
-        .onChange(of: month) { _, _ in updateData() }
-        .onChange(of: recordsDict) { _, _ in updateData() }
-    }
-    
-    private func updateData() {
-        let cal = Calendar.current
-        var comps = DateComponents(year: year, month: month)
-        guard let startOfMonth = cal.date(from: comps),
-              let range = cal.range(of: .day, in: .month, for: startOfMonth) else { return }
-        
-        var data: [(Int, Double)] = []
-        for day in range {
-            comps.day = day
-            if let date = cal.date(from: comps),
-               let duration = recordsDict[cal.startOfDay(for: date)]
-            {
-                data.append((day, duration / 60.0))
-            } else {
-                data.append((day, 0))
-            }
-        }
-        chartData = data
     }
 }
 

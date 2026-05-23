@@ -7,28 +7,22 @@ import SwiftUI
 struct MomentumChart: View {
     let dataPoints: [MomentumDataPoint]
     let totalMinutes: Int
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         let isEmpty = totalMinutes == 0
         
         VStack(alignment: .leading, spacing: 16) {
             // ================= 1. 顶部数据头 =================
-            HStack(alignment: .bottom) {
-                Text("14 DAYS MOMENTUM")
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .foregroundColor(isEmpty ? .secondary.opacity(0.4) : .secondary)
-                    .tracking(2)
+            HStack {
+                Text("双周动能")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
                 
                 Spacer()
-                
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(totalMinutes)")
-                        .font(.system(size: 18, weight: .heavy, design: .rounded))
-                        .foregroundColor(isEmpty ? .secondary.opacity(0.3) : .primary)
-                    Text("Min")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundColor(isEmpty ? .secondary.opacity(0.3) : .secondary)
-                }
+
+                Image(systemName: "chart.bar.fill")
+                    .foregroundColor(.blue)
             }
             
             // ================= 2. 图表渲染区 =================
@@ -64,6 +58,17 @@ struct MomentumChart: View {
             }
             .frame(maxWidth: .infinity)
         }
+        .padding(AppSpacing.xl)
+        .frame(maxWidth: .infinity)
+        .background(
+            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
+            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+        )
+        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
+                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+        )
     }
 }
 

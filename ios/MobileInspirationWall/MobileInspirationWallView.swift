@@ -48,7 +48,7 @@ struct MobileInspirationWallView: View {
                     .padding(.bottom, 80)
                 }
             }
-            .navigationTitle("灵感碎片")
+            .navigationTitle("摘录长廊")
             .navigationBarTitleDisplayMode(.large)
             .onChange(of: annotationFingerprint) { _, _ in refreshData(animate: true) }
             .onAppear { refreshData(animate: false) }
