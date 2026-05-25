@@ -285,9 +285,9 @@ private struct DayCardView: View {
             if mins > 0 { parts.append("\(mins)分钟") }
             if data.totalDelta > 0 {
                 switch data.unit {
-                case .page: parts.append("+\(Int(data.totalDelta))页")
-                case .percent: parts.append("+\(Int(data.totalDelta))%")
-                case .chapter: parts.append("+\(Int(data.totalDelta))章")
+                case .page: parts.append("\(Int(data.totalDelta))页")
+                case .percent: parts.append("\(Int(data.totalDelta))%")
+                case .chapter: parts.append("\(Int(data.totalDelta))章")
                 }
             }
             return (book.title, parts.joined(separator: " · "))

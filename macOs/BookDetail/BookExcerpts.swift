@@ -216,7 +216,7 @@ struct ExcerptCardView: View {
                 Text(excerpt.createdAt.formatted(date: .numeric, time: .shortened)).font(.system(size: 12, weight: .medium)).foregroundColor(.secondary.opacity(0.6))
             }
             
-            Text(excerpt.content)
+            Text(verbatim: excerpt.content)
                 .font(.system(size: 16, weight: .regular, design: .serif))
                 .foregroundColor(.primary).lineSpacing(8).fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
@@ -250,7 +250,7 @@ struct NoteCardView: View {
                 Spacer()
                 Text(note.createdAt.formatted(date: .numeric, time: .shortened)).font(.system(size: 12, weight: .medium)).foregroundColor(.secondary.opacity(0.6))
             }
-            Text(note.content)
+            Text(verbatim: note.content)
                 .font(.system(size: 15)).foregroundColor(.primary).lineSpacing(6).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
         }
         .padding(24)

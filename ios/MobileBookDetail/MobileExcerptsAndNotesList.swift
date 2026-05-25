@@ -31,6 +31,7 @@ struct MobileExcerptsAndNotesList: View {
     let onDelete: (Excerpt) -> Void
 
     @State private var filter: AnnotationFilter = .all
+    @Environment(\.colorScheme) private var colorScheme
 
     private var sortedAnnotations: [Excerpt] {
         (book.excerpts ?? []).sorted { $0.createdAt > $1.createdAt }
@@ -53,6 +54,7 @@ struct MobileExcerptsAndNotesList: View {
                 Image(systemName: "leaf").font(.system(size: 32)).foregroundColor(Color.gray.opacity(0.5))
                 Text("暂无记录，写下你的感悟吧").font(.system(size: 14)).foregroundColor(.secondary)
             }
+            .frame(maxWidth: .infinity)
             .padding(.vertical, 60)
         } else {
             HStack(spacing: AppSpacing.xxs) {
@@ -61,15 +63,15 @@ struct MobileExcerptsAndNotesList: View {
                     Button(action: { withAnimation { filter = f } }) {
                         Text("\(f.displayName) (\(count))")
                             .font(.system(size: 12, weight: filter == f ? .bold : .medium, design: .rounded))
-                            .foregroundColor(filter == f ? .white : .primary)
+                            .foregroundColor(filter == f ? AppColors.primaryBackground(for: colorScheme) : .primary)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(filter == f ? Color.indigo : Color.secondary.opacity(0.08))
+                            .background(filter == f ? Color.primary : Color.secondary.opacity(0.08))
                             .clipShape(Capsule())
                     }
+                    .buttonStyle(.plain)
                 }
                 Spacer()
             }
-            .padding(.horizontal, AppSpacing.l)
             .padding(.bottom, 8)
 
             LazyVStack(spacing: AppSpacing.m) {
@@ -79,7 +81,6 @@ struct MobileExcerptsAndNotesList: View {
                     }
                 }
             }
-            .padding(.horizontal, AppSpacing.l)
         }
     }
 }
@@ -130,7 +131,7 @@ private struct MobileReadingExcerptCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.s) {
             // ✨ 修复：模型里的 content 已经是必填项，干掉了冗余的 ?? ""
-            Text(annotation.content)
+            Text(verbatim: annotation.content)
                 .font(.system(size: 15, weight: .regular, design: .serif))
                 .lineSpacing(6)
                 .foregroundColor(.primary)
@@ -145,19 +146,17 @@ private struct MobileReadingExcerptCard: View {
         }
         .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColors.secondaryBackground(for: colorScheme))
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+        .readingRecordCardStyle(cornerRadius: AppRadius.m, backgroundOpacity: 0.72, strokeOpacity: 0.05)
     }
 }
 
-/// 呈现原生 Markdown 并带有橙紫暖色辨识特征的独立思考笔记视图卡片。
+/// 以纯文本呈现的独立思考笔记视图卡片。
 private struct MobileNoteCard: View {
     let annotation: Excerpt
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.s) {
-            // 🍏 SwiftUI 底层自动接管 markdown 的多级 Header 和无序列表样式映射
-            Text(annotation.content)
+            Text(verbatim: annotation.content)
                 .font(.system(size: 14))
                 .lineSpacing(4)
                 .foregroundColor(.primary)
@@ -171,8 +170,7 @@ private struct MobileNoteCard: View {
         }
         .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColors.readingAmber.opacity(0.05)) // 笔记用极淡的暖黄色区分，并带底层阴影
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+        .readingRecordCardStyle(cornerRadius: AppRadius.m, backgroundOpacity: 0.72, strokeOpacity: 0.05)
     }
 }
 

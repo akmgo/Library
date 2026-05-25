@@ -16,7 +16,6 @@ struct BookDetailView: View {
     @Binding var showDeleteAlert: Bool
     
     @State private var showAddExcerptSheet = false
-    @State private var showAddNoteSheet = false
     @State private var isDeleteMode = false
     
     var body: some View {
@@ -44,9 +43,6 @@ struct BookDetailView: View {
             // ================= 3. 弹窗引擎池 =================
             .sheet(isPresented: $showAddExcerptSheet) {
                 ContentEditorSheet(isPresented: $showAddExcerptSheet, book: book, mode: .excerpt)
-            }
-            .sheet(isPresented: $showAddNoteSheet) {
-                ContentEditorSheet(isPresented: $showAddNoteSheet, book: book, mode: .note)
             }
         }
         .sheet(isPresented: $showEditSheet) {

@@ -2,62 +2,191 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - 📝 摘录录入表单
+private enum MobileBookContentMode: Hashable {
+    case excerpt
+    case note
 
-/// 专门用于记录书中原文摘录的轻量级表单。
-///
-/// **交互特性：**
-/// 采用了 `.serif` 衬线体以渲染文学感。
-/// 利用 `@FocusState` 在视图呼出时自动拉起键盘，确保用户实现“即点即记，记完即走”的极速体验。
+    var displayName: String {
+        switch self {
+        case .excerpt: return "摘录"
+        case .note: return "笔记"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .excerpt: return "text.quote"
+        case .note: return "note.text"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .excerpt: return .blue
+        case .note: return .purple
+        }
+    }
+
+    var category: ExcerptCategory {
+        switch self {
+        case .excerpt: return .bookExcerpt
+        case .note: return .note
+        }
+    }
+
+    var placeholder: String {
+        switch self {
+        case .excerpt: return "输入书中值得留下的句子..."
+        case .note: return "记录此刻的想法..."
+        }
+    }
+
+    var saveTitle: String {
+        switch self {
+        case .excerpt: return "保存摘录"
+        case .note: return "保存笔记"
+        }
+    }
+}
+
+private enum MobileBookContentInputMetrics {
+    static let font = Font.system(size: 17, weight: .regular, design: .serif)
+    static let lineSpacing: CGFloat = 6
+    static let editorPadding: CGFloat = 14
+}
+
+// MARK: - 📝 摘录 / 笔记录入表单
+
+/// 书籍详情页内的轻量级内容录入表单。
 struct MobileAddExcerptSheet: View {
     let book: Book
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     
+    @State private var selectedMode: MobileBookContentMode = .excerpt
     @State private var content: String = ""
     @FocusState private var isFocused: Bool
+    @Namespace private var modeNamespace
+
+    private var trimmedContent: String {
+        content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    TextField("输入书中打动你的金句...", text: $content, axis: .vertical)
-                        .lineLimit(8...15)
-                        .focused($isFocused)
-                        .padding(.vertical, AppSpacing.xs)
-                        // 摘录通常更有文学感，所以我们强制使用衬线字体
-                        .font(.system(size: 16, weight: .regular, design: .serif))
-                } footer: {
-                    Text("摘录将展示在首页的“思想共鸣”卡片中。")
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppSpacing.l) {
+                    modeSlider
+                    contentEditor
                 }
+                .padding(.horizontal, AppSpacing.l)
+                .padding(.top, AppSpacing.l)
+                .padding(.bottom, AppSpacing.emptyState)
             }
-            .navigationTitle("加摘录")
+            .scrollDismissesKeyboard(.interactively)
+            .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
+            .navigationTitle("添加内容")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("取消") { dismiss() }
-                        .foregroundColor(.secondary) // 原生次级颜色
+                    Button("取消") {
+                        isFocused = false
+                        dismiss()
+                    }
+                    .foregroundColor(.secondary)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    let isEmpty = content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    Button("保存") { saveExcerpt() }
+                    Button(selectedMode.saveTitle) { saveExcerpt() }
                         .fontWeight(.bold)
-                        .disabled(isEmpty)
+                        .disabled(trimmedContent.isEmpty)
                 }
             }
             .onAppear {
-                // 延迟极短的时间以确保视图树渲染完毕后自动呼出键盘
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { isFocused = true }
             }
         }
     }
+
+    private var modeSlider: some View {
+        HStack(spacing: 0) {
+            ForEach([MobileBookContentMode.excerpt, MobileBookContentMode.note], id: \.self) { mode in
+                let isSelected = selectedMode == mode
+
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        selectedMode = mode
+                    }
+                } label: {
+                    ZStack {
+                        if isSelected {
+                            RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
+                                .fill(mode.tint)
+                                .matchedGeometryEffect(id: "mobile-content-mode", in: modeNamespace)
+                        }
+
+                        HStack(spacing: AppSpacing.xs) {
+                            Image(systemName: mode.iconName)
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(mode.displayName)
+                                .font(.system(size: 14, weight: isSelected ? .bold : .medium, design: .rounded))
+                        }
+                        .foregroundStyle(isSelected ? .white : Color.primary.opacity(0.72))
+                        .frame(maxWidth: .infinity, minHeight: 38)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(Color.primary.opacity(0.045))
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+    }
+
+    private var contentEditor: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.s) {
+            Text(selectedMode == .excerpt ? "摘录正文" : "笔记正文")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            ZStack(alignment: .topLeading) {
+                if content.isEmpty {
+                    Text(selectedMode.placeholder)
+                        .foregroundStyle(.secondary.opacity(0.55))
+                        .font(MobileBookContentInputMetrics.font)
+                        .lineSpacing(MobileBookContentInputMetrics.lineSpacing)
+                        .padding(MobileBookContentInputMetrics.editorPadding)
+                        .allowsHitTesting(false)
+                }
+
+                TextEditor(text: $content)
+                    .font(MobileBookContentInputMetrics.font)
+                    .lineSpacing(MobileBookContentInputMetrics.lineSpacing)
+                    .focused($isFocused)
+                    .scrollContentBackground(.hidden)
+                    .padding(MobileBookContentInputMetrics.editorPadding)
+            }
+            .frame(minHeight: 260, alignment: .top)
+            .background(
+                AppColors.secondaryBackground(for: colorScheme)
+                    .opacity(0.78)
+                    .background(AppMaterials.card)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                    .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+            )
+        }
+    }
     
     private func saveExcerpt() {
-        let cleanContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !cleanContent.isEmpty {
+        if !trimmedContent.isEmpty {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             try? ReadingDataService.shared.insertExcerpt(
-                content: cleanContent,
-                category: .bookExcerpt,
+                content: trimmedContent,
+                category: selectedMode.category,
                 book: book,
                 context: modelContext
             )

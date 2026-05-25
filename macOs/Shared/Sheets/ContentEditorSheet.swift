@@ -4,9 +4,51 @@ import SwiftUI
 
 // MARK: - 枚举与模式
 
-enum ContentSheetMode {
+enum ContentSheetMode: Hashable {
     case excerpt
     case note
+
+    var displayName: String {
+        switch self {
+        case .excerpt: return "摘录"
+        case .note: return "笔记"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .excerpt: return "text.quote"
+        case .note: return "note.text"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .excerpt: return .blue
+        case .note: return .purple
+        }
+    }
+
+    var category: ExcerptCategory {
+        switch self {
+        case .excerpt: return .bookExcerpt
+        case .note: return .note
+        }
+    }
+
+    var placeholder: String {
+        switch self {
+        case .excerpt: return "输入书中值得留下的句子..."
+        case .note: return "记录此刻的想法..."
+        }
+    }
+
+    var saveTitle: String {
+        switch self {
+        case .excerpt: return "保存摘录"
+        case .note: return "保存笔记"
+        }
+    }
 }
 
 private enum ContentEditorInputMetrics {
@@ -27,21 +69,27 @@ struct ContentEditorSheet: View {
     // ✨ 核心修复：接收全新的统一大实体 Excerpt
     var itemToEdit: Excerpt? = nil
     
+    @State private var selectedMode: ContentSheetMode = .excerpt
     @State private var contentText: String = ""
+    @Namespace private var modeNamespace
     
     var body: some View {
         let isEdit = itemToEdit != nil
         
         VStack(spacing: 0) {
-            // ================= 1. 原生顶部标题 =================
-            HStack(spacing: 12) {
-                Image(systemName: mode == .excerpt ? (isEdit ? "quote.closing" : "quote.opening") : "pencil.line")
-                    .font(.system(size: 20))
-                    .foregroundColor(mode == .excerpt ? .blue : .purple)
-                
-                Text(isEdit ? (mode == .excerpt ? "编辑摘录" : "编辑笔记") : (mode == .excerpt ? "新增摘录" : "记录灵感"))
-                    .font(.system(size: 18, weight: .bold))
-                Spacer()
+            // ================= 1. 顶部标题与类型滑块 =================
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    Image(systemName: selectedMode.iconName)
+                        .font(.system(size: 20))
+                        .foregroundColor(selectedMode.tint)
+
+                    Text(isEdit ? "编辑内容" : "添加内容")
+                        .font(.system(size: 18, weight: .bold))
+                    Spacer()
+                }
+
+                modeSlider
             }
             .padding(.horizontal, 24)
             .padding(.top, 24)
@@ -67,7 +115,7 @@ struct ContentEditorSheet: View {
                     .padding(ContentEditorInputMetrics.editorPadding)
 
                 if contentText.isEmpty {
-                    Text("输入那些值得被铭记的内容...")
+                    Text(selectedMode.placeholder)
                         .font(ContentEditorInputMetrics.font)
                         .foregroundColor(.secondary.opacity(0.6))
                         .lineSpacing(ContentEditorInputMetrics.lineSpacing)
@@ -90,15 +138,16 @@ struct ContentEditorSheet: View {
                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
                 
                 let isContentValid = !contentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                let hasChanges = isEdit ? (contentText != itemToEdit?.content) : true
+                let originalMode: ContentSheetMode = itemToEdit?.isNote == true ? .note : .excerpt
+                let hasChanges = isEdit ? (contentText != itemToEdit?.content || selectedMode != originalMode) : true
                 let canSave = isContentValid && hasChanges
                 
-                Button(isEdit ? "保存修改" : (mode == .excerpt ? "保存摘录" : "保存笔记")) { saveContent() }
+                Button(isEdit ? "保存修改" : selectedMode.saveTitle) { saveContent() }
                     .buttonStyle(.plain)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
                     .padding(.horizontal, 16).padding(.vertical, 6)
-                    .glassEffect(canSave ? .regular.tint(.blue).interactive() : .clear.interactive(), in: .rect(cornerRadius: 6))
+                    .glassEffect(canSave ? .regular.tint(selectedMode.tint).interactive() : .clear.interactive(), in: .rect(cornerRadius: 6))
                     .opacity(canSave ? 1.0 : 0.4)
             }
             .padding(16)
@@ -107,10 +156,46 @@ struct ContentEditorSheet: View {
         .glassEffect(in: .rect(cornerRadius: 16.0))
         .background(WindowTransparentEffect())
         .onAppear {
+            selectedMode = itemToEdit?.isNote == true ? .note : mode
             if let item = itemToEdit {
                 contentText = item.content
             }
         }
+    }
+
+    private var modeSlider: some View {
+        HStack(spacing: 0) {
+            ForEach([ContentSheetMode.excerpt, ContentSheetMode.note], id: \.self) { mode in
+                let isSelected = selectedMode == mode
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        selectedMode = mode
+                    }
+                } label: {
+                    ZStack {
+                        if isSelected {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.clear)
+                                .glassEffect(.regular.tint(mode.tint), in: .rect(cornerRadius: 10))
+                                .matchedGeometryEffect(id: "content-mode", in: modeNamespace)
+                        }
+
+                        HStack(spacing: 7) {
+                            Image(systemName: mode.iconName)
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(mode.displayName)
+                                .font(.system(size: 14, weight: isSelected ? .bold : .medium))
+                        }
+                        .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.72))
+                        .frame(maxWidth: .infinity, minHeight: 34)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(Color.clear.glassEffect(in: .rect(cornerRadius: 12)))
     }
     
     // MARK: - 存储逻辑
@@ -121,12 +206,13 @@ struct ContentEditorSheet: View {
         if let item = itemToEdit {
             // ✨ 编辑模式：直接更新单体字段，逻辑极致简单
             item.content = contentText
+            item.category = selectedMode.category
             try? modelContext.save()
         } else if let targetBook = book {
             // ✨ 新增模式：注入明确的 Type
             try? ReadingDataService.shared.insertExcerpt(
                 content: contentText,
-                category: mode == .excerpt ? .bookExcerpt : .note,
+                category: selectedMode.category,
                 book: targetBook,
                 context: modelContext
             )

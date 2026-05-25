@@ -4,10 +4,6 @@ import SwiftUI
 
 // MARK: - 📱 Mobile 核心调度中心 (数据驱动版)
 
-struct BookDetailPresentation: Identifiable {
-    let id: String
-}
-
 struct MobileHomeView: View {
     @Environment(\.colorScheme) private var colorScheme
     
@@ -21,7 +17,7 @@ struct MobileHomeView: View {
     // ✨ 全局沉浸式底部搜索状态
     @State private var showGlobalSearch = false
     
-    @State private var activeBookDetail: BookDetailPresentation? = nil
+    @State private var activeBookDetail: Book? = nil
     @State private var focusedReadingBookID: String?
 
     private var dashboard: ReadingStatsCalculator.DashboardSnapshot {
@@ -52,7 +48,7 @@ struct MobileHomeView: View {
                                 secondaryBooks: secondaryReadingBooks,
                                 onTapDetail: {
                                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                    activeBookDetail = BookDetailPresentation(id: heroBook.id)
+                                    activeBookDetail = heroBook
                                 },
                                 onSelectSecondaryBook: { candidate in
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -98,10 +94,8 @@ struct MobileHomeView: View {
             }
         }
         .groupBoxStyle(NativeWidgetGroupBoxStyle())
-        .sheet(item: $activeBookDetail) { presentation in
-            if let book = book(withID: presentation.id) {
-                MobileBookDetailView(book: book)
-            }
+        .navigationDestination(item: $activeBookDetail) { book in
+            MobileBookDetailView(book: book)
         }
     }
 
@@ -121,10 +115,6 @@ struct MobileHomeView: View {
 }
 
 private extension MobileHomeView {
-    func book(withID id: String) -> Book? {
-        books.first { $0.id == id }
-    }
-
     // MARK: - 在读焦点管理
 
     private var orderedReadingBooks: [Book] {

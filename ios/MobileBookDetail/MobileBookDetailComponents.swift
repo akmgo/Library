@@ -2,237 +2,363 @@
 import SwiftData
 import SwiftUI
 
-// MARK: - 🧩 右侧超紧凑组件：想读标记按钮
+// MARK: - 基础结构
 
-struct MobilePlannedStatusToggle: View {
-    @Bindable var book: Book
-    @Binding var showMaxAlert: Bool
-    @Environment(\.modelContext) private var modelContext
-    
+struct MobileBookIdentityHeader: View {
+    let book: Book
+
     var body: some View {
-        Button {
-            handleToggle()
-        } label: {
-            // ✨ 修复：彻底弃用布尔值，改用原生状态枚举判定
-            let isPlanned = book.status == .planned
-            Image(systemName: isPlanned ? "bookmark.fill" : "bookmark")
-                .font(.system(size: 16))
-                .foregroundColor(isPlanned ? .orange : Color.gray.opacity(0.5))
-                .padding(4)
+        VStack(spacing: AppSpacing.s) {
+            BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+                .frame(width: 168, height: 252)
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous)
+                        .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.14), radius: 18, y: 10)
+
+            Text(book.title)
+                .font(.system(size: 28, weight: .black, design: .rounded))
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .padding(.top, AppSpacing.xs)
+
+            Text(book.author.isEmpty ? "佚名" : book.author)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
         }
-        .buttonStyle(.plain)
-    }
-    
-    private func handleToggle() {
-        if book.status == .planned {
-            withAnimation(.spring()) {
-                try? ReadingDataService.shared.updateStatus(book, to: .unread, context: modelContext)
-            }
-        } else {
-            do {
-                // ✨ 安全过滤：在内存中过滤以防 #Predicate 引起 SQLite 崩溃
-                let allBooks = try modelContext.fetch(FetchDescriptor<Book>())
-                let count = allBooks.filter { $0.status == .planned }.count
-                
-                if count >= 4 {
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
-                    showMaxAlert = true
-                } else {
-                    withAnimation(.spring()) {
-                        try? ReadingDataService.shared.updateStatus(book, to: .planned, context: modelContext)
-                    }
-                }
-            } catch { print("想读状态查询失败: \(error)") }
-        }
+        .frame(maxWidth: .infinity)
     }
 }
 
-// MARK: - 🧩 右侧超紧凑组件：状态选择器
+struct MobileBookDetailCard<Content: View, Trailing: View>: View {
+    let title: String
+    let systemImage: String
+    let tint: Color
+    let trailing: () -> Trailing
+    let content: () -> Content
 
-struct MobileCompactStatusPicker: View {
-    @Bindable var book: Book
-    var animationNamespace: Namespace.ID
-    @Environment(\.modelContext) private var modelContext
-    
-    // “想读”不放在选择器里，靠书签按钮触发，所以这里只放核心三态
-    let options: [(BookStatus, String)] = [(.unread, "待读"), (.reading, "在读"), (.finished, "已读完")]
-    
+    init(
+        title: String,
+        systemImage: String,
+        tint: Color,
+        @ViewBuilder trailing: @escaping () -> Trailing,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.tint = tint
+        self.trailing = trailing
+        self.content = content
+    }
+
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(options, id: \.0) { opt in
-                let isSelected = book.status == opt.0
-                Button(action: {
-                    handleStatusChange(to: opt.0)
-                }) {
-                    ZStack {
-                            if isSelected {
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(AppColors.selection)
-                                .matchedGeometryEffect(id: "mobile-status-bg", in: animationNamespace)
-                        }
-                        Text(opt.1)
-                            .font(.system(size: 11, weight: isSelected ? .bold : .medium))
-                            .foregroundColor(isSelected ? .white : .secondary)
-                    }
-                    .frame(height: 24)
-                    .frame(maxWidth: .infinity)
+        VStack(alignment: .leading, spacing: AppSpacing.m) {
+            HStack(spacing: AppSpacing.s) {
+                Label(title, systemImage: systemImage)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(tint)
+                Spacer(minLength: AppSpacing.s)
+                trailing()
+            }
+            content()
+        }
+        .padding(AppSpacing.l)
+        .readingRecordCardStyle()
+    }
+}
+
+extension MobileBookDetailCard where Trailing == EmptyView {
+    init(
+        title: String,
+        systemImage: String,
+        tint: Color,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.init(title: title, systemImage: systemImage, tint: tint, trailing: { EmptyView() }, content: content)
+    }
+}
+
+private struct MobileCountBadge: View {
+    let text: String
+    var tint: Color?
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 12, weight: .semibold, design: .rounded))
+            .foregroundStyle(tint.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.secondary))
+            .padding(.horizontal, AppSpacing.xs)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(tint?.opacity(0.14) ?? Color.primary.opacity(0.08)))
+    }
+}
+
+// MARK: - 阅读状态
+
+struct MobileReadingStatusCard: View {
+    @Bindable var book: Book
+    @Binding var showMaxAlert: Bool
+
+    @Environment(\.modelContext) private var modelContext
+    @Namespace private var animationNamespace
+
+    var body: some View {
+        MobileBookDetailCard(title: "阅读状态", systemImage: "book.fill", tint: AppColors.selection) {
+            HStack(spacing: 0) {
+                ForEach(AppConstants.statusOptions, id: \.0) { option in
+                    statusButton(status: option.0, title: option.1)
                 }
-                .buttonStyle(.plain)
+            }
+            .padding(4)
+            .background(Color.primary.opacity(0.045))
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+        }
+    }
+
+    private func statusButton(status: BookStatus, title: String) -> some View {
+        let isSelected = book.status == status
+        return Button {
+            handleStatusChange(to: status)
+        } label: {
+            ZStack {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
+                        .fill(AppColors.selection)
+                        .matchedGeometryEffect(id: "mobile-book-status", in: animationNamespace)
+                }
+                Text(title)
+                    .font(.system(size: 12, weight: isSelected ? .bold : .medium, design: .rounded))
+                    .foregroundColor(isSelected ? .white : .secondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 34)
+                    .contentShape(Rectangle())
             }
         }
-        .padding(2)
-        .background(Color.secondary.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
     }
-    
+
     private func handleStatusChange(to newStatus: BookStatus) {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+        guard newStatus != book.status else { return }
+
+        if newStatus == .planned {
+            do {
+                let allBooks = try modelContext.fetch(FetchDescriptor<Book>())
+                let plannedCount = allBooks.filter { $0.id != book.id && $0.status == .planned }.count
+                guard plannedCount < 4 else {
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    showMaxAlert = true
+                    return
+                }
+            } catch {
+                print("想读状态查询失败: \(error)")
+            }
+        }
+
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        withAnimation(.easeInOut(duration: 0.18)) {
             try? ReadingDataService.shared.updateStatus(book, to: newStatus, context: modelContext)
         }
     }
 }
 
-// MARK: - 🧩 右侧超紧凑组件：双列日期与历时区块
+// MARK: - 日期
 
-struct MobileCompactDatePickers: View {
+struct MobileReadingDateCard: View {
     @Bindable var book: Book
+
+    private var totalDaysText: String {
+        guard let startDate = book.startDate else { return "未开始" }
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.startOfDay(for: book.finishDate ?? Date())
+        let days = max(1, (calendar.dateComponents([.day], from: start, to: end).day ?? 0) + 1)
+        return "\(days) 天"
+    }
+
     var body: some View {
-        HStack(spacing: AppSpacing.xs) {
-            VStack(spacing: 6) {
-                CompactDateBtn(icon: "play.fill", title: "开始", date: $book.startDate)
-                CompactDateBtn(icon: "flag.fill", title: "结束", date: $book.finishDate, isDisabled: book.status != .finished)
-            }
-            
-            if book.status == .finished, let start = book.startDate, let end = book.finishDate {
-                let days = max(1, Calendar.current.dateComponents([.day], from: start, to: end).day ?? 1)
-                VStack(spacing: 2) {
-                    Text("\(days)")
-                        .font(.system(size: 20, weight: .black, design: .rounded))
-                        .foregroundColor(AppColors.success)
-                    Text("历时(天)")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundColor(.secondary)
-                }
-                .frame(width: 56, height: 54)
-                .background(Color.secondary.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        MobileBookDetailCard(
+            title: "阅读旅程",
+            systemImage: "calendar",
+            tint: .mint,
+            trailing: { MobileCountBadge(text: totalDaysText, tint: .mint) }
+        ) {
+            VStack(spacing: AppSpacing.s) {
+                MobileDateControlRow(icon: "calendar.badge.plus", title: "开始", date: $book.startDate, tint: .mint)
+                MobileDateControlRow(
+                    icon: "calendar.badge.checkmark",
+                    title: "结束",
+                    date: $book.finishDate,
+                    tint: .mint,
+                    isDisabled: book.status != .finished,
+                    disabledText: "已读后可设置"
+                )
             }
         }
     }
 }
 
-struct CompactDateBtn: View {
-    let icon: String; let title: String; @Binding var date: Date?; var isDisabled: Bool = false
+private struct MobileDateControlRow: View {
+    let icon: String
+    let title: String
+    @Binding var date: Date?
+    let tint: Color
+    var isDisabled = false
+    var disabledText = "不可设置"
+
     @State private var showPicker = false
-    
+
     var body: some View {
-        Button(action: { showPicker = true }) {
-            HStack(spacing: 6) {
+        Button {
+            showPicker = true
+        } label: {
+            HStack(spacing: AppSpacing.s) {
                 Image(systemName: icon)
-                    .font(.system(size: 9))
-                    .foregroundColor(date != nil ? .blue : Color.gray.opacity(0.5))
-                
-                if let d = date {
-                    Text(d.formatted(date: .numeric, time: .omitted))
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                } else {
-                    Text(title)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(isDisabled ? .secondary.opacity(0.35) : tint)
+                    .frame(width: 28, height: 28)
+                    .background(Circle().fill((isDisabled ? Color.secondary : tint).opacity(0.12)))
+
+                Text(title)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                Text(displayText)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(isDisabled ? .secondary.opacity(0.45) : .primary)
+                    .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 8)
-            .frame(height: 24)
-            .background(Color.secondary.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .padding(.horizontal, AppSpacing.s)
+            .frame(height: 48)
+            .background(Color.primary.opacity(0.035))
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
         }
+        .buttonStyle(.plain)
         .disabled(isDisabled)
-        .opacity(isDisabled ? 0.4 : 1.0)
         .popover(isPresented: $showPicker) {
-            DatePicker("", selection: Binding(get: { date ?? Date() }, set: { date = $0 }), displayedComponents: .date)
-                .datePickerStyle(.graphical).padding()
+            DatePicker(
+                "",
+                selection: Binding(get: { date ?? Date() }, set: { date = $0 }),
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+            .environment(\.locale, Locale(identifier: "zh_CN"))
+            .padding()
         }
+    }
+
+    private var displayText: String {
+        if isDisabled { return disabledText }
+        guard let date else { return "尚未设置" }
+        return AppFormatters.chineseFullDateFormatter.string(from: date)
     }
 }
 
-// MARK: - 🧩 右侧超紧凑组件：小星级与评价文字
+// MARK: - 评价
 
-struct MobileCompactRatingView: View {
+struct MobileBookRatingCard: View {
     @Bindable var book: Book
+
+    private let activeGradient = LinearGradient(
+        colors: [.yellow, .orange],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
 
     var body: some View {
         let validRating = min(max(book.rating, 0), 7)
-        HStack(spacing: AppSpacing.xxs) {
-            HStack(spacing: 1) {
-                ForEach(1 ... 7, id: \.self) { star in
-                    let isFilled = validRating >= star
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 11))
-                        .foregroundColor(isFilled ? .yellow : Color.secondary.opacity(0.2))
+
+        MobileBookDetailCard(
+            title: "阅读沉淀",
+            systemImage: "sparkles",
+            tint: .yellow,
+            trailing: {
+                Text(AppConstants.ratingPoeticTexts[validRating])
+                    .font(.system(size: 13, weight: .bold, design: .serif))
+                    .foregroundStyle(validRating > 0 ? AnyShapeStyle(activeGradient) : AnyShapeStyle(Color.secondary.opacity(0.45)))
+            }
+        ) {
+            HStack(spacing: 0) {
+                ForEach(Array(1...7), id: \.self) { index in
+                    let isFilled = index <= validRating
+                    Image(systemName: isFilled ? "star.fill" : "star")
+                        .font(.system(size: 23))
+                        .foregroundStyle(isFilled ? AnyShapeStyle(activeGradient) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 36)
+                        .contentShape(Rectangle())
                         .onTapGesture {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            withAnimation(.spring(response: 0.3)) { book.rating = star }
+                            withAnimation(.spring(response: 0.22, dampingFraction: 0.88)) {
+                                book.rating = validRating == index ? 0 : index
+                            }
                         }
                 }
-            }
-            Spacer()
-            if validRating > 0 {
-                Text(AppConstants.ratingPoeticTexts[validRating])
-                    .font(.system(size: 10, weight: .bold, design: .serif))
-                    .foregroundColor(AppColors.readingAmber)
-            } else {
-                Text("暂无评价").font(.system(size: 10, weight: .medium)).foregroundColor(Color.gray.opacity(0.5))
             }
         }
     }
 }
 
-// MARK: - 🧩 底部超紧凑组件：自适应多行标签网格
+// MARK: - 标签
 
-struct MobileCompactTagsView: View {
+struct MobileBookTagsCard: View {
     @Bindable var book: Book
-    let predefinedTags = ["哲学", "历史", "商业", "科技", "文学", "成长", "设计", "心理", "传记", "管理"]
-    
+
+    private let columns = [GridItem(.adaptive(minimum: 72, maximum: 120), spacing: AppSpacing.xs)]
+
     var body: some View {
-        let columns = [GridItem(.adaptive(minimum: 54, maximum: 70), spacing: AppSpacing.xs)]
-        
-        LazyVGrid(columns: columns, alignment: .leading, spacing: AppSpacing.xs) {
-            ForEach(predefinedTags, id: \.self) { tag in
-                let isSelected = book.tags.contains(tag)
-                let isMaxed = book.tags.count >= 3 && !isSelected
-                
-                Button(action: {
-                    withAnimation(.spring(response: 0.3)) {
-                        // ✨ 修复：非可选数组的丝滑操作
-                        if isSelected {
-                            book.tags.removeAll(where: { $0 == tag })
-                        } else if book.tags.count < 3 {
-                            book.tags.append(tag)
-                        }
-                    }
-                }) {
-                    Text(tag)
-                        .font(.system(size: 11, weight: isSelected ? .bold : .medium))
-                        .foregroundColor(isSelected ? .white : .secondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 26)
-                        .background(isSelected ? Color.indigo : Color.secondary.opacity(0.1))
-                        .clipShape(Capsule())
+        MobileBookDetailCard(
+            title: "知识标签",
+            systemImage: "tag.fill",
+            tint: .purple,
+            trailing: { MobileCountBadge(text: "\(book.tags.count) / 3") }
+        ) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: AppSpacing.xs) {
+                ForEach(AppConstants.predefinedTags, id: \.self) { tag in
+                    tagButton(tag)
                 }
-                .disabled(isMaxed)
-                .opacity(isMaxed ? 0.4 : 1.0)
             }
         }
     }
+
+    private func tagButton(_ tag: String) -> some View {
+        let isSelected = book.tags.contains(tag)
+        let isMaxed = book.tags.count >= 3 && !isSelected
+
+        return Button {
+            guard !isMaxed else { return }
+            withAnimation(.spring(response: 0.22, dampingFraction: 0.88)) {
+                if isSelected {
+                    book.tags.removeAll(where: { $0 == tag })
+                } else {
+                    book.tags.append(tag)
+                }
+            }
+        } label: {
+            Text(tag)
+                .font(.system(size: 13, weight: isSelected ? .bold : .medium, design: .rounded))
+                .foregroundColor(isSelected ? .white : (isMaxed ? .secondary.opacity(0.45) : .primary))
+                .frame(maxWidth: .infinity)
+                .frame(height: 34)
+                .background(isSelected ? Color.purple : Color.primary.opacity(0.045))
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(isMaxed)
+    }
 }
-// MARK: - 阅读记录卡片
+
+// MARK: - 阅读记录
 
 struct MobileReadingSessionCard: View {
     let book: Book
-    @Environment(\.colorScheme) private var colorScheme
     @State private var isExpanded = false
     private let maxCollapsed = 5
 
@@ -240,74 +366,149 @@ struct MobileReadingSessionCard: View {
         (book.sessions ?? []).sorted { $0.startedAt > $1.startedAt }
     }
 
+    private var visibleSessions: [ReadingSession] {
+        isExpanded ? sessions : Array(sessions.prefix(maxCollapsed))
+    }
+
     var body: some View {
-        let visible = isExpanded ? sessions : Array(sessions.prefix(maxCollapsed))
-        VStack(alignment: .leading, spacing: AppSpacing.s) {
-            HStack {
-                Label("阅读记录", systemImage: "clock.fill")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(AppColors.readingAmber)
-                Spacer()
+        MobileBookDetailCard(
+            title: "阅读记录",
+            systemImage: "clock.fill",
+            tint: AppColors.readingAmber,
+            trailing: {
                 if !sessions.isEmpty {
-                    Text("\(sessions.count) 条")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Capsule().fill(Color.primary.opacity(0.08)))
+                    MobileCountBadge(text: "\(sessions.count) 条")
                 }
             }
-
+        ) {
             if sessions.isEmpty {
-                HStack {
-                    Spacer()
-                    Text("暂无阅读记录").font(.system(size: 13)).foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding(.vertical, 16)
+                MobileEmptyDetailState(
+                    systemImage: "clock.badge.questionmark",
+                    title: "暂无阅读记录",
+                    subtitle: "开始阅读或手动录入后，记录将显示在这里"
+                )
             } else {
                 VStack(spacing: 0) {
-                    ForEach(Array(visible.enumerated()), id: \.element.id) { i, s in
-                        HStack(spacing: AppSpacing.s) {
-                            Text(s.startedAt.formatted(date: .abbreviated, time: .omitted))
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                                .foregroundColor(.primary)
-                                .frame(width: 72, alignment: .leading)
-                            Text(s.displayDuration)
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
-                                .foregroundColor(AppColors.readingAmber)
-                            Spacer()
-                            if s.deltaAmount > 0 {
-                                Text(s.displayDelta)
-                                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                                    .foregroundColor(AppColors.readingAmber)
-                            }
-                        }
-                        .padding(.vertical, AppSpacing.xs)
-                        if i < visible.count - 1 {
-                            Divider().opacity(0.3)
+                    ForEach(Array(visibleSessions.enumerated()), id: \.element.id) { index, session in
+                        MobileSessionRowView(session: session)
+                        if index < visibleSessions.count - 1 {
+                            Divider().opacity(0.25)
                         }
                     }
                 }
-                .padding(AppSpacing.s)
-                .background(Color.primary.opacity(0.03))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .background(
+                    RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                        .fill(Color.primary.opacity(0.025))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                        .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+                )
 
                 if sessions.count > maxCollapsed {
-                    Button(action: { withAnimation { isExpanded.toggle() } }) {
-                        Text(isExpanded ? "收起" : "查看全部 \(sessions.count) 条")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.18)) { isExpanded.toggle() }
+                    } label: {
+                        HStack(spacing: AppSpacing.xxs) {
+                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 10, weight: .bold))
+                            Text(isExpanded ? "收起" : "查看全部 \(sessions.count) 条记录")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppSpacing.xs)
+                        .background(Capsule().fill(Color.primary.opacity(0.04)))
                     }
-                    .frame(maxWidth: .infinity)
+                    .buttonStyle(.plain)
                 }
             }
         }
-        .padding(AppSpacing.m)
-        .background(AppColors.secondaryBackground(for: colorScheme))
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 0.5))
-        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 4)
-        .padding(.horizontal, AppSpacing.m)
+    }
+}
+
+private struct MobileSessionRowView: View {
+    let session: ReadingSession
+
+    var body: some View {
+        HStack(spacing: AppSpacing.s) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(AppFormatters.chineseFullDateFormatter.string(from: session.startedAt))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                Text(session.displayTimeRange)
+                    .font(.system(size: 11, weight: .medium, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(session.displayDuration)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppColors.readingAmber)
+                HStack(spacing: 6) {
+                    if session.deltaAmount > 0 {
+                        Text(session.displayDelta)
+                    }
+                    Text(session.inputMode == .timer ? "计时" : "手动")
+                }
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary.opacity(0.65))
+            }
+        }
+        .padding(.horizontal, AppSpacing.s)
+        .padding(.vertical, AppSpacing.s)
+    }
+}
+
+// MARK: - 摘录
+
+struct MobileBookExcerptsCard: View {
+    let book: Book
+    @Binding var isDeleteMode: Bool
+    let onDelete: (Excerpt) -> Void
+
+    private var totalCount: Int {
+        book.excerpts?.count ?? 0
+    }
+
+    var body: some View {
+        MobileBookDetailCard(
+            title: "摘录笔记",
+            systemImage: "text.quote",
+            tint: .teal,
+            trailing: {
+                if totalCount > 0 {
+                    MobileCountBadge(text: "\(totalCount) 条")
+                }
+            }
+        ) {
+            MobileExcerptsAndNotesList(book: book, isDeleteMode: isDeleteMode, onDelete: onDelete)
+        }
+    }
+}
+
+private struct MobileEmptyDetailState: View {
+    let systemImage: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(spacing: AppSpacing.xs) {
+            Image(systemName: systemImage)
+                .font(.system(size: 24, weight: .light))
+                .foregroundStyle(.secondary.opacity(0.4))
+            Text(title)
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary.opacity(0.55))
+            Text(subtitle)
+                .font(.system(size: 11, weight: .regular, design: .rounded))
+                .foregroundStyle(.secondary.opacity(0.38))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppSpacing.l)
     }
 }
 
@@ -315,15 +516,22 @@ struct MobileReadingSessionCard: View {
 #if DEBUG
 private struct PreviewDetailComponents: View {
     @State private var showMax = false
+    @State private var isDeleteMode = false
     var body: some View {
         PreviewWithBook { book in
             NavigationStack {
-                VStack(spacing: 20) {
-                    MobileCompactRatingView(book: book)
-                    MobileCompactTagsView(book: book)
-                    MobilePlannedStatusToggle(book: book, showMaxAlert: $showMax)
+                ScrollView {
+                    VStack(spacing: AppSpacing.l) {
+                        MobileBookIdentityHeader(book: book)
+                        MobileReadingStatusCard(book: book, showMaxAlert: $showMax)
+                        MobileReadingDateCard(book: book)
+                        MobileBookRatingCard(book: book)
+                        MobileBookTagsCard(book: book)
+                        MobileReadingSessionCard(book: book)
+                        MobileBookExcerptsCard(book: book, isDeleteMode: $isDeleteMode, onDelete: { _ in })
+                    }
+                    .padding(AppSpacing.l)
                 }
-                .padding()
             }
         }
         .modelContainer(previewModelContainer)

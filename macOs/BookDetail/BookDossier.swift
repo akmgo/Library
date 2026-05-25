@@ -272,8 +272,8 @@ struct BookDatePickers: View {
                         .frame(height: 56)
                     Spacer()
                 } else {
-                    AdvancedDatePickerButton(icon: "play.fill", title: "开始", date: $book.startDate)
-                    AdvancedDatePickerButton(icon: "flag.fill", title: "结束", date: $book.finishDate, isDisabled: book.status != .finished)
+                    AdvancedDatePickerButton(icon: "calendar.badge.plus", title: "开始", date: $book.startDate)
+                    AdvancedDatePickerButton(icon: "calendar.badge.checkmark", title: "结束", date: $book.finishDate, isDisabled: book.status != .finished)
                     
                     if book.status == .finished, let start = book.startDate, let end = book.finishDate {
                         let diff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: start), to: Calendar.current.startOfDay(for: end)).day ?? 0
@@ -314,7 +314,7 @@ struct AdvancedDatePickerButton: View {
                 HStack(spacing: 10) {
                     Text(title).font(.system(size: 12, weight: .bold)).foregroundColor(.secondary)
                     if let d = date {
-                        Text(AppFormatters.numericDateFormatter.string(from: d))
+                        Text(AppFormatters.chineseFullDateFormatter.string(from: d))
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
                     } else {

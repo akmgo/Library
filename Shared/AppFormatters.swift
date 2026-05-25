@@ -11,6 +11,16 @@ enum AppFormatters {
         // ✨ 修复报错：改为合法的 DateFormatter.Style
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter
+    }()
+
+    /// 中文完整日期格式 (如：2026年4月24日)
+    /// 用途：详情页日期、阅读记录等需要明确中文展示的场景
+    static let chineseFullDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "yyyy年M月d日"
         return formatter
     }()
     

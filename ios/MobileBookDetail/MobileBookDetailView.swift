@@ -24,128 +24,29 @@ struct MobileBookDetailView: View {
     @State private var showMaxPlannedAlert = false
     
     @State private var isDeleteMode = false
-    @Namespace private var animationNamespace
     
     var body: some View {
         ZStack {
-            // ================= 1. 全局无界内容区 =================
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: AppSpacing.xxl) {
-                    
-                    // ================= 👆 上半部分：书籍详情大模块 =================
-                    VStack(alignment: .leading, spacing: AppSpacing.l) {
-                        
-                        // --- 上：左右分栏 (左封面，右信息) ---
-                        HStack(alignment: .top, spacing: AppSpacing.m) {
-                            // 左侧：封面 (✨ 补齐了 coverID 缓存钩子)
-                            BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
-                                .frame(width: 120, height: 180)
-                                .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
-                                .shadow(color: Color.black.opacity(0.15), radius: 12, y: 6)
-                            
-                            // 右侧：紧凑型档案信息
-                            VStack(alignment: .leading, spacing: 0) {
-                                // 书名、作者与想读按钮
-                                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                                    HStack(alignment: .top) {
-                                        Text(book.title)
-                                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                                            .foregroundColor(.primary)
-                                            .lineLimit(2)
-                                        Spacer(minLength: 4)
-                                        
-                                        // ✨ “想读”本质上是一种特殊的 unread 状态，这里包容它
-                                        if book.status == .unread || book.status == .planned {
-                                            MobilePlannedStatusToggle(book: book, showMaxAlert: $showMaxPlannedAlert)
-                                                .offset(y: -4)
-                                        }
-                                    }
-                                    Text(book.author)
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(1)
-                                }
-                                
-                                Spacer()
-                                
-                                // 状态切换器
-                                MobileCompactStatusPicker(book: book, animationNamespace: animationNamespace)
-                                
-                                Spacer()
-                                
-                                // 阅读日期与历时
-                                MobileCompactDatePickers(book: book)
-                                
-                                Spacer()
-                                
-                                // 个人评价
-                                MobileCompactRatingView(book: book)
-                            }
-                            .frame(height: 180)
-                        }
-                        
-                        Divider()
-                        // --- 下：多列自适应标签组件 ---
-                        MobileCompactTagsView(book: book)
-                    }
-                    .padding(AppSpacing.l)
-                    .background(AppColors.secondaryBackground(for: colorScheme))
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 0.5))
-                    .shadow(color: Color.black.opacity(0.04), radius: 8, y: 4)
-                    .padding(.horizontal, AppSpacing.m)
-                    .padding(.top, AppSpacing.m)
+                VStack(spacing: AppSpacing.l) {
+                    MobileBookIdentityHeader(book: book)
+                        .padding(.bottom, AppSpacing.xs)
 
-                    // ================= 阅读记录 =================
+                    MobileReadingStatusCard(book: book, showMaxAlert: $showMaxPlannedAlert)
+                    MobileReadingDateCard(book: book)
+                    MobileBookRatingCard(book: book)
+                    MobileBookTagsCard(book: book)
                     MobileReadingSessionCard(book: book)
-
-                    // ================= 👇 下半部分：摘录与笔记展示区 =================
-                    VStack(spacing: AppSpacing.l) {
-                        // 区域头部栏
-                        HStack(alignment: .center) {
-                            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                                Text("思考的痕迹")
-                                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
-                                Text("留住阅读时的金句与灵感")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            HStack(spacing: AppSpacing.xs) {
-                                Button(action: {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isDeleteMode.toggle() }
-                                }) {
-                                    Text(isDeleteMode ? "完成" : "管理")
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundColor(isDeleteMode ? .white : .primary)
-                                        .padding(.horizontal, AppSpacing.s).padding(.vertical, 6)
-                                        .background(isDeleteMode ? Color.red : Color.secondary.opacity(0.1))
-                                        .clipShape(Capsule())
-                                }
-                                
-                                Button(action: { showAddExcerptSheet = true }) {
-                                    HStack(spacing: AppSpacing.xxs) {
-                                        Image(systemName: "quote.opening").font(.system(size: 10))
-                                        Text("记摘录").font(.system(size: 12, weight: .bold))
-                                    }
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, AppSpacing.s).padding(.vertical, 6)
-                                    .background(Color.indigo)
-                                    .clipShape(Capsule())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, AppSpacing.l)
-                        
-                        // 混合时间线列表渲染
-                        MobileExcerptsAndNotesList(book: book, isDeleteMode: isDeleteMode) { itemToDelete in
+                    MobileBookExcerptsCard(
+                        book: book,
+                        isDeleteMode: $isDeleteMode,
+                        onDelete: { itemToDelete in
                             deleteRecord(itemToDelete)
                         }
-                    }
+                    )
                 }
+                .padding(.horizontal, AppSpacing.l)
+                .padding(.top, AppSpacing.xl)
                 .padding(.bottom, AppSpacing.emptyState)
             }
         }
@@ -165,9 +66,22 @@ struct MobileBookDetailView: View {
         .sheet(isPresented: $showAddExcerptSheet) { MobileAddExcerptSheet(book: book) }
         .sheet(isPresented: $showEditSheet) { MobileBookEditorSheet(bookToEdit: book) }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
                 Button(action: { showEditSheet = true }) {
                     Image(systemName: "square.and.pencil")
+                }
+                Button(role: .destructive, action: { showDeleteAlert = true }) {
+                    Image(systemName: "trash")
+                }
+                Button(action: { showAddExcerptSheet = true }) {
+                    Image(systemName: "text.quote")
+                }
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        isDeleteMode.toggle()
+                    }
+                }) {
+                    Image(systemName: isDeleteMode ? "checkmark.circle.fill" : "slider.horizontal.3")
                 }
             }
         }
