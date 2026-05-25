@@ -26,7 +26,6 @@ struct BookExcerpts: View {
     
     var body: some View {
         VStack(spacing: 24) {
-            // 顶部：高定分类过滤器
             if !allRecords.isEmpty {
                 HStack {
                     HStack(spacing: 4) {
@@ -40,16 +39,14 @@ struct BookExcerpts: View {
                         }
                     }
                     .padding(4)
-                    .background(Color.secondary.opacity(0.05))
-                    .clipShape(Capsule())
+                    .appInnerCapsuleStyle()
                     
                     Spacer()
                 }
             }
             
             if filteredRecords.isEmpty {
-                BookExcerptsEmptyStateView()
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                EmptyView()
             } else {
                 WaterfallLayout(columns: 2, spacing: 24) {
                     ForEach(filteredRecords) { item in
@@ -59,10 +56,8 @@ struct BookExcerpts: View {
                             onDelete: { onDelete(item) },
                             onEdit: { itemToEdit = item }
                         )
-                        .transition(.appCardGlide)
                     }
                 }
-                .animation(.appFluidSpring, value: filteredRecords.count)
             }
         }
         .sheet(item: $itemToEdit) { item in
@@ -85,19 +80,20 @@ private struct FilterTab: View {
     let isSelected: Bool
     let action: () -> Void
     @State private var isHovered = false
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Text(title)
             .font(.system(size: 13, weight: isSelected ? .bold : .medium))
-            .foregroundColor(isSelected ? Color(nsColor: .windowBackgroundColor) : .primary)
+            .foregroundColor(isSelected ? .white : .primary)
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
             .background(
                 ZStack {
                     if isSelected {
-                        Capsule().fill(Color.primary)
+                        Capsule().fill(AppColors.selection)
                     } else if isHovered {
-                        Capsule().fill(Color.secondary.opacity(0.1))
+                        Capsule().fill(AppColors.innerBlock(for: colorScheme))
                     }
                 }
             )
@@ -191,10 +187,9 @@ struct AnnotationCardWrapper: View {
 }
 
 struct ExcerptCardView: View {
-    let excerpt: Excerpt // ✨
+    let excerpt: Excerpt
     let onEdit: () -> Void
-    @State private var isHovered = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -203,7 +198,7 @@ struct ExcerptCardView: View {
                 Spacer()
                 Text(excerpt.createdAt.formatted(date: .numeric, time: .shortened)).font(.system(size: 12, weight: .medium)).foregroundColor(.secondary.opacity(0.6))
             }
-            
+
             Text(verbatim: excerpt.content)
                 .font(.system(size: 16, weight: .regular, design: .serif))
                 .foregroundColor(.primary).lineSpacing(8).fixedSize(horizontal: false, vertical: true)
@@ -211,24 +206,15 @@ struct ExcerptCardView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .appInnerCardStyle(cornerRadius: AppRadius.m)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                .stroke(isHovered ? Color.indigo.opacity(0.24) : Color.clear, lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.04), radius: isHovered ? 12 : 8, y: isHovered ? 6 : 3)
-        .scaleEffect(isHovered ? 1.008 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
-        .onHover { h in isHovered = h }
+        .appInnerBlockStyle(cornerRadius: AppRadius.m)
         .onTapGesture(count: 2, perform: onEdit)
     }
 }
 
 struct NoteCardView: View {
-    let note: Excerpt // ✨
+    let note: Excerpt
     let onEdit: () -> Void
-    @State private var isHovered = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -242,26 +228,14 @@ struct NoteCardView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .appInnerCardStyle(cornerRadius: AppRadius.m)
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                .stroke(isHovered ? Color.purple.opacity(0.24) : Color.clear, lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.04), radius: isHovered ? 12 : 8, y: isHovered ? 6 : 3)
-        .scaleEffect(isHovered ? 1.008 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
-        .onHover { h in isHovered = h }
+        .appInnerBlockStyle(cornerRadius: AppRadius.m)
         .onTapGesture(count: 2, perform: onEdit)
     }
 }
 
 struct BookExcerptsEmptyStateView: View {
     var body: some View {
-        VStack(spacing: 12) {
-            Text("没有任何思考的痕迹").font(.system(size: 16, weight: .bold)).foregroundColor(.secondary)
-            Text("点击右上角的按钮，沉淀当下的思绪").font(.system(size: 13)).foregroundColor(.secondary.opacity(0.6))
-        }
-        .frame(maxWidth: .infinity).frame(height: 200).background(Color.secondary.opacity(0.05)).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)).overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.secondary.opacity(0.1), style: StrokeStyle(lineWidth: 1.5, dash: [8, 8])))
+        EmptyView()
     }
 }
 

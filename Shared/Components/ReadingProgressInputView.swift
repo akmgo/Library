@@ -163,7 +163,7 @@ struct ReadingProgressInputView: View {
         .padding(.horizontal, AppSpacing.m)
         .frame(height: 44)
         .frame(maxWidth: .infinity)
-        .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 
     private func amountField(title: String, suffix: String, value: Binding<Double>) -> some View {
@@ -188,11 +188,7 @@ struct ReadingProgressInputView: View {
         .padding(.horizontal, AppSpacing.m)
         .frame(height: 48)
         .frame(maxWidth: .infinity)
-        .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 }
 

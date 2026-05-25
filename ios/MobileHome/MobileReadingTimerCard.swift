@@ -230,7 +230,7 @@ struct MobileReadingTimerCard: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
-                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .appInnerBlockStyle(cornerRadius: 12)
 
                 Spacer()
 
@@ -282,7 +282,7 @@ struct MobileReadingTimerCard: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .appInnerBlockStyle(cornerRadius: 12)
 
                 ReadingProgressInputView(
                     draft: $timerProgressDraft,
@@ -357,7 +357,7 @@ struct MobileReadingTimerCard: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
-                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .appInnerBlockStyle(cornerRadius: 12)
 
                 Divider().opacity(0.3)
 

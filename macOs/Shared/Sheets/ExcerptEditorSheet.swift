@@ -567,7 +567,7 @@ struct ExcerptEditorSheet: View {
             .foregroundStyle(canSave ? Color.primary : Color.secondary)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .glassEffect(canSave ? .regular.tint(selectedCategory.themeColor).interactive() : .clear.interactive(), in: .rect(cornerRadius: 8))
+            .glassEffect(canSave ? .regular.tint(selectedCategory.themeColor).interactive() : .clear, in: .rect(cornerRadius: 8))
             .opacity(canSave ? 1 : 0.42)
         }
         .padding(.horizontal, 24)

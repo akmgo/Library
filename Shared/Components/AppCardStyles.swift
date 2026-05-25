@@ -6,6 +6,7 @@ enum AppCardStyleMetrics {
     static let cardStrokeOpacity: Double = 0.05
     static let innerBackgroundOpacity: Double = 0.72
     static let innerStrokeOpacity: Double = 0.05
+    static let innerBlockOpacity: Double = 0.04
 }
 
 struct AppGlassCardModifier: ViewModifier {
@@ -26,6 +27,11 @@ struct AppGlassCardModifier: ViewModifier {
 extension View {
     func glassCard(cornerRadius: CGFloat = 16) -> some View {
         modifier(AppGlassCardModifier(cornerRadius: cornerRadius))
+    }
+
+    /// Shared lightweight card surface for repeated app cards.
+    func glassCardSurface(cornerRadius: CGFloat = AppRadius.card) -> some View {
+        self.glassEffect(in: .rect(cornerRadius: cornerRadius))
     }
 }
 
@@ -61,6 +67,65 @@ struct AppCardStyleModifier: ViewModifier {
     }
 }
 
+struct AppInnerSurfaceModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    let strokeOpacity: Double
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    init(
+        cornerRadius: CGFloat = AppRadius.m,
+        strokeOpacity: Double = AppCardStyleMetrics.innerStrokeOpacity
+    ) {
+        self.cornerRadius = cornerRadius
+        self.strokeOpacity = strokeOpacity
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                AppColors.innerSurface(for: colorScheme),
+                in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppColors.innerStroke(for: colorScheme).opacity(strokeOpacity / AppCardStyleMetrics.innerStrokeOpacity), lineWidth: 1)
+            )
+    }
+}
+
+struct AppInnerBlockModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    init(cornerRadius: CGFloat = AppRadius.m) {
+        self.cornerRadius = cornerRadius
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                AppColors.innerBlock(for: colorScheme),
+                in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+            )
+    }
+}
+
+struct AppInnerCapsuleModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background(Capsule().fill(AppColors.innerBlock(for: colorScheme)))
+            .overlay(Capsule().stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1))
+    }
+}
+
 extension View {
     func appCardStyle(
         cornerRadius: CGFloat = AppRadius.card,
@@ -81,11 +146,15 @@ extension View {
         backgroundOpacity: Double = AppCardStyleMetrics.innerBackgroundOpacity,
         strokeOpacity: Double = AppCardStyleMetrics.innerStrokeOpacity
     ) -> some View {
-        appCardStyle(
-            cornerRadius: cornerRadius,
-            backgroundOpacity: backgroundOpacity,
-            strokeOpacity: strokeOpacity
-        )
+        modifier(AppInnerSurfaceModifier(cornerRadius: cornerRadius, strokeOpacity: strokeOpacity))
+    }
+
+    func appInnerBlockStyle(cornerRadius: CGFloat = AppRadius.m) -> some View {
+        modifier(AppInnerBlockModifier(cornerRadius: cornerRadius))
+    }
+
+    func appInnerCapsuleStyle() -> some View {
+        modifier(AppInnerCapsuleModifier())
     }
 
     func readingRecordCardStyle(

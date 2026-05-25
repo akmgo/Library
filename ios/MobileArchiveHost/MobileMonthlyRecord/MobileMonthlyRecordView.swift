@@ -292,7 +292,7 @@ private struct DayReadingCard: View {
             }
         }
         .padding(AppSpacing.l)
-        .readingRecordCardStyle()
+        .glassCardSurface()
     }
 }
 

@@ -239,13 +239,7 @@ struct MobileTimelineCardView: View {
             .padding(AppSpacing.m)
         }
         .frame(maxWidth: .infinity)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme)
-                .opacity(0.9)
-                .background(AppMaterials.card)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
+        .glassCardSurface()
         .shadow(color: Color.black.opacity(0.05), radius: 8, y: 4)
     }
 }

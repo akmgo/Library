@@ -68,7 +68,7 @@ struct MobileBookDetailCard<Content: View, Trailing: View>: View {
             content()
         }
         .padding(AppSpacing.l)
-        .appCardStyle()
+        .glassCardSurface()
     }
 }
 
@@ -93,7 +93,7 @@ private struct MobileCountBadge: View {
             .foregroundStyle(tint.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.secondary))
             .padding(.horizontal, AppSpacing.xs)
             .padding(.vertical, 3)
-            .background(Capsule().fill(tint?.opacity(0.14) ?? Color.primary.opacity(0.08)))
+            .appInnerCapsuleStyle()
     }
 }
 
@@ -114,8 +114,7 @@ struct MobileReadingStatusCard: View {
                 }
             }
             .padding(4)
-            .background(Color.primary.opacity(0.045))
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+            .appInnerBlockStyle(cornerRadius: AppRadius.m)
         }
     }
 
@@ -127,7 +126,8 @@ struct MobileReadingStatusCard: View {
             ZStack {
                 if isSelected {
                     RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
-                        .fill(AppColors.selection)
+                        .fill(Color.clear)
+                        .glassEffect(.regular.tint(AppColors.selection), in: .rect(cornerRadius: AppRadius.s))
                         .matchedGeometryEffect(id: "mobile-book-status", in: animationNamespace)
                 }
                 Text(title)
@@ -236,8 +236,7 @@ private struct MobileDateControlRow: View {
             }
             .padding(.horizontal, AppSpacing.s)
             .frame(height: 48)
-            .background(Color.primary.opacity(0.035))
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+            .appInnerBlockStyle(cornerRadius: AppRadius.m)
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
@@ -310,6 +309,7 @@ struct MobileBookRatingCard: View {
 
 struct MobileBookTagsCard: View {
     @Bindable var book: Book
+    @Environment(\.colorScheme) private var colorScheme
 
     private let columns = [GridItem(.adaptive(minimum: 72, maximum: 120), spacing: AppSpacing.xs)]
 
@@ -347,7 +347,20 @@ struct MobileBookTagsCard: View {
                 .foregroundColor(isSelected ? .white : (isMaxed ? .secondary.opacity(0.45) : .primary))
                 .frame(maxWidth: .infinity)
                 .frame(height: 34)
-                .background(isSelected ? Color.purple : Color.primary.opacity(0.045))
+                .background {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
+                            .fill(Color.clear)
+                            .glassEffect(.regular.tint(.purple), in: .rect(cornerRadius: AppRadius.s))
+                    } else {
+                        RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
+                            .fill(AppColors.innerBlock(for: colorScheme))
+                    }
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
+                        .stroke(isSelected ? Color.clear : AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+                )
                 .clipShape(RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous))
         }
         .buttonStyle(.plain)
@@ -396,14 +409,7 @@ struct MobileReadingSessionCard: View {
                         }
                     }
                 }
-                .background(
-                    RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                        .fill(Color.primary.opacity(0.025))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                        .stroke(Color.primary.opacity(0.05), lineWidth: 1)
-                )
+                .appInnerBlockStyle(cornerRadius: AppRadius.m)
 
                 if sessions.count > maxCollapsed {
                     Button {
@@ -418,7 +424,7 @@ struct MobileReadingSessionCard: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, AppSpacing.xs)
-                        .background(Capsule().fill(Color.primary.opacity(0.04)))
+                        .appInnerCapsuleStyle()
                     }
                     .buttonStyle(.plain)
                 }

@@ -104,7 +104,7 @@ struct BookEditorSheet: View {
                     .disabled(!canSave)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .glassEffect(canSave ? .regular.tint(.blue).interactive() : .clear.interactive(), in: .rect(cornerRadius: 8))
+                    .glassEffect(canSave ? .regular.tint(.blue).interactive() : .clear, in: .rect(cornerRadius: 8))
                     .opacity(canSave ? 1.0 : 0.4)
             }
             .padding(16)

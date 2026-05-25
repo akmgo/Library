@@ -51,24 +51,7 @@ struct PageStatsHeader: View {
         }
         .padding(.vertical, 12)
         #if os(iOS)
-        .background(
-            showsBackground
-            ? AnyView(
-                AppColors.secondaryBackground(for: colorScheme).opacity(0.8)
-                    .background(AppMaterials.card)
-            )
-            : AnyView(Color.clear)
-        )
-        .clipShape(
-            showsBackground
-            ? AnyShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-            : AnyShape(Rectangle())
-        )
-        .overlay(
-            showsBackground
-            ? AnyView(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
-            : AnyView(EmptyView())
-        )
+        .glassCardSurface()
         .shadow(
             color: showsBackground ? Color.black.opacity(0.05) : Color.clear,
             radius: showsBackground ? 8 : 0,
@@ -77,7 +60,7 @@ struct PageStatsHeader: View {
         #else
         .background(
             showsBackground
-            ? AnyView(Color.primary.opacity(0.03))
+            ? AnyView(AppColors.innerSurface(for: colorScheme))
             : AnyView(Color.clear)
         )
         .clipShape(

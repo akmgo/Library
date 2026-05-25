@@ -20,16 +20,14 @@
 		C54819062F9B6875006D5686 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819052F9B6875006D5686 /* AppNotifications.swift */; };
 		C54819082F9B775B006D5686 /* VisualEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819072F9B775B006D5686 /* VisualEngines.swift */; };
 		C548190C2F9C44EA006D5686 /* BookMetadataSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */; };
-		C54819122F9C52C3006D5686 /* BookMetadataSearchComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */; };
-		C548191E2F9DABBE006D5686 /* SnippetEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */; };
+		C548191E2F9DABBE006D5686 /* ExcerptEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548191D2F9DABBE006D5686 /* ExcerptEditorSheet.swift */; };
 		C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819272F9F385D006D5686 /* GoalSettingsView.swift */; };
 		C548192E2F9F38AC006D5686 /* DataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C548192D2F9F38AC006D5686 /* DataSettingsView.swift */; };
 		C54819312F9F38C6006D5686 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819302F9F38C6006D5686 /* AboutSettingsView.swift */; };
 		C54819832FA09BEC006D5686 /* ReadingDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819822FA09BEC006D5686 /* ReadingDataService.swift */; };
-		C54819852FA0E765006D5686 /* LiquidGlassButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819842FA0E765006D5686 /* LiquidGlassButton.swift */; };
 		C54819892FA19CA7006D5686 /* TopToastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819882FA19CA7006D5686 /* TopToastManager.swift */; };
 		C54819C72FA37817006D5686 /* MobileDataSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819C62FA37817006D5686 /* MobileDataSettingsView.swift */; };
-		C54819CC2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819CB2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift */; };
+		C54819CC2FA3A3BF006D5686 /* MobileExcerptEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C54819CB2FA3A3BF006D5686 /* MobileExcerptEditorSheet.swift */; };
 		C5481A022FA86010006D5686 /* BookMetadataSpotlightSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5481A012FA86010006D5686 /* BookMetadataSpotlightSearchView.swift */; };
 		C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
 		C5FD82912F90C4BB0003A500 /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */; };
@@ -52,9 +50,7 @@
 		C5FD82FA2F90CD1F0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
 		C5FD82FC2F90CD2E0003A500 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100012FA80000006D5686 /* Book.swift */; };
 		C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */; };
-		C5FD83272F934C250003A500 /* AmbientGlowBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */; };
 		C5FD83282F934C250003A500 /* BookCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83242F934C250003A500 /* BookCoverView.swift */; };
-		C5FD83292F934C250003A500 /* Background.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83222F934C250003A500 /* Background.swift */; };
 		C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83232F934C250003A500 /* ConfettiView.swift */; };
 		C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834C2F9513080003A500 /* ReadingHero.swift */; };
 		C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83522F9513340003A500 /* MomentumChart.swift */; };
@@ -105,7 +101,6 @@
 		C6A1020A2FA80000006D5686 /* AppShadows.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A102092FA80000006D5686 /* AppShadows.swift */; };
 		C6A1020C2FA80000006D5686 /* AppMaterials.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1020B2FA80000006D5686 /* AppMaterials.swift */; };
 		C6A1020E2FA80000006D5686 /* AppComponentSizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1020D2FA80000006D5686 /* AppComponentSizes.swift */; };
-		C6A103022FA80000006D5686 /* StatusBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A103012FA80000006D5686 /* StatusBadgeView.swift */; };
 		C6A103042FA80000006D5686 /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A103032FA80000006D5686 /* ProgressBarView.swift */; };
 		E00000010000000000000002 /* PageStatsHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000010000000000000001 /* PageStatsHeader.swift */; };
 		C6A103062FA80000006D5686 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A103052FA80000006D5686 /* EmptyStateView.swift */; };
@@ -152,16 +147,14 @@
 		C54819052F9B6875006D5686 /* AppNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotifications.swift; sourceTree = "<group>"; };
 		C54819072F9B775B006D5686 /* VisualEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEngines.swift; sourceTree = "<group>"; };
 		C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSearchManager.swift; sourceTree = "<group>"; };
-		C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSearchComponents.swift; sourceTree = "<group>"; };
-		C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetEditorSheet.swift; sourceTree = "<group>"; };
+		C548191D2F9DABBE006D5686 /* ExcerptEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExcerptEditorSheet.swift; sourceTree = "<group>"; };
 		C54819272F9F385D006D5686 /* GoalSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalSettingsView.swift; sourceTree = "<group>"; };
 		C548192D2F9F38AC006D5686 /* DataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataSettingsView.swift; sourceTree = "<group>"; };
 		C54819302F9F38C6006D5686 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
 		C54819822FA09BEC006D5686 /* ReadingDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingDataService.swift; sourceTree = "<group>"; };
-		C54819842FA0E765006D5686 /* LiquidGlassButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassButton.swift; sourceTree = "<group>"; };
 		C54819882FA19CA7006D5686 /* TopToastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopToastManager.swift; sourceTree = "<group>"; };
 		C54819C62FA37817006D5686 /* MobileDataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileDataSettingsView.swift; sourceTree = "<group>"; };
-		C54819CB2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSnippetEditorSheet.swift; sourceTree = "<group>"; };
+		C54819CB2FA3A3BF006D5686 /* MobileExcerptEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileExcerptEditorSheet.swift; sourceTree = "<group>"; };
 		C5481A012FA86010006D5686 /* BookMetadataSpotlightSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookMetadataSpotlightSearchView.swift; sourceTree = "<group>"; };
 		C5FD820B2F90C3530003A500 /* Library.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Library.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FD82882F90C4BB0003A500 /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
@@ -183,8 +176,6 @@
 		C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
 		C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
 		C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibraryWidgetsExtension.entitlements; sourceTree = "<group>"; };
-		C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientGlowBackground.swift; sourceTree = "<group>"; };
-		C5FD83222F934C250003A500 /* Background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Background.swift; sourceTree = "<group>"; };
 		C5FD83232F934C250003A500 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		C5FD83242F934C250003A500 /* BookCoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCoverView.swift; sourceTree = "<group>"; };
 		C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWidgetGroupBoxStyle.swift; sourceTree = "<group>"; };
@@ -233,7 +224,6 @@
 		C6A102092FA80000006D5686 /* AppShadows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShadows.swift; sourceTree = "<group>"; };
 		C6A1020B2FA80000006D5686 /* AppMaterials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMaterials.swift; sourceTree = "<group>"; };
 		C6A1020D2FA80000006D5686 /* AppComponentSizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppComponentSizes.swift; sourceTree = "<group>"; };
-		C6A103012FA80000006D5686 /* StatusBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadgeView.swift; sourceTree = "<group>"; };
 		C6A103032FA80000006D5686 /* ProgressBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarView.swift; sourceTree = "<group>"; };
 		E00000010000000000000001 /* PageStatsHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageStatsHeader.swift; sourceTree = "<group>"; };
 		C6A103052FA80000006D5686 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
@@ -314,7 +304,6 @@
 				C5FD82A72F90C5570003A500 /* Sheets */,
 				C5481A032FA86010006D5686 /* Search */,
 				C548190B2F9C44EA006D5686 /* BookMetadataSearchManager.swift */,
-				C54819112F9C52C3006D5686 /* BookMetadataSearchComponents.swift */,
 				C54819882FA19CA7006D5686 /* TopToastManager.swift */,
 			);
 			path = Shared;
@@ -325,7 +314,6 @@
 			children = (
 				C54818FD2F9A66D4006D5686 /* Buttons.swift */,
 				C54818FF2F9A7190006D5686 /* Animations.swift */,
-				C54819842FA0E765006D5686 /* LiquidGlassButton.swift */,
 			);
 			path = UIComponents;
 			sourceTree = "<group>";
@@ -465,7 +453,7 @@
 			children = (
 				C5FD82A82F90C5640003A500 /* ContentEditorSheet.swift */,
 				C5FD82A92F90C5640003A500 /* BookEditorSheet.swift */,
-				C548191D2F9DABBE006D5686 /* SnippetEditorSheet.swift */,
+				C548191D2F9DABBE006D5686 /* ExcerptEditorSheet.swift */,
 			);
 			path = Sheets;
 			sourceTree = "<group>";
@@ -475,7 +463,7 @@
 			children = (
 				C5FD82BD2F90C5CB0003A500 /* MobileAddExcerptSheet.swift */,
 				C5FD82BE2F90C5CB0003A500 /* MobileBookEditorSheet.swift */,
-				C54819CB2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift */,
+				C54819CB2FA3A3BF006D5686 /* MobileExcerptEditorSheet.swift */,
 				CCCCCCCCCCCCCCCCCCCCCCC2 /* MobilePreviewHelper.swift */,
 				B11111111111111111111111 /* MobileBookSearchSheet.swift */,
 			);
@@ -507,8 +495,6 @@
 		C5FD831D2F934BD20003A500 /* CommonUI */ = {
 			isa = PBXGroup;
 			children = (
-				C5FD83212F934C250003A500 /* AmbientGlowBackground.swift */,
-				C5FD83222F934C250003A500 /* Background.swift */,
 				C5FD83232F934C250003A500 /* ConfettiView.swift */,
 				C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */,
 			);
@@ -692,7 +678,6 @@
 			isa = PBXGroup;
 			children = (
 				C5FD83242F934C250003A500 /* BookCoverView.swift */,
-				C6A103012FA80000006D5686 /* StatusBadgeView.swift */,
 				C6A103032FA80000006D5686 /* ProgressBarView.swift */,
 				E00000010000000000000001 /* PageStatsHeader.swift */,
 				C5FD84512F9700000003A500 /* AppCardStyles.swift */,
@@ -835,13 +820,11 @@
 				C5FD83BF2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift in Sources */,
 				C5FD82CF2F90C6150003A500 /* GeneralSettingsView.swift in Sources */,
 				C54819892FA19CA7006D5686 /* TopToastManager.swift in Sources */,
-				C548191E2F9DABBE006D5686 /* SnippetEditorSheet.swift in Sources */,
+				C548191E2F9DABBE006D5686 /* ExcerptEditorSheet.swift in Sources */,
 				C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */,
 				C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */,
-				C5FD83272F934C250003A500 /* AmbientGlowBackground.swift in Sources */,
 				C5FD83762F9517330003A500 /* InspirationWallView.swift in Sources */,
 				C5FD83282F934C250003A500 /* BookCoverView.swift in Sources */,
-				C5FD83292F934C250003A500 /* Background.swift in Sources */,
 				C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */,
 				C5FD84502F9700000003A500 /* AppCardStyles.swift in Sources */,
 				C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */,
@@ -863,7 +846,6 @@
 				C6A1020A2FA80000006D5686 /* AppShadows.swift in Sources */,
 				C6A1020C2FA80000006D5686 /* AppMaterials.swift in Sources */,
 				C6A1020E2FA80000006D5686 /* AppComponentSizes.swift in Sources */,
-				C6A103022FA80000006D5686 /* StatusBadgeView.swift in Sources */,
 				C6A103042FA80000006D5686 /* ProgressBarView.swift in Sources */,
 				E00000010000000000000002 /* PageStatsHeader.swift in Sources */,
 				A11111111111111111111112 /* ReadingSemiCircleArc.swift in Sources */,
@@ -871,7 +853,7 @@
 				C6A103062FA80000006D5686 /* EmptyStateView.swift in Sources */,
 				C6A105042FA80000006D5686 /* ReadingProgressInputView.swift in Sources */,
 				C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */,
-				C54819CC2FA3A3BF006D5686 /* MobileSnippetEditorSheet.swift in Sources */,
+				C54819CC2FA3A3BF006D5686 /* MobileExcerptEditorSheet.swift in Sources */,
 				CCCCCCCCCCCCCCCCCCCCCCC1 /* MobilePreviewHelper.swift in Sources */,
 				C5FD82BF2F90C5CB0003A500 /* MobileBookEditorSheet.swift in Sources */,
 				C5FD83662F95152A0003A500 /* BookCard.swift in Sources */,
@@ -896,7 +878,6 @@
 				C5FD83A32F952FFE0003A500 /* MobileQueueCarouselCard.swift in Sources */,
 				A33333333333333333333332 /* MobileReadingTimerCard.swift in Sources */,
 				C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */,
-				C54819122F9C52C3006D5686 /* BookMetadataSearchComponents.swift in Sources */,
 				C5481A022FA86010006D5686 /* BookMetadataSpotlightSearchView.swift in Sources */,
 				C5FD82BA2F90C5B70003A500 /* MobileYearlyTimelineView.swift in Sources */,
 				C5FD82D52F90C9370003A500 /* ContentView.swift in Sources */,
@@ -906,7 +887,6 @@
 				C54819282F9F385D006D5686 /* GoalSettingsView.swift in Sources */,
 				C5FD83C12F9536B50003A500 /* MobileArchiveHostView.swift in Sources */,
 				C548190C2F9C44EA006D5686 /* BookMetadataSearchManager.swift in Sources */,
-				C54819852FA0E765006D5686 /* LiquidGlassButton.swift in Sources */,
 				C54819C72FA37817006D5686 /* MobileDataSettingsView.swift in Sources */,
 				C5FD82B12F90C59F0003A500 /* MobileGalleryView.swift in Sources */,
 				C548192E2F9F38AC006D5686 /* DataSettingsView.swift in Sources */,

@@ -340,7 +340,7 @@ struct MobileUnifiedExcerptCardView: View {
                 naturalInkHeight = height
             }
         }
-        .readingRecordCardStyle()
+        .glassCardSurface()
     }
 
     @ViewBuilder

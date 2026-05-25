@@ -170,8 +170,8 @@ struct BookRatingView: View {
                     Image(systemName: index <= validRating ? "star.fill" : "star")
                         .font(.system(size: 20))
                         .foregroundStyle(index <= validRating ? AnyShapeStyle(activeGradient) : AnyShapeStyle(Color.secondary.opacity(0.15)))
-                        .shadow(color: index <= validRating ? Color.orange.opacity(0.4) : .clear, radius: 4)
-                        .scaleEffect(index <= validRating ? 1.08 : 1.0)
+                        .shadow(color: index <= validRating ? Color.orange.opacity(0.18) : .clear, radius: 2)
+                        .scaleEffect(index <= validRating ? 1.02 : 1.0)
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -231,7 +231,7 @@ struct BookStatusPicker: View {
                 }
             }
             .padding(4)
-            .background(Color.clear.glassEffect(in: .rect(cornerRadius: 12.0))) // ✨ 内部轨道的底层玻璃
+            .appInnerBlockStyle(cornerRadius: 12)
         }
         .glassCard()
     }
@@ -303,6 +303,7 @@ struct AdvancedDatePickerButton: View {
     let icon: String; let title: String; @Binding var date: Date?; var isDisabled: Bool = false
     @State private var isShowingPopover = false
     @State private var isHovered = false
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isShowingPopover.toggle() } }) {
@@ -326,8 +327,12 @@ struct AdvancedDatePickerButton: View {
                 Spacer()
             }
             .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity)
-            // ✨ 按钮本身变成一层带有交互反馈的玻璃
-            .glassEffect(isHovered ? .regular.interactive() : .clear.interactive(), in: .rect(cornerRadius: 12.0))
+            .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+            )
+            .glassEffect(isHovered ? .regular.interactive() : .clear, in: .rect(cornerRadius: 12.0))
         }
         .buttonStyle(.plain).disabled(isDisabled).opacity(isDisabled ? 0.4 : 1.0)
         .onHover { h in withAnimation(.easeInOut(duration: 0.2)) { isHovered = h }; if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
@@ -381,6 +386,7 @@ struct QuickOptionRow: View {
 
 struct BookTagsView: View {
     @Bindable var book: Book
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         let safeTags: [String] = book.tags
@@ -390,7 +396,12 @@ struct BookTagsView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.purple)
                 Spacer()
-                Text("\(safeTags.count) / 3").font(.system(size: 14, weight: .bold)).foregroundColor(.secondary)
+                Text("\(safeTags.count) / 3")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .appInnerCapsuleStyle()
             }
             let columns = [GridItem(.adaptive(minimum: 80, maximum: 120), spacing: 12)]
             LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
@@ -410,9 +421,20 @@ struct BookTagsView: View {
                             .font(.system(size: 14, weight: isSelected ? .bold : .medium))
                             .foregroundColor(isSelected ? .white : (isMaxed ? .secondary.opacity(0.6) : .primary))
                             .frame(height: 36).frame(maxWidth: .infinity)
-                            // ✨ 亮点：选中的标签变成一颗紫色的液态水滴！
-                            .glassEffect(isSelected ? .regular.tint(.purple).interactive() : .clear.interactive(), in: .rect(cornerRadius: 12.0))
-                            .scaleEffect(isSelected ? 1.05 : 1.0)
+                            .background {
+                                if !isSelected {
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .fill(AppColors.innerBlock(for: colorScheme))
+                                }
+                            }
+                            .overlay {
+                                if !isSelected {
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+                                }
+                            }
+                            .glassEffect(isSelected ? .regular.tint(.purple).interactive() : .clear, in: .rect(cornerRadius: 12.0))
+                            .scaleEffect(isSelected ? 1.02 : 1.0)
                     }
                     .buttonStyle(.plain).disabled(isMaxed).onHover { h in if h && !isMaxed { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
                 }
@@ -453,7 +475,7 @@ struct ReadingSessionCard: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Capsule().fill(Color.primary.opacity(0.08)))
+                        .appInnerCapsuleStyle()
                 }
             }
 
@@ -480,14 +502,7 @@ struct ReadingSessionCard: View {
                         }
                     }
                 }
-                .background(
-                    RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                        .fill(Color.primary.opacity(0.02))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                        .stroke(Color.primary.opacity(0.05), lineWidth: 1)
-                )
+                .appInnerBlockStyle(cornerRadius: AppRadius.m)
 
                 if sessions.count > maxCollapsed {
                     Button {
@@ -502,7 +517,7 @@ struct ReadingSessionCard: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
-                        .background(Capsule().fill(Color.primary.opacity(0.04)))
+                        .appInnerCapsuleStyle()
                     }
                     .buttonStyle(.plain)
                 }
@@ -560,7 +575,7 @@ private struct SessionRowView: View {
             .foregroundStyle(.secondary.opacity(0.5))
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .background(Capsule().fill(Color.primary.opacity(0.05)))
+            .appInnerCapsuleStyle()
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 12)
@@ -590,13 +605,15 @@ struct ExcerptCard: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Capsule().fill(Color.primary.opacity(0.08)))
+                        .appInnerCapsuleStyle()
                 }
             }
 
             BookExcerpts(book: book, isDeleteMode: isDeleteMode, onDelete: onDelete)
         }
-        .glassCard()
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassCardSurface()
     }
 }
 

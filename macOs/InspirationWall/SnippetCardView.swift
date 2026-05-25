@@ -93,7 +93,7 @@ struct ExcerptWallCardView: View {
                 naturalInkHeight = height
             }
         }
-        .readingRecordCardStyle()
+        .glassCardSurface()
         .excerptDoubleTap(enabled: allowsEditGesture) {
             onEdit(excerpt)
         }

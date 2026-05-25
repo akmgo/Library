@@ -6,6 +6,8 @@ enum AppColors {
         static let primaryBackground = Color(red: 247 / 255, green: 245 / 255, blue: 241 / 255)
         static let secondaryBackground = Color.white
         static let tertiaryBackground = Color(red: 238 / 255, green: 234 / 255, blue: 227 / 255)
+        static let innerSurface = Color.white.opacity(0.38)
+        static let innerBlock = Color.white.opacity(0.56)
         static let primaryText = Color(red: 28 / 255, green: 28 / 255, blue: 30 / 255)
         static let secondaryText = Color(red: 110 / 255, green: 110 / 255, blue: 115 / 255)
         static let tertiaryText = Color(red: 161 / 255, green: 161 / 255, blue: 166 / 255)
@@ -16,6 +18,8 @@ enum AppColors {
         static let primaryBackground = Color(red: 17 / 255, green: 17 / 255, blue: 19 / 255)
         static let secondaryBackground = Color(red: 26 / 255, green: 26 / 255, blue: 29 / 255)
         static let tertiaryBackground = Color(red: 36 / 255, green: 36 / 255, blue: 40 / 255)
+        static let innerSurface = Color.white.opacity(0.055)
+        static let innerBlock = Color.white.opacity(0.075)
         static let primaryText = Color(red: 245 / 255, green: 245 / 255, blue: 247 / 255)
         static let secondaryText = Color(red: 161 / 255, green: 161 / 255, blue: 166 / 255)
         static let tertiaryText = Color(red: 111 / 255, green: 111 / 255, blue: 118 / 255)
@@ -41,6 +45,18 @@ enum AppColors {
 
     static func tertiaryBackground(for colorScheme: ColorScheme) -> Color {
         colorScheme == .dark ? Dark.tertiaryBackground : Light.tertiaryBackground
+    }
+
+    static func innerSurface(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Dark.innerSurface : Light.innerSurface
+    }
+
+    static func innerBlock(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Dark.innerBlock : Light.innerBlock
+    }
+
+    static func innerStroke(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.045)
     }
 
     static func primaryText(for colorScheme: ColorScheme) -> Color {

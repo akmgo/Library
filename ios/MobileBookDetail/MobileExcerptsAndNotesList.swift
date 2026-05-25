@@ -30,12 +30,7 @@ struct MobileExcerptsAndNotesList: View {
 
     var body: some View {
         if sortedAnnotations.isEmpty {
-            VStack(spacing: AppSpacing.s) {
-                Image(systemName: "leaf").font(.system(size: 32)).foregroundColor(Color.gray.opacity(0.5))
-                Text("暂无记录，写下你的感悟吧").font(.system(size: 14)).foregroundColor(.secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 60)
+            EmptyView()
         } else {
             HStack(spacing: AppSpacing.xxs) {
                 ForEach(BookExcerptFilter.allCases, id: \.self) { f in
@@ -43,15 +38,21 @@ struct MobileExcerptsAndNotesList: View {
                     Button(action: { withAnimation { filter = f } }) {
                         Text("\(f.displayName) (\(count))")
                             .font(.system(size: 12, weight: filter == f ? .bold : .medium, design: .rounded))
-                            .foregroundColor(filter == f ? AppColors.primaryBackground(for: colorScheme) : .primary)
+                            .foregroundColor(filter == f ? .white : .primary)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(filter == f ? Color.primary : Color.secondary.opacity(0.08))
+                            .background(filter == f ? AppColors.selection : AppColors.innerBlock(for: colorScheme))
+                            .overlay(
+                                Capsule()
+                                    .stroke(filter == f ? Color.clear : AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+                            )
                             .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
                 }
                 Spacer()
             }
+            .padding(4)
+            .appInnerCapsuleStyle()
             .padding(.bottom, 8)
 
             LazyVStack(spacing: AppSpacing.m) {
@@ -126,21 +127,21 @@ private struct MobileReadingExcerptCard: View {
         }
         .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .appInnerCardStyle()
+        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 }
 
 /// 以纯文本呈现的独立思考笔记视图卡片。
 private struct MobileNoteCard: View {
     let annotation: Excerpt
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.s) {
             Text(verbatim: annotation.content)
                 .font(.system(size: 14))
                 .lineSpacing(4)
                 .foregroundColor(.primary)
-            
+
             HStack {
                 Spacer()
                 Text(annotation.createdAt, format: .dateTime.year().month().day())
@@ -150,7 +151,7 @@ private struct MobileNoteCard: View {
         }
         .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .appInnerCardStyle()
+        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 }
 

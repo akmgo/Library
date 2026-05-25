@@ -98,7 +98,7 @@ struct ContentEditorSheet: View {
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
                     .padding(.horizontal, 16).padding(.vertical, 6)
-                    .glassEffect(canSave ? .regular.tint(selectedMode.tint).interactive() : .clear.interactive(), in: .rect(cornerRadius: 6))
+                    .glassEffect(canSave ? .regular.tint(selectedMode.tint).interactive() : .clear, in: .rect(cornerRadius: 6))
                     .opacity(canSave ? 1.0 : 0.4)
             }
             .padding(16)

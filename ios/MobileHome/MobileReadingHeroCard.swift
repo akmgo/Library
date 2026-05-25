@@ -148,10 +148,7 @@ struct MobileReadingHeroCard: View {
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.primary.opacity(0.04))
-                            )
+                            .appInnerBlockStyle(cornerRadius: 10)
                         }
                         .buttonStyle(.plain)
                     }

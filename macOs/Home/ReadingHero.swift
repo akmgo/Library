@@ -80,10 +80,10 @@ struct ReadingHero: View {
             if secondaryBooks.count < 3 {
                 ForEach(0 ..< (3 - secondaryBooks.count), id: \.self) { _ in
                     RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                        .fill(Color.primary.opacity(0.025))
+                        .fill(AppColors.innerBlock(for: colorScheme))
                         .overlay(
                             RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                                .stroke(Color.primary.opacity(0.035), lineWidth: 1)
+                                .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
                         )
                         .frame(maxWidth: 300)
                         .frame(height: secondaryRowHeight)
@@ -345,7 +345,7 @@ struct ReadingTimerCard: View {
             .padding(.horizontal, AppSpacing.m)
             .frame(maxWidth: .infinity)
             .frame(height: 48)
-            .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+            .appInnerBlockStyle(cornerRadius: AppRadius.m)
 
             Divider().opacity(0.28)
 
@@ -393,7 +393,7 @@ struct ReadingTimerCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 6)
-            .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+            .appInnerBlockStyle(cornerRadius: AppRadius.m)
 
             ReadingProgressInputView(
                 draft: $timerProgressDraft,
@@ -481,7 +481,7 @@ struct ReadingTimerCard: View {
             .padding(.horizontal, AppSpacing.m)
             .frame(maxWidth: .infinity)
             .frame(height: 48)
-            .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+            .appInnerBlockStyle(cornerRadius: AppRadius.m)
 
             Button {
                 isTimedDurationPopoverPresented = false
@@ -620,11 +620,7 @@ private struct SecondaryReadingBookRow: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .frame(maxWidth: 300, maxHeight: .infinity)
-        .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
-        )
+        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 }
 
@@ -690,14 +686,11 @@ struct EmptyReadingHero: View {
         }
         .padding(.horizontal, AppSpacing.l)
         .padding(.vertical, 16)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.72),
-            in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-        )
+        .background(AppColors.innerSurface(for: colorScheme), in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous))
         .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
         .overlay(
             RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.tertiaryBackground(for: colorScheme).opacity(0.9), lineWidth: 1)
+                .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
         )
     }
 }

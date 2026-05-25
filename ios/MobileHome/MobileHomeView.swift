@@ -433,9 +433,7 @@ struct MobileBottomSearchView: View {
             Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).foregroundColor(.secondary.opacity(0.5))
         }
         .padding(14)
-        .background(AppColors.secondaryBackground(for: colorScheme))
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
+        .glassCardSurface()
         .shadow(color: Color.black.opacity(0.03), radius: 8, y: 4)
         .contentShape(Rectangle())
     }
@@ -461,9 +459,7 @@ struct MobileBottomSearchView: View {
             Spacer(minLength: 0)
         }
         .padding(AppSpacing.m)
-        .background(AppColors.secondaryBackground(for: colorScheme))
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
+        .glassCardSurface()
         .shadow(color: Color.black.opacity(0.03), radius: 8, y: 4)
         .contentShape(Rectangle())
     }
@@ -487,9 +483,7 @@ struct MobileBottomSearchView: View {
             Spacer(minLength: 0)
         }
         .padding(AppSpacing.m)
-        .background(AppColors.secondaryBackground(for: colorScheme))
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
+        .glassCardSurface()
         .shadow(color: Color.black.opacity(0.03), radius: 8, y: 4)
         .contentShape(Rectangle())
     }

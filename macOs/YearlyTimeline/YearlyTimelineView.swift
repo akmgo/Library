@@ -234,16 +234,7 @@ private struct TimelineCardView: View {
         }
         .padding(24)
         .frame(width: 420, alignment: isLeft ? .trailing : .leading)
-        .background(
-            Color(nsColor: .controlBackgroundColor)
-                .opacity(isHovered ? 0.9 : 0.6)
-                .background(.ultraThinMaterial)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.primary.opacity(isHovered ? 0.15 : 0.05), lineWidth: 1)
-        )
+        .glassCardSurface(cornerRadius: 16)
         .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.02), radius: isHovered ? 10 : 4, y: isHovered ? 3 : 2)
         .contentShape(Rectangle())
         .onHover { h in
