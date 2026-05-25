@@ -19,7 +19,7 @@ struct MobileArchiveHostView: View {
                     Text("月历记录").tag(1)
                 }
                 .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, AppSpacing.l)
                 .padding(.top, 10)
                 .padding(.bottom, 16)
                 
@@ -34,11 +34,20 @@ struct MobileArchiveHostView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .navigationTitle(archiveMode == 0 ? "年度轨迹" : "月历记录")
             .navigationBarTitleDisplayMode(.inline)
             .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
             .toolbar(isLandscape ? .hidden : .visible, for: .tabBar)
         }
     }
 }
+
+#if DEBUG
+#Preview("存档总览") {
+    PreviewWithData {
+        MobileArchiveHostView()
+    }
+}
+#endif
+
+
 #endif

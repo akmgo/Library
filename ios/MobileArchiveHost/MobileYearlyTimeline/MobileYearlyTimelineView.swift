@@ -26,22 +26,17 @@ struct MobileYearlyTimelineView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .top) {
-                AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
+        ZStack(alignment: .top) {
+            AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
                 
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 0) {
-                        MobileYearlyStatsHeader(
-                            year: selectedYear,
-                            booksCount: yearlySnapshot.books.count,
-                            daysCount: yearlySnapshot.totalDaysRead,
-                            hoursCount: yearlySnapshot.totalReadingHours,
-                            streakCount: yearlySnapshot.longestStreak
-                        )
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-                        .padding(.bottom, 24)
+                        MobilePageStatsHeader(items: [
+                            PageStatItemData(title: "完结作品", value: "\(yearlySnapshot.books.count)", color: .indigo),
+                            PageStatItemData(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", color: AppColors.readingAmber),
+                            PageStatItemData(title: "阅读时长", value: "\(yearlySnapshot.totalReadingHours)", color: .teal),
+                            PageStatItemData(title: "最高连续", value: "\(yearlySnapshot.longestStreak)", color: .pink),
+                        ], bottomPadding: 24)
                         
                         if yearlySnapshot.books.isEmpty {
                             emptyState
@@ -56,14 +51,29 @@ struct MobileYearlyTimelineView: View {
                             }
                         }
                     }
-                    .padding(.bottom, 120)
+                    .padding(.bottom, AppSpacing.emptyState)
                     .opacity(isEntranceAnimated ? 1.0 : 0.0)
                     .offset(y: isEntranceAnimated ? 0 : 40)
                     .animation(.spring(response: 0.5, dampingFraction: 0.8), value: isEntranceAnimated)
                 }
             }
-            .navigationTitle("\(String(selectedYear)) 年轨迹")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        ForEach(yearlySnapshot.availableYears, id: \.self) { year in
+                            Button(action: { selectedYear = year }) {
+                                HStack {
+                                    Text(String(year))
+                                    if year == selectedYear { Image(systemName: "checkmark") }
+                                }
+                            }
+                        }
+                    } label: {
+                        Text(String(selectedYear))
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+            }
             .onAppear {
                 // ✨ 核心修复：锁定生命周期，只在首次进入时触发下拉动画
                 if !hasAppeared {
@@ -77,8 +87,7 @@ struct MobileYearlyTimelineView: View {
                 }
             }
         }
-    }
-    
+
     private var emptyState: some View {
         EmptyStateView(
             systemImage: "calendar.badge.exclamationmark",
@@ -93,54 +102,6 @@ struct MobileYearlyTimelineView: View {
 }
 
 // ============================================================================
-// MARK: - 📊 2. 顶部数据面板组件
-// ============================================================================
-
-struct MobileYearlyStatsHeader: View {
-    let year: Int; let booksCount: Int; let daysCount: Int; let hoursCount: Int; let streakCount: Int
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            MobileStatItem(title: "完结作品", value: "\(booksCount)", unit: "部", color: .indigo)
-            Divider().frame(height: 32).opacity(0.5)
-            MobileStatItem(title: "打卡天数", value: "\(daysCount)", unit: "天", color: .orange)
-            Divider().frame(height: 32).opacity(0.5)
-            MobileStatItem(title: "阅读时长", value: "\(hoursCount)", unit: "时", color: .teal)
-            Divider().frame(height: 32).opacity(0.5)
-            MobileStatItem(title: "最高连续", value: "\(streakCount)", unit: "天", color: .pink)
-        }
-        .padding(.vertical, 16)
-        .background(
-            AppColors.secondaryBackground(for: colorScheme).opacity(0.8)
-                .background(AppMaterials.card)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
-        .shadow(color: Color.black.opacity(0.05), radius: 8, y: 4)
-    }
-}
-
-private struct MobileStatItem: View {
-    let title: String; let value: String; let unit: String; let color: Color
-    var body: some View {
-        VStack(spacing: 4) {
-            HStack(alignment: .lastTextBaseline, spacing: 2) {
-                Text(value)
-                    .font(.system(size: 24, weight: .heavy, design: .rounded))
-                    .foregroundColor(color)
-                    .contentTransition(.numericText(value: Double(value) ?? 0))
-                Text(unit)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.secondary)
-            }
-            Text(title).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-// ============================================================================
 // MARK: - 📍 3. 单轨时间轴行组件
 // ============================================================================
 
@@ -150,7 +111,7 @@ struct MobileTimelineRowView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: AppSpacing.m) {
             VStack(spacing: 0) {
                 ZStack {
                     Circle().fill(AppColors.primaryBackground(for: colorScheme)).frame(width: 14, height: 14)
@@ -163,7 +124,7 @@ struct MobileTimelineRowView: View {
             }
             .padding(.leading, 20)
             
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: AppSpacing.s) {
                 MobileTimelineDateBadgeView(book: book)
                 
                 // ✨ 核心修复：彻底摒弃自定义交互样式，回归最原生、最敏捷的点击反馈
@@ -187,14 +148,14 @@ private struct MobileTimelineDateBadgeView: View {
     }
     
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: AppSpacing.s) {
             Text(dateStr)
                 .font(.system(size: 20, weight: .bold, design: .rounded))
                 .tracking(1)
                 .foregroundColor(.secondary)
             
             if let data = AppConstants.recommendationData(for: book.rating) {
-                HStack(spacing: 4) {
+                HStack(spacing: AppSpacing.xxs) {
                     Image(systemName: data.icon).font(.system(size: 11))
                     Text(data.text).font(.system(size: 11, weight: .bold))
                 }
@@ -227,7 +188,7 @@ struct MobileTimelineCardView: View {
                 }
             }.clipShape(RoundedRectangle(cornerRadius: AppRadius.card))
             
-            HStack(alignment: .top, spacing: 16) {
+            HStack(alignment: .top, spacing: AppSpacing.m) {
                 BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
                     .frame(width: 80, height: 120).clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover))
                     .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover).stroke(Color.primary.opacity(0.1), lineWidth: 0.5))
@@ -252,7 +213,7 @@ struct MobileTimelineCardView: View {
                             if book.rating < AppConstants.ratingPoeticTexts.count {
                                 Text(AppConstants.ratingPoeticTexts[book.rating])
                                     .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(AppColors.readingAmber)
                                     .padding(.leading, 4)
                             }
                         }
@@ -275,7 +236,7 @@ struct MobileTimelineCardView: View {
                 }
                 .frame(height: 120)
             }
-            .padding(16)
+            .padding(AppSpacing.m)
         }
         .frame(maxWidth: .infinity)
         .background(
@@ -296,19 +257,19 @@ struct MobileJourneyTicket: View {
         
         HStack(spacing: 0) {
             Text(formatShortDate(book.startDate)).font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary)
-            HStack(spacing: 4) {
-                Circle().fill(Color.teal).frame(width: 4, height: 4)
-                Rectangle().fill(Color.teal.opacity(0.5)).frame(height: 1)
+            HStack(spacing: AppSpacing.xxs) {
+                Circle().fill(AppColors.success).frame(width: 4, height: 4)
+                Rectangle().fill(AppColors.success.opacity(0.5)).frame(height: 1)
                 
-                Text("\(days)天").font(.system(size: 9, weight: .bold)).foregroundColor(.teal).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                    .padding(.horizontal, 6).padding(.vertical, 2).background(Color.teal.opacity(0.15)).clipShape(Capsule())
+                Text("\(days)天").font(.system(size: 9, weight: .bold)).foregroundColor(AppColors.success).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                    .padding(.horizontal, 6).padding(.vertical, 2).background(AppColors.success.opacity(0.15)).clipShape(Capsule())
                 
-                Rectangle().fill(Color.teal.opacity(0.5)).frame(height: 1)
-                Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold)).foregroundColor(.teal)
+                Rectangle().fill(AppColors.success.opacity(0.5)).frame(height: 1)
+                Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold)).foregroundColor(AppColors.success)
             }.padding(.horizontal, 8)
             Text(formatShortDate(book.finishDate)).font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary)
         }
-        .padding(.horizontal, 10).padding(.vertical, 8)
+        .padding(.horizontal, 10).padding(.vertical, AppSpacing.xs)
         .background(Color.primary.opacity(0.03))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
@@ -326,4 +287,14 @@ struct MobileJourneyTicket: View {
         return max(1, diff + 1)
     }
 }
+
+#if DEBUG
+#Preview("年度时间线") {
+    PreviewWithData {
+        MobileYearlyTimelineView()
+    }
+}
+#endif
+
+
 #endif

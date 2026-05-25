@@ -2,6 +2,19 @@
 import SwiftData
 import SwiftUI
 
+// MARK: - 过滤器
+
+enum AnnotationFilter: String, CaseIterable {
+    case all, excerpts, notes
+    var displayName: String {
+        switch self {
+        case .all: return "全部"
+        case .excerpts: return "摘录"
+        case .notes: return "笔记"
+        }
+    }
+}
+
 // MARK: - 🧩 混合列表渲染引擎 (全面拥抱大一统注解模型)
 
 /// 并列交织渲染书籍关联的所有碎片记录的双列瀑布流容器。
@@ -16,28 +29,57 @@ struct MobileExcerptsAndNotesList: View {
     /// 当用户点击红色 "X" 按钮时触发的业务上移执行闭包。
     /// ✨ 修复：传出参数统一更改为原生的 Excerpt
     let onDelete: (Excerpt) -> Void
-    
-    // ✨ 极简提取：由于单表合并，现在只需要一句话就能完成排序
+
+    @State private var filter: AnnotationFilter = .all
+
     private var sortedAnnotations: [Excerpt] {
         (book.excerpts ?? []).sorted { $0.createdAt > $1.createdAt }
     }
-    
+
+    private var filteredAnnotations: [Excerpt] {
+        switch filter {
+        case .all: return sortedAnnotations
+        case .excerpts: return sortedAnnotations.filter { $0.type == .excerpt }
+        case .notes: return sortedAnnotations.filter { $0.type == .note }
+        }
+    }
+
+    private var excerptCount: Int { sortedAnnotations.filter { $0.type == .excerpt }.count }
+    private var noteCount: Int { sortedAnnotations.filter { $0.type == .note }.count }
+
     var body: some View {
         if sortedAnnotations.isEmpty {
-            VStack(spacing: 12) {
+            VStack(spacing: AppSpacing.s) {
                 Image(systemName: "leaf").font(.system(size: 32)).foregroundColor(Color.gray.opacity(0.5))
                 Text("暂无记录，写下你的感悟吧").font(.system(size: 14)).foregroundColor(.secondary)
             }
             .padding(.vertical, 60)
         } else {
-            LazyVStack(spacing: 16) {
-                ForEach(sortedAnnotations) { annotation in
+            HStack(spacing: AppSpacing.xxs) {
+                ForEach(AnnotationFilter.allCases, id: \.self) { f in
+                    let count = f == .all ? (excerptCount + noteCount) : (f == .excerpts ? excerptCount : noteCount)
+                    Button(action: { withAnimation { filter = f } }) {
+                        Text("\(f.displayName) (\(count))")
+                            .font(.system(size: 12, weight: filter == f ? .bold : .medium, design: .rounded))
+                            .foregroundColor(filter == f ? .white : .primary)
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(filter == f ? Color.indigo : Color.secondary.opacity(0.08))
+                            .clipShape(Capsule())
+                    }
+                }
+                Spacer()
+            }
+            .padding(.horizontal, AppSpacing.l)
+            .padding(.bottom, 8)
+
+            LazyVStack(spacing: AppSpacing.m) {
+                ForEach(filteredAnnotations) { annotation in
                     MobileAnnotationCardWrapper(annotation: annotation, isDeleteMode: isDeleteMode) {
                         onDelete(annotation)
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, AppSpacing.l)
         }
     }
 }
@@ -70,7 +112,7 @@ private struct MobileAnnotationCardWrapper: View {
                         .frame(width: 28, height: 28)
                         .background(Color.red)
                         .clipShape(Circle())
-                        .shadow(color: Color.red.opacity(0.4), radius: 6, y: 3)
+                        .shadow(color: AppColors.danger.opacity(0.4), radius: 6, y: 3)
                 }
                 .offset(x: 8, y: -8)
                 .transition(.scale.combined(with: .opacity))
@@ -86,7 +128,7 @@ private struct MobileReadingExcerptCard: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.s) {
             // ✨ 修复：模型里的 content 已经是必填项，干掉了冗余的 ?? ""
             Text(annotation.content)
                 .font(.system(size: 15, weight: .regular, design: .serif))
@@ -101,7 +143,7 @@ private struct MobileReadingExcerptCard: View {
                     .foregroundColor(Color.gray.opacity(0.5))
             }
         }
-        .padding(16)
+        .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppColors.secondaryBackground(for: colorScheme))
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
@@ -113,7 +155,7 @@ private struct MobileNoteCard: View {
     let annotation: Excerpt
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.s) {
             // 🍏 SwiftUI 底层自动接管 markdown 的多级 Header 和无序列表样式映射
             Text(annotation.content)
                 .font(.system(size: 14))
@@ -127,10 +169,31 @@ private struct MobileNoteCard: View {
                     .foregroundColor(Color.gray.opacity(0.5))
             }
         }
-        .padding(16)
+        .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.05)) // 笔记用极淡的暖黄色区分，并带底层阴影
+        .background(AppColors.readingAmber.opacity(0.05)) // 笔记用极淡的暖黄色区分，并带底层阴影
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
     }
 }
+
+#if DEBUG
+private struct PreviewExcerptsList: View {
+    var body: some View {
+        PreviewWithBook(title: "三体", author: "刘慈欣", currentAmount: 156) { book in
+            MobileExcerptsAndNotesList(
+                book: book,
+                isDeleteMode: false,
+                onDelete: { _ in }
+            )
+        }
+        .modelContainer(previewModelContainer)
+    }
+}
+
+#Preview("摘录与笔记列表") {
+    PreviewExcerptsList()
+}
+#endif
+
+
 #endif

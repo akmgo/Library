@@ -47,4 +47,14 @@ struct MobileManualLogCard: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("手动录入卡") {
+    MobileManualLogCard()
+        .padding()
+        .background(Color(UIColor.systemGroupedBackground))
+}
+#endif
+
+
 #endif

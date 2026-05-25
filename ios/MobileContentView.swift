@@ -22,30 +22,47 @@ struct MobileContentView: View {
     
     @State private var selectedTab = 0
     @State private var showingAddBookSheet = false
-    
-    private var currentMonthString: String {
-        let formatter = DateFormatter(); formatter.dateFormat = "yyyy年M月"; return formatter.string(from: Date())
-    }
-    
+    @State private var showingSettings = false
+
     var body: some View {
         TabView(selection: $selectedTab) {
             // ================= 1. 主页 =================
             NavigationStack {
                 MobileHomeView()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            HStack(spacing: AppSpacing.s) {
+                                Button(action: { showingAddBookSheet = true }) {
+                                    Image(systemName: "plus")
+                                }
+                                Button(action: { showingSettings = true }) {
+                                    Image(systemName: "gearshape")
+                                }
+                            }
+                        }
+                    }
             }
             .tabItem { Label("主页", systemImage: "house.fill") }.tag(0)
-            
+
             // ================= 2. 画廊 =================
             MobileGalleryView()
                 .tabItem { Label("画廊", systemImage: "books.vertical.fill") }.tag(1)
-            
+
             // ================= 3. 摘录 =================
             MobileInspirationWallView()
                 .tabItem { Label("摘录", systemImage: "quote.bubble.fill") }.tag(2)
-            
-            // ================= 4. 归档 =================
-            MobileArchiveHostView()
-                .tabItem { Label("归档", systemImage: "clock.arrow.circlepath") }.tag(3)
+
+            // ================= 4. 年度 =================
+            NavigationStack {
+                MobileYearlyTimelineView()
+            }
+            .tabItem { Label("年度", systemImage: "calendar") }.tag(3)
+
+            // ================= 5. 月度 =================
+            NavigationStack {
+                MobileMonthlyRecordView()
+            }
+            .tabItem { Label("月度", systemImage: "calendar.day.timeline.left") }.tag(4)
         }
         .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
         .onAppear {
@@ -62,7 +79,10 @@ struct MobileContentView: View {
             showingAddBookSheet = true
         }
         .sheet(isPresented: $showingAddBookSheet) {
-            MobileBookEditorSheet()
+            MobileBookSearchSheet(isPresented: $showingAddBookSheet)
+        }
+        .sheet(isPresented: $showingSettings) {
+            MobileSettingsView()
         }
     }
     
@@ -83,4 +103,14 @@ struct MobileContentView: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("App 主框架") {
+    PreviewWithData {
+        MobileContentView()
+    }
+}
+#endif
+
+
 #endif

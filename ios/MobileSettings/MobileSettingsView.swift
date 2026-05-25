@@ -75,7 +75,7 @@ struct MobileSettingsView: View {
                 } else {
                     VStack {
                         ProgressView()
-                        Text("初始化配置中...").font(.caption).foregroundColor(.secondary).padding(.top, 8)
+                        Text("初始化配置中...").font(.caption).foregroundColor(.secondary).padding(.top, AppSpacing.xs)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(AppColors.primaryBackground(for: colorScheme))
@@ -93,12 +93,11 @@ struct MobileSettingsView: View {
                         .background(.ultraThinMaterial)
                         .clipShape(Capsule())
                         .shadow(color: Color.black.opacity(0.15), radius: 10, y: 5)
-                        .padding(.top, 16)
+                        .padding(.top, AppSpacing.m)
                         .transition(.move(edge: .top).combined(with: .scale(scale: 0.9)).combined(with: .opacity))
                         .zIndex(100)
                 }
             }
-            .navigationTitle("系统设置")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -139,7 +138,7 @@ struct SettingsHeaderRow: View {
     let icon: String; let iconColor: Color; let title: String; let subtitle: String
     var body: some View {
         // ✨ 强制顶部对齐
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: AppSpacing.m) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8, style: .continuous).fill(iconColor).frame(width: 30, height: 30)
                 Image(systemName: icon).font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
@@ -213,9 +212,9 @@ private struct MobileFluidCapsuleStepper: View {
 struct MobileSettingsControlRow<Content: View>: View {
     let icon: String; let iconColor: Color; let title: String; let subtitle: String; @ViewBuilder let control: Content
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.s) {
             // ✨ 强制顶部对齐
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: AppSpacing.s) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 6, style: .continuous).fill(iconColor).frame(width: 28, height: 28)
                     Image(systemName: icon).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
@@ -243,19 +242,19 @@ struct MobileAboutSettingsView: View {
     private var buildNumber: String { Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1" }
     
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: AppSpacing.xl) {
             Spacer()
             ZStack {
                 RoundedRectangle(cornerRadius: 32, style: .continuous).fill(LinearGradient(colors: [.indigo, .purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 140, height: 140).shadow(color: .indigo.opacity(0.3), radius: 20, y: 10)
                 Image(systemName: "books.vertical.fill").font(.system(size: 60)).foregroundColor(.white)
             }
-            VStack(spacing: 8) {
+            VStack(spacing: AppSpacing.xs) {
                 Text("MyLibrary").font(.system(size: 32, weight: .heavy, design: .rounded)).foregroundColor(.primary)
                 Text("Version \(appVersion) (\(buildNumber))").font(.system(size: 14, design: .monospaced)).foregroundColor(.secondary)
                 Text("构建属于你自己的纯粹阅读资产库").font(.system(size: 15, weight: .medium)).foregroundColor(.secondary.opacity(0.8)).padding(.top, 4)
             }
             Spacer()
-            VStack(spacing: 20) {
+            VStack(spacing: AppSpacing.l) {
                 Button(action: { if let url = URL(string: "https://akram.top") { UIApplication.shared.open(url) } }) {
                     HStack { Image(systemName: "globe"); Text("访问开发者主页") }
                     .font(.system(size: 16, weight: .bold)).foregroundColor(.white).frame(width: 240, height: 50).background(Color.blue).clipShape(Capsule())
@@ -269,15 +268,24 @@ struct MobileAboutSettingsView: View {
                 }
             }
             Spacer()
-            VStack(spacing: 4) {
+            VStack(spacing: AppSpacing.xxs) {
                 Text("Designed and Crafted by Akram").font(.system(size: 12, weight: .medium)).foregroundColor(.secondary.opacity(0.6))
                 Text("Copyright © \(String(Calendar.current.component(.year, from: Date()))) Akram. All rights reserved.").font(.system(size: 10)).foregroundColor(.secondary.opacity(0.5))
             }.padding(.bottom, 32)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppColors.primaryBackground(for: colorScheme))
-        .navigationTitle("关于")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+#if DEBUG
+#Preview("设置页") {
+    PreviewWithData {
+        MobileSettingsView()
+    }
+}
+#endif
+
+
 #endif

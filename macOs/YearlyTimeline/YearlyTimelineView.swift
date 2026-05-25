@@ -49,9 +49,7 @@ struct YearlyTimelineView: View {
         .overlay(alignment: .top) {
             AppPageHeader(contentID: "\(selectedYear)-\(yearlySnapshot.books.count)-\(yearlySnapshot.totalDaysRead)") {
                 AppHeaderTitle("\(String(selectedYear)) 年度轨迹", subtitle: "以年份回看阅读留下的路径。")
-            } trailingContent: {
-                AppHeaderStatsView(yearlyHeaderStats)
-            }
+            } trailingContent: { PageStatsCompact(items: yearlyHeaderStats) }
         }
         .onAppear {
             availableYears = yearlySnapshot.availableYears
@@ -101,11 +99,12 @@ struct YearlyTimelineView: View {
         .transition(.opacity)
     }
 
-    private var yearlyHeaderStats: [AppHeaderStatItem] {
+    private var yearlyHeaderStats: [PageStatItemData] {
         [
-            AppHeaderStatItem(yearlySnapshot.books.count, label: "完结作品"),
-            AppHeaderStatItem(yearlySnapshot.totalDaysRead, label: "打卡天数"),
-            AppHeaderStatItem(yearlySnapshot.totalReadingHours, label: "阅读时长")
+            PageStatItemData(title: "完结作品", value: "\(yearlySnapshot.books.count)", color: .indigo),
+            PageStatItemData(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", color: AppColors.readingAmber),
+            PageStatItemData(title: "阅读时长", value: "\(yearlySnapshot.totalReadingHours)", color: .teal),
+            PageStatItemData(title: "最高连续", value: "\(yearlySnapshot.longestStreak)", color: .pink),
         ]
     }
     

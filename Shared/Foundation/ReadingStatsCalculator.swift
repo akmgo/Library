@@ -2,7 +2,7 @@
 import Foundation
 import SwiftUI
 
-enum BookGallerySortKey {
+enum BookGallerySortKey: CaseIterable {
     case newest
     case oldest
     case titleAscending
@@ -10,6 +10,18 @@ enum BookGallerySortKey {
     case dateAdded
     case progress
     case title
+
+    var displayName: String {
+        switch self {
+        case .newest: return "最新加入"
+        case .oldest: return "最早加入"
+        case .titleAscending: return "标题 A-Z"
+        case .lastRead: return "最近阅读"
+        case .dateAdded: return "添加时间"
+        case .progress: return "阅读进度"
+        case .title: return "书名"
+        }
+    }
 }
 
 enum ExcerptGallerySortKey {
@@ -32,7 +44,38 @@ struct ExcerptListItem: Identifiable, Hashable {
     let bookAuthor: String
     let bookID: String
     let isNote: Bool
+    let category: ExcerptCategory
+    let title: String?
+    let sourceAuthor: String?
+    let source: String?
     let coverData: Data?
+
+    var isBookBound: Bool { !bookID.isEmpty }
+    var bookDisplayTitle: String { Self.nonEmpty(bookTitle) ?? "未关联书籍" }
+    var bookDisplayAuthor: String { Self.nonEmpty(bookAuthor) ?? "佚名" }
+    var sourceTitleDisplay: String {
+        Self.nonEmpty(title)
+            ?? Self.nonEmpty(source)
+            ?? (isBookBound ? bookDisplayTitle : category.displayName)
+    }
+    var sourceAuthorDisplay: String {
+        Self.nonEmpty(sourceAuthor)
+            ?? (isBookBound ? bookDisplayAuthor : "佚名")
+    }
+    var sourceDisplay: String {
+        Self.nonEmpty(source)
+            ?? sourceTitleDisplay
+    }
+    var sortTitle: String {
+        isBookBound ? bookDisplayTitle : sourceTitleDisplay
+    }
+
+    private static func nonEmpty(_ value: String?) -> String? {
+        guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
+            return nil
+        }
+        return trimmed
+    }
 }
 
 enum ReadingStatsCalculator {
@@ -284,12 +327,16 @@ enum ReadingStatsCalculator {
         var excerpts = excerpts.compactMap { excerpt -> ExcerptListItem? in
             guard type == nil || excerpt.category == type else { return nil }
 
-            let title = excerpt.book?.title ?? "未知书籍"
-            let author = excerpt.book?.author ?? "佚名"
+            let bookTitle = excerpt.book?.title ?? ""
+            let bookAuthor = excerpt.book?.author ?? ""
             if !query.isEmpty {
                 let matches = excerpt.content.lowercased().contains(query)
-                    || title.lowercased().contains(query)
-                    || author.lowercased().contains(query)
+                    || bookTitle.lowercased().contains(query)
+                    || bookAuthor.lowercased().contains(query)
+                    || excerpt.category.displayName.lowercased().contains(query)
+                    || (excerpt.title ?? "").lowercased().contains(query)
+                    || (excerpt.sourceAuthor ?? "").lowercased().contains(query)
+                    || (excerpt.source ?? "").lowercased().contains(query)
                 guard matches else { return nil }
             }
 
@@ -297,10 +344,14 @@ enum ReadingStatsCalculator {
                 id: excerpt.id,
                 content: excerpt.content,
                 date: excerpt.createdAt,
-                bookTitle: title,
-                bookAuthor: author,
+                bookTitle: bookTitle,
+                bookAuthor: bookAuthor,
                 bookID: excerpt.book?.id ?? "",
                 isNote: excerpt.isNote,
+                category: excerpt.category,
+                title: excerpt.title,
+                sourceAuthor: excerpt.sourceAuthor,
+                source: excerpt.source,
                 coverData: excerpt.book?.coverData
             )
         }
@@ -311,7 +362,7 @@ enum ReadingStatsCalculator {
         case .oldest:
             excerpts.sort { $0.date < $1.date }
         case .bookTitle:
-            excerpts.sort { $0.bookTitle.localizedStandardCompare($1.bookTitle) == .orderedAscending }
+            excerpts.sort { $0.sortTitle.localizedStandardCompare($1.sortTitle) == .orderedAscending }
         }
 
         if randomize {

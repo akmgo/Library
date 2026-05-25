@@ -89,7 +89,7 @@ struct BookCoverView: View {
         let processedImage = await Task.detached(priority: .userInitiated) { () -> PlatformImage? in
             #if os(iOS)
             let targetSize = CGSize(width: 300, height: 450)
-            return ImageCacheManager.shared.downsample(data: data, to: targetSize)
+            return await ImageCacheManager.shared.downsample(data: data, to: targetSize)
             #else
             return NSImage(data: data)
             #endif

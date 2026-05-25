@@ -28,11 +28,11 @@ struct MobileMomentumChartCard: View {
                 // 上部：四大指标
                 HStack(alignment: .center, spacing: 0) {
                     MomentumAppStat(title: "阅读天数", value: "\(totalDays)", unit: "天")
-                    Spacer(minLength: 5)
+                    Spacer(minLength: AppSpacing.xxs + 1)
                     MomentumAppStat(title: "总计时间", value: "\(totalMinutes)", unit: "分")
-                    Spacer(minLength: 5)
+                    Spacer(minLength: AppSpacing.xxs + 1)
                     MomentumAppStat(title: "单日最高", value: "\(maxMinutes)", unit: "分")
-                    Spacer(minLength: 5)
+                    Spacer(minLength: AppSpacing.xxs + 1)
                     MomentumAppStat(title: "日均阅读", value: "\(avgMinutes)", unit: "分")
                 }
                 .padding(.bottom, 16)
@@ -95,4 +95,29 @@ private struct MomentumAppStat: View {
         }
     }
 }
+
+#if DEBUG
+private struct PreviewMomentumCard: View {
+    var body: some View {
+        let today = Date()
+        let points = (0..<14).map { i in
+            let date = Calendar.current.date(byAdding: .day, value: -13 + i, to: today)!
+            return MomentumDataPoint(
+                date: date,
+                minutes: Double.random(in: 0...120),
+                isToday: Calendar.current.isDate(date, inSameDayAs: today)
+            )
+        }
+        MobileMomentumChartCard(dataPoints: points, totalMinutes: Int(points.reduce(0) { $0 + $1.minutes }))
+            .padding()
+            .background(Color(UIColor.systemGroupedBackground))
+    }
+}
+
+#Preview("双周动能卡") {
+    PreviewMomentumCard()
+}
+#endif
+
+
 #endif

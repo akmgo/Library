@@ -2,211 +2,559 @@
 import SwiftData
 import SwiftUI
 
-// MARK: - ✨ iOS 原生录入弹窗
-struct MobileExcerptEditorSheet: View {
-    @Environment(\.modelContext) private var modelContext
-    @Binding var isPresented: Bool
-    
-    var excerptToEdit: Excerpt? = nil
-    
-    @State private var selectedCategory: ExcerptCategory = .web
-    @State private var titleInput: String = ""
-    @State private var contentInput: String = ""
-    @State private var authorInput: String = ""
-    @State private var dynastyInput: String = ""
-    @State private var annotationInput: String = ""
-    
-    // 控制键盘焦点
-    @FocusState private var focusedField: Field?
-    enum Field { case title, author, dynasty, content, annotation }
-    
-    private var showAuthor: Bool { [.poetry, .lyric, .prose, .quote, .movie].contains(selectedCategory) }
-    private var showDynastyAndAnnotation: Bool { [.poetry, .lyric, .prose].contains(selectedCategory) }
-    
-    // 计算是否允许保存
-    private var canSave: Bool {
-        !titleInput.trimmingCharacters(in: .whitespaces).isEmpty && !contentInput.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                // ================= 1. 分类选择区 =================
-                Section {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(ExcerptCategory.allCases, id: \.self) { category in
-                                Text(category.displayName)
-                                    .font(.system(size: 15, weight: .bold))
-                                    .foregroundColor(selectedCategory == category ? .white : .primary.opacity(0.7))
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(selectedCategory == category ? category.themeColor : Color(uiColor: .tertiarySystemGroupedBackground))
-                                    .clipShape(Capsule())
-                                    .onTapGesture {
-                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                                            selectedCategory = category
-                                        }
-                                    }
-                            }
-                        }
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 8)
-                    }
-                    .listRowInsets(EdgeInsets()) // 移除 Form 默认边距，让滚动铺满
-                    .listRowBackground(Color.clear)
-                }
-                
-                // ================= 2. 基础信息区 =================
-                Section(header: Text("基础信息")) {
-                    TextField(selectedCategory == .movie ? "出处 (例如：星际穿越)" : "标题 (例如：将进酒)", text: $titleInput)
-                        .font(.system(size: 16))
-                        .focused($focusedField, equals: .title)
-                    
-                    if showAuthor {
-                        TextField(selectedCategory == .movie ? "角色 (例如：库珀)" : "作者 (例如：李白)", text: $authorInput)
-                            .font(.system(size: 16))
-                            .focused($focusedField, equals: .author)
-                    }
-                    
-                    if showDynastyAndAnnotation {
-                        TextField("朝代 (选填，例如：唐)", text: $dynastyInput)
-                            .font(.system(size: 16))
-                            .focused($focusedField, equals: .dynasty)
-                    }
-                }
-                
-                // ================= 3. 核心内容区 =================
-                Section(header: Text(selectedCategory == .movie ? "台词正文" : "内容正文")) {
-                    ZStack(alignment: .topLeading) {
-                        if contentInput.isEmpty {
-                            Text("请输入内容，支持换行...")
-                                .foregroundColor(Color(uiColor: .placeholderText))
-                                .font(.system(size: 16, design: .serif))
-                                .padding(.top, 8)
-                                .padding(.leading, 4)
-                                .allowsHitTesting(false) // 让点击穿透到下方的 TextEditor
-                        }
-                        TextEditor(text: $contentInput)
-                            .font(.system(size: 16, design: .serif))
-                            .frame(minHeight: 180)
-                            .focused($focusedField, equals: .content)
-                    }
-                }
-                
-                // ================= 4. 注释区 =================
-                if showDynastyAndAnnotation {
-                    Section(header: Text("注释 / 释义 (选填)")) {
-                        ZStack(alignment: .topLeading) {
-                            if annotationInput.isEmpty {
-                                Text("输入对文字的注解...")
-                                    .foregroundColor(Color(uiColor: .placeholderText))
-                                    .font(.system(size: 15))
-                                    .padding(.top, 8)
-                                    .padding(.leading, 4)
-                                    .allowsHitTesting(false)
-                            }
-                            TextEditor(text: $annotationInput)
-                                .font(.system(size: 15))
-                                .frame(minHeight: 100)
-                                .focused($focusedField, equals: .annotation)
-                        }
-                    }
-                }
+private enum MobileExcerptFormField: Hashable {
+    case title
+    case source
+    case sourceAuthor
+    case relatedBook
+}
+
+private enum MobileExcerptInputMetrics {
+    static let fieldFont = Font.system(size: 16, weight: .regular)
+    static let contentFont = Font.system(size: 18, weight: .regular, design: .serif)
+    static let fieldHorizontalPadding: CGFloat = 14
+    static let fieldVerticalPadding: CGFloat = 12
+    static let contentPadding: CGFloat = 13
+    static let fieldCornerRadius: CGFloat = 12
+    static let contentCornerRadius: CGFloat = 16
+}
+
+private struct MobileExcerptCategoryFormConfig {
+    let heading: String
+    let contentLabel: String
+    let contentPlaceholder: String
+    let fields: [MobileExcerptFormField]
+    let requiredFields: Set<MobileExcerptFormField>
+
+    func label(for field: MobileExcerptFormField) -> String {
+        switch field {
+        case .title: return "标题"
+        case .source:
+            switch heading {
+            case "新增台词": return "出处"
+            case "新增拾遗": return "来源"
+            default: return "出处"
             }
-            .navigationTitle(excerptToEdit != nil ? "编辑摘录" : "新增摘录")
-            .navigationBarTitleDisplayMode(.inline)
-            // ================= 顶部操作栏 =================
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("取消") {
-                        isPresented = false
-                    }
-                    .foregroundColor(.primary)
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(excerptToEdit != nil ? "保存" : "添加") {
-                        saveExcerpt()
-                    }
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(canSave ? selectedCategory.themeColor : .secondary.opacity(0.4))
-                    .disabled(!canSave)
-                }
-                
-                // 给键盘上方增加一个“完成”收起的工具栏
-                ToolbarItem(placement: .keyboard) {
-                    HStack {
-                        Spacer()
-                        Button("完成") {
-                            focusedField = nil
-                        }
-                        .font(.system(size: 16, weight: .bold))
-                    }
-                }
-            }
-            .onAppear {
-                if let excerpt = excerptToEdit {
-                    selectedCategory = excerpt.category
-                    titleInput = excerpt.title ?? ""
-                    contentInput = excerpt.content
-                    authorInput = excerpt.author
-                    dynastyInput = excerpt.dynasty
-                    annotationInput = excerpt.annotation
-                } else {
-                    // 如果是新增，默认自动弹出键盘激活标题输入
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        focusedField = .title
-                    }
-                }
-            }
-            .onChange(of: selectedCategory) { _, newValue in
-                if newValue == .web {
-                    authorInput = ""; dynastyInput = ""; annotationInput = ""
-                } else if [.quote, .movie].contains(newValue) {
-                    dynastyInput = ""; annotationInput = ""
-                }
-            }
+        case .sourceAuthor:
+            return heading == "新增台词" ? "角色" : "作者"
+        case .relatedBook:
+            return "关联书籍"
         }
     }
-    
-    // MARK: - 数据保存引擎
-    private func saveExcerpt() {
-        guard !titleInput.isEmpty, !contentInput.isEmpty else { return }
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        
-        if let excerpt = excerptToEdit {
-            excerpt.category = selectedCategory
-            excerpt.title = titleInput
-            excerpt.content = contentInput
-            excerpt.author = showAuthor ? (authorInput.trimmingCharacters(in: .whitespaces).isEmpty ? "佚名" : authorInput) : "佚名"
-            excerpt.dynasty = showDynastyAndAnnotation ? dynastyInput : ""
-            excerpt.annotation = showDynastyAndAnnotation ? annotationInput : ""
-        } else {
-            let newExcerpt = Excerpt(
-                title: titleInput,
-                content: contentInput,
-                author: showAuthor ? (authorInput.trimmingCharacters(in: .whitespaces).isEmpty ? "佚名" : authorInput) : "佚名",
-                dynasty: showDynastyAndAnnotation ? dynastyInput : "",
-                annotation: showDynastyAndAnnotation ? annotationInput : "",
-                category: selectedCategory
-            )
-            try? ReadingDataService.shared.insertExcerpt(newExcerpt, context: modelContext)
+
+    func placeholder(for field: MobileExcerptFormField) -> String {
+        switch field {
+        case .title:
+            switch heading {
+            case "新增诗歌": return "例如：将进酒"
+            case "新增词曲": return "例如：水调歌头"
+            case "新增短文": return "例如：一段短文"
+            default: return "例如：标题"
+            }
+        case .source:
+            switch heading {
+            case "新增台词": return "例如：星际穿越"
+            case "新增拾遗": return "例如：网页、播客或文章"
+            default: return "例如：书名、篇名或来源"
+            }
+        case .sourceAuthor:
+            return heading == "新增台词" ? "例如：库珀" : "例如：李白"
+        case .relatedBook:
+            return ""
         }
-        
-        if excerptToEdit != nil { try? modelContext.save() }
-        isPresented = false
     }
 }
 
-// MARK: - 📱 预览
-#Preview("日常摘录录入弹窗") {
-    let schema = Schema([Excerpt.self])
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: schema, configurations: [config])
-    
-    MobileExcerptEditorSheet(isPresented: .constant(true))
-        .modelContainer(container)
+private extension ExcerptCategory {
+    var mobileFormConfig: MobileExcerptCategoryFormConfig {
+        switch self {
+        case .bookExcerpt:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增书摘",
+                contentLabel: "摘录正文",
+                contentPlaceholder: "输入书中值得留下的句子...",
+                fields: [.relatedBook],
+                requiredFields: [.relatedBook]
+            )
+        case .note:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增笔记",
+                contentLabel: "笔记正文",
+                contentPlaceholder: "记录此刻的想法...",
+                fields: [.relatedBook],
+                requiredFields: []
+            )
+        case .poetry:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增诗歌",
+                contentLabel: "诗歌正文",
+                contentPlaceholder: "写下诗句，支持换行...",
+                fields: [.title, .sourceAuthor, .source],
+                requiredFields: [.title]
+            )
+        case .lyric:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增词曲",
+                contentLabel: "词曲正文",
+                contentPlaceholder: "写下歌词或词句...",
+                fields: [.title, .sourceAuthor, .source],
+                requiredFields: [.title]
+            )
+        case .prose:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增短文",
+                contentLabel: "短文正文",
+                contentPlaceholder: "写下一段短文...",
+                fields: [.title, .sourceAuthor, .source],
+                requiredFields: [.title]
+            )
+        case .quote:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增语录",
+                contentLabel: "语录正文",
+                contentPlaceholder: "输入一句值得保存的话...",
+                fields: [.sourceAuthor, .source],
+                requiredFields: []
+            )
+        case .web:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增拾遗",
+                contentLabel: "内容正文",
+                contentPlaceholder: "记录网页、播客、文章或偶然所得...",
+                fields: [.source],
+                requiredFields: []
+            )
+        case .movie:
+            return MobileExcerptCategoryFormConfig(
+                heading: "新增台词",
+                contentLabel: "台词正文",
+                contentPlaceholder: "输入台词，支持换行...",
+                fields: [.source, .sourceAuthor],
+                requiredFields: [.source]
+            )
+        }
+    }
 }
+
+// MARK: - iOS 摘录录入弹窗
+
+struct MobileExcerptEditorSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
+    @Query(sort: \Book.createdAt, order: .reverse) private var allBooks: [Book]
+
+    @Binding var isPresented: Bool
+    var excerptToEdit: Excerpt? = nil
+
+    @State private var selectedCategory: ExcerptCategory = .web
+    @State private var selectedBookID: String = ""
+    @State private var titleInput: String = ""
+    @State private var contentInput: String = ""
+    @State private var sourceAuthorInput: String = ""
+    @State private var sourceInput: String = ""
+
+    @FocusState private var focusedField: Field?
+
+    private enum Field: Hashable {
+        case content
+        case title
+        case sourceAuthor
+        case source
+    }
+
+    private var isEdit: Bool { excerptToEdit != nil }
+    private var config: MobileExcerptCategoryFormConfig { selectedCategory.mobileFormConfig }
+    private var trimmedContent: String { contentInput.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmedTitle: String { titleInput.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmedSourceAuthor: String { sourceAuthorInput.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmedSource: String { sourceInput.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var selectedBook: Book? { allBooks.first(where: { $0.id == selectedBookID }) }
+
+    private var selectedBookTitle: String {
+        if let selectedBook { return selectedBook.title }
+        return config.requiredFields.contains(.relatedBook) ? "选择一本书" : "不关联书籍"
+    }
+
+    private var selectedBookAuthor: String? {
+        guard let author = selectedBook?.author.trimmingCharacters(in: .whitespacesAndNewlines), !author.isEmpty else {
+            return nil
+        }
+        return author
+    }
+
+    private var canSave: Bool {
+        guard !trimmedContent.isEmpty else { return false }
+        if config.requiredFields.contains(.title), trimmedTitle.isEmpty { return false }
+        if config.requiredFields.contains(.source), trimmedSource.isEmpty { return false }
+        if config.requiredFields.contains(.sourceAuthor), trimmedSourceAuthor.isEmpty { return false }
+        if config.requiredFields.contains(.relatedBook), selectedBookID.isEmpty { return false }
+        return true
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 22) {
+                    categoryRail
+                    dynamicFields
+                    contentEditor
+                }
+                .padding(.horizontal, AppSpacing.l)
+                .padding(.top, AppSpacing.m)
+                .padding(.bottom, AppSpacing.emptyState)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
+            .navigationTitle(isEdit ? "编辑摘录" : config.heading)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("取消") {
+                        focusedField = nil
+                        isPresented = false
+                    }
+                    .foregroundStyle(.secondary)
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(isEdit ? "保存" : "完成") {
+                        saveExcerpt()
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(!canSave)
+                }
+
+            }
+            .onAppear(perform: loadInitialValues)
+            .onChange(of: selectedCategory) { _, _ in
+                normalizeFieldsForCategory()
+            }
+        }
+        .presentationDragIndicator(.visible)
+    }
+
+    private var categoryRail: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("分类")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(ExcerptCategory.allCases, id: \.self) { category in
+                        categoryButton(category)
+                    }
+                }
+                .padding(.vertical, 1)
+            }
+        }
+    }
+
+    private func categoryButton(_ category: ExcerptCategory) -> some View {
+        let isSelected = selectedCategory == category
+
+        return Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            withAnimation(.easeOut(duration: 0.18)) {
+                selectedCategory = category
+            }
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: iconName(for: category))
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 14)
+
+                Text(category.displayName)
+                    .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
+            }
+            .foregroundStyle(isSelected ? AppColors.readingAmber : Color.primary.opacity(0.72))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .background(
+                Capsule()
+                    .fill(isSelected ? AppColors.readingAmber.opacity(0.14) : Color.primary.opacity(0.05))
+            )
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var dynamicFields: some View {
+        ForEach(config.fields, id: \.self) { field in
+            fieldView(field)
+        }
+    }
+
+    @ViewBuilder
+    private func fieldView(_ field: MobileExcerptFormField) -> some View {
+        switch field {
+        case .relatedBook:
+            relatedBookPicker
+        case .title:
+            inputField(
+                label: config.label(for: field),
+                placeholder: config.placeholder(for: field),
+                text: $titleInput,
+                focus: .title,
+                isRequired: config.requiredFields.contains(field)
+            )
+        case .sourceAuthor:
+            inputField(
+                label: config.label(for: field),
+                placeholder: config.placeholder(for: field),
+                text: $sourceAuthorInput,
+                focus: .sourceAuthor,
+                isRequired: config.requiredFields.contains(field)
+            )
+        case .source:
+            inputField(
+                label: config.label(for: field),
+                placeholder: config.placeholder(for: field),
+                text: $sourceInput,
+                focus: .source,
+                isRequired: config.requiredFields.contains(field)
+            )
+        }
+    }
+
+    private var relatedBookPicker: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            fieldCaption("关联书籍", isRequired: config.requiredFields.contains(.relatedBook))
+
+            Menu {
+                if !config.requiredFields.contains(.relatedBook) {
+                    Button("不关联书籍") {
+                        selectedBookID = ""
+                    }
+                }
+
+                ForEach(allBooks) { book in
+                    Button(book.title) {
+                        selectedBookID = book.id
+                    }
+                }
+            } label: {
+                HStack(spacing: 11) {
+                    selectedBookCover
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(selectedBookTitle)
+                            .font(MobileExcerptInputMetrics.fieldFont)
+                            .foregroundStyle(selectedBookID.isEmpty ? .secondary : .primary)
+                            .lineLimit(1)
+
+                        if let author = selectedBookAuthor {
+                            Text(author)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, MobileExcerptInputMetrics.fieldHorizontalPadding)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
+                .background(fieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: MobileExcerptInputMetrics.fieldCornerRadius, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            if allBooks.isEmpty && config.requiredFields.contains(.relatedBook) {
+                Text("请先添加一本书，再录入书摘。")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var selectedBookCover: some View {
+        if let selectedBook {
+            BookCoverView(
+                coverID: selectedBook.id,
+                coverData: selectedBook.coverData,
+                fallbackTitle: selectedBook.title
+            )
+            .frame(width: 34, height: 48)
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(Color.primary.opacity(0.08), lineWidth: 0.5)
+            )
+        } else {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(AppColors.readingAmber.opacity(0.12))
+                .frame(width: 34, height: 48)
+                .overlay {
+                    Image(systemName: "book.closed")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppColors.readingAmber)
+                }
+        }
+    }
+
+    private func inputField(
+        label: String,
+        placeholder: String,
+        text: Binding<String>,
+        focus: Field,
+        isRequired: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 9) {
+            fieldCaption(label, isRequired: isRequired)
+
+            TextField(placeholder, text: text)
+                .textFieldStyle(.plain)
+                .submitLabel(.done)
+                .focused($focusedField, equals: focus)
+                .font(MobileExcerptInputMetrics.fieldFont)
+                .padding(.horizontal, MobileExcerptInputMetrics.fieldHorizontalPadding)
+                .padding(.vertical, MobileExcerptInputMetrics.fieldVerticalPadding)
+                .background(fieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: MobileExcerptInputMetrics.fieldCornerRadius, style: .continuous))
+                .onSubmit { focusedField = nil }
+        }
+    }
+
+    private var contentEditor: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            fieldCaption(config.contentLabel, isRequired: true)
+
+            ZStack(alignment: .topLeading) {
+                if contentInput.isEmpty {
+                    Text(config.contentPlaceholder)
+                        .foregroundStyle(.secondary.opacity(0.55))
+                        .font(MobileExcerptInputMetrics.contentFont)
+                        .lineSpacing(5)
+                        .padding(MobileExcerptInputMetrics.contentPadding)
+                        .allowsHitTesting(false)
+                }
+
+                TextEditor(text: $contentInput)
+                    .font(MobileExcerptInputMetrics.contentFont)
+                    .lineSpacing(5)
+                    .focused($focusedField, equals: .content)
+                    .scrollContentBackground(.hidden)
+                    .padding(MobileExcerptInputMetrics.contentPadding)
+            }
+            .frame(minHeight: 240, alignment: .top)
+            .background(fieldBackground)
+            .clipShape(RoundedRectangle(cornerRadius: MobileExcerptInputMetrics.contentCornerRadius, style: .continuous))
+        }
+    }
+
+    private var fieldBackground: some ShapeStyle {
+        AppColors.secondaryBackground(for: colorScheme).opacity(0.78)
+    }
+
+    private func fieldCaption(_ text: String, isRequired: Bool) -> some View {
+        HStack(spacing: 4) {
+            Text(text)
+            if isRequired {
+                Text("必填")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(AppColors.readingAmber)
+            }
+        }
+        .font(.system(size: 13, weight: .semibold))
+        .foregroundStyle(.secondary)
+    }
+
+    private func loadInitialValues() {
+        if let excerpt = excerptToEdit {
+            selectedCategory = excerpt.category
+            selectedBookID = excerpt.book?.id ?? ""
+            titleInput = excerpt.title ?? ""
+            contentInput = excerpt.content
+            sourceAuthorInput = excerpt.sourceAuthor ?? ""
+            sourceInput = excerpt.source ?? ""
+        } else if selectedCategory == .bookExcerpt, selectedBookID.isEmpty {
+            selectedBookID = allBooks.first?.id ?? ""
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            focusedField = .content
+        }
+    }
+
+    private func normalizeFieldsForCategory() {
+        let fields = Set(config.fields)
+
+        if selectedCategory == .bookExcerpt, selectedBookID.isEmpty {
+            selectedBookID = allBooks.first?.id ?? ""
+        } else if !fields.contains(.relatedBook) {
+            selectedBookID = ""
+        }
+
+        if !fields.contains(.sourceAuthor) {
+            sourceAuthorInput = ""
+        }
+        if !fields.contains(.source) {
+            sourceInput = ""
+        }
+        if !fields.contains(.title) {
+            titleInput = ""
+        }
+    }
+
+    private func saveExcerpt() {
+        guard canSave else { return }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+
+        let relatedBook = allBooks.first(where: { $0.id == selectedBookID })
+
+        if let excerpt = excerptToEdit {
+            excerpt.category = selectedCategory
+            excerpt.title = trimmedTitle.isEmpty ? nil : trimmedTitle
+            excerpt.content = trimmedContent
+            excerpt.sourceAuthor = trimmedSourceAuthor.isEmpty ? nil : trimmedSourceAuthor
+            excerpt.source = trimmedSource.isEmpty ? nil : trimmedSource
+            excerpt.book = relatedBook
+            try? modelContext.save()
+        } else {
+            let newExcerpt = Excerpt(
+                content: trimmedContent,
+                category: selectedCategory,
+                title: trimmedTitle.isEmpty ? nil : trimmedTitle,
+                sourceAuthor: trimmedSourceAuthor.isEmpty ? nil : trimmedSourceAuthor,
+                source: trimmedSource.isEmpty ? nil : trimmedSource,
+                book: relatedBook
+            )
+            try? ReadingDataService.shared.insertExcerpt(newExcerpt, context: modelContext)
+        }
+
+        focusedField = nil
+        isPresented = false
+    }
+
+    private func iconName(for category: ExcerptCategory) -> String {
+        switch category {
+        case .bookExcerpt: return "text.quote"
+        case .note: return "note.text"
+        case .poetry: return "sparkles"
+        case .lyric: return "music.note"
+        case .prose: return "text.alignleft"
+        case .quote: return "quote.opening"
+        case .web: return "link"
+        case .movie: return "film"
+        }
+    }
+}
+
+#if DEBUG
+#Preview("摘录录入弹窗") {
+    PreviewWithData {
+        PreviewSheet {
+            MobileExcerptEditorSheet(isPresented: .constant(true))
+        }
+    }
+}
+#endif
 #endif

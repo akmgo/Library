@@ -15,8 +15,13 @@ private struct ScrollBoundsKey: PreferenceKey {
 // MARK: - 🗓️ 核心月度记录视图
 
 struct MonthlyRecordView: View {
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
-    
+    @Query(sort: \Book.title) private var books: [Book]
+
+    @Binding var isBatchDeletePresented: Bool
+    @Binding var selectedDates: Set<Date>
+
     @State private var visibleYear: Int = Calendar.current.component(.year, from: Date())
     @State private var visibleMonth: Int = Calendar.current.component(.month, from: Date())
     
@@ -32,8 +37,15 @@ struct MonthlyRecordView: View {
                     ZStack {
                         VStack(spacing: 30) {
                             ForEach(monthlySnapshot.sections) { section in
-                                MonthGridSection(section: section, recordsDict: monthlySnapshot.durationByDay)
-                                    .id(section.id)
+                                MonthGridSection(
+                                    section: section,
+                                    recordsDict: monthlySnapshot.durationByDay,
+                                    isBatchMode: isBatchDeletePresented,
+                                    selectedDates: $selectedDates,
+                                    sessions: sessions,
+                                    books: books
+                                )
+                                .id(section.id)
                                     .background(
                                         GeometryReader { geo in
                                             Color.clear.preference(key: ScrollBoundsKey.self, value: [section.id: geo.frame(in: .global)])
@@ -74,10 +86,15 @@ struct MonthlyRecordView: View {
                     titleContent: {
                         AppHeaderTitle("\(visibleYear)年 \(visibleMonth)月", subtitle: "按月份查看每天的阅读痕迹。")
                     },
-                    trailingContent: {
-                        AppHeaderStatsView(monthlyHeaderStats)
-                    }
+                    trailingContent: { PageStatsCompact(items: monthlyHeaderStats) }
                 )
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if isBatchDeletePresented {
+                monthlyBatchDeleteCapsule
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .toolbarBackground(.hidden, for: .windowToolbar)
@@ -89,11 +106,13 @@ struct MonthlyRecordView: View {
         }
     }
 
-    private var monthlyHeaderStats: [AppHeaderStatItem] {
-        [
-            AppHeaderStatItem(visibleMonthReadingMinutes, label: "本月阅读"),
-            AppHeaderStatItem(visibleMonthReadingDays, label: "阅读天数"),
-            AppHeaderStatItem(visibleMonthLongestStreak, label: "最高连续")
+    private var monthlyHeaderStats: [PageStatItemData] {
+        let avgMinutes = visibleMonthReadingDays > 0 ? visibleMonthReadingMinutes / visibleMonthReadingDays : 0
+        return [
+            PageStatItemData(title: "本月阅读", value: "\(visibleMonthReadingMinutes)", color: .indigo),
+            PageStatItemData(title: "阅读天数", value: "\(visibleMonthReadingDays)", color: AppColors.readingAmber),
+            PageStatItemData(title: "最高连续", value: "\(visibleMonthLongestStreak)", color: .teal),
+            PageStatItemData(title: "日均阅读", value: "\(avgMinutes)", color: .pink),
         ]
     }
 
@@ -125,7 +144,44 @@ struct MonthlyRecordView: View {
     private var visibleMonthReadingMinutes: Int {
         Int(visibleMonthDuration / 60)
     }
-    
+
+    private var visibleMonthSessions: [ReadingSession] {
+        let calendar = Calendar.current
+        return sessions.filter {
+            calendar.component(.year, from: $0.startedAt) == visibleYear &&
+            calendar.component(.month, from: $0.startedAt) == visibleMonth
+        }
+    }
+
+    private var monthlyBatchDeleteCapsule: some View {
+        HStack(spacing: 14) {
+            Button {
+                withAnimation { selectedDates.removeAll(); isBatchDeletePresented = false }
+            } label: {
+                Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain).help("取消")
+
+            Text("已选择 \(selectedDates.count) 天")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            Button(role: .destructive) {
+                let calendar = Calendar.current
+                let targets = visibleMonthSessions.filter { selectedDates.contains(calendar.startOfDay(for: $0.startedAt)) }
+                for s in targets { modelContext.delete(s) }
+                try? modelContext.save()
+                withAnimation { selectedDates.removeAll(); isBatchDeletePresented = false }
+            } label: {
+                Image(systemName: "trash").font(.system(size: 16, weight: .semibold)).frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain).disabled(selectedDates.isEmpty).help("删除")
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+    }
+
 }
 
 // MARK: - 无缝网格分段
@@ -133,6 +189,10 @@ struct MonthlyRecordView: View {
 private struct MonthGridSection: View {
     let section: ReadingStatsCalculator.ReadingMonthSection
     let recordsDict: [Date: TimeInterval]
+    let isBatchMode: Bool
+    @Binding var selectedDates: Set<Date>
+    let sessions: [ReadingSession]
+    let books: [Book]
     
     private var monthTotalMinutes: Int {
         section.days.compactMap { d -> Int? in
@@ -166,7 +226,20 @@ private struct MonthGridSection: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(0..<section.days.count, id: \.self) { index in
                     if let date = section.days[index] {
-                        DayCardView(date: date, duration: recordsDict[Calendar.current.startOfDay(for: date)])
+                        let daySessions = sessions.filter { Calendar.current.isDate($0.startedAt, inSameDayAs: date) }
+                        DayCardView(
+                            date: date,
+                            duration: recordsDict[Calendar.current.startOfDay(for: date)],
+                            isBatchMode: isBatchMode,
+                            isSelected: selectedDates.contains(Calendar.current.startOfDay(for: date)),
+                            onToggle: {
+                                let startOfDay = Calendar.current.startOfDay(for: date)
+                                if selectedDates.contains(startOfDay) { selectedDates.remove(startOfDay) }
+                                else { selectedDates.insert(startOfDay) }
+                            },
+                            daySessions: daySessions,
+                            books: books
+                        )
                     } else {
                         Color.clear.frame(height: 110)
                     }
@@ -181,23 +254,58 @@ private struct MonthGridSection: View {
 private struct DayCardView: View {
     let date: Date
     let duration: TimeInterval?
-    
+    let isBatchMode: Bool
+    let isSelected: Bool
+    let onToggle: () -> Void
+    let daySessions: [ReadingSession]
+    let books: [Book]
+
     @State private var isHovered = false
-    
+    @State private var showPopover = false
+
+    private let calendar = Calendar.current
+
+    private var totalMinutes: Int {
+        Int(daySessions.reduce(0) { $0 + $1.duration } / 60)
+    }
+
+    private var bookSummaries: [(title: String, detail: String)] {
+        var merged: [String: (totalDelta: Double, unit: ProgressUnit, totalDuration: TimeInterval)] = [:]
+        for session in daySessions {
+            guard let bookID = session.book?.id, books.contains(where: { $0.id == bookID }) else { continue }
+            var entry = merged[bookID] ?? (0, session.progressUnit, 0)
+            entry.totalDelta += session.deltaAmount
+            entry.totalDuration += session.duration
+            merged[bookID] = entry
+        }
+        return merged.compactMap { bookID, data in
+            guard let book = books.first(where: { $0.id == bookID }) else { return nil }
+            let mins = Int(data.totalDuration / 60)
+            var parts: [String] = []
+            if mins > 0 { parts.append("\(mins)分钟") }
+            if data.totalDelta > 0 {
+                switch data.unit {
+                case .page: parts.append("+\(Int(data.totalDelta))页")
+                case .percent: parts.append("+\(Int(data.totalDelta))%")
+                case .chapter: parts.append("+\(Int(data.totalDelta))章")
+                }
+            }
+            return (book.title, parts.joined(separator: " · "))
+        }
+    }
+
     var body: some View {
-        let calendar = Calendar.current
         let isToday = calendar.isDateInToday(date)
         let hasRead = duration != nil
         let dateString = "\(calendar.component(.day, from: date))"
-        
         let totalSeconds = Int(duration ?? 0)
         let dailyMinutes = totalSeconds > 0 ? max(1, totalSeconds / 60) : 0
         let isCelebration = dailyMinutes > 50
-        
+
         ZStack {
             Rectangle()
                 .fill(hasRead ? Color(nsColor: .controlBackgroundColor) : Color.secondary.opacity(0.03))
-            
+
             if hasRead {
                 VStack(spacing: 0) {
                     Spacer()
@@ -207,17 +315,26 @@ private struct DayCardView: View {
                         .shadow(color: VisualEngines.ReadingHeatmap.shadowColor(for: dailyMinutes).opacity(0.5), radius: isHovered ? 8 : 4, y: -2)
                 }
             }
-            
+
             VStack(spacing: 0) {
                 HStack(alignment: .top) {
-                    ZStack {
-                        if isToday { Circle().fill(Color.primary).frame(width: 24, height: 24) }
-                        Text(dateString)
-                            .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
-                            .foregroundColor(isToday ? Color(nsColor: .windowBackgroundColor) : (hasRead ? .primary : .secondary.opacity(0.4)))
+                    if isBatchMode {
+                        ZStack {
+                            if isToday { Circle().fill(Color.primary).frame(width: 24, height: 24) }
+                            Text(dateString)
+                                .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
+                                .foregroundColor(isToday ? Color(nsColor: .windowBackgroundColor) : (hasRead ? .primary : .secondary.opacity(0.4)))
+                        }
+                    } else {
+                        ZStack {
+                            if isToday { Circle().fill(Color.primary).frame(width: 24, height: 24) }
+                            Text(dateString)
+                                .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
+                                .foregroundColor(isToday ? Color(nsColor: .windowBackgroundColor) : (hasRead ? .primary : .secondary.opacity(0.4)))
+                        }
                     }
                     Spacer()
-                    if hasRead {
+                    if hasRead && !isBatchMode {
                         HStack(spacing: 2) {
                             if isCelebration { Image(systemName: "flame.fill").font(.system(size: 9)) }
                             Text("\(dailyMinutes)m")
@@ -232,18 +349,55 @@ private struct DayCardView: View {
                 .padding(10)
                 Spacer()
             }
-            
-            // ✨ 删除了展示书名的部分，让界面保持极简的热力图效果
         }
         .frame(height: 110)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.primary.opacity(isHovered ? 0.2 : 0.05), lineWidth: isHovered ? 2 : 1))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(isBatchMode && isSelected ? Color.blue : Color.primary.opacity(isHovered ? 0.2 : 0.05), lineWidth: isBatchMode && isSelected ? 3 : (isHovered ? 2 : 1)))
         .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.0), radius: isHovered ? 8 : 0, y: isHovered ? 3 : 0)
         .scaleEffect(isHovered ? 1.012 : 1.0)
         .zIndex(isHovered ? 1 : 0)
         .animation(.appSnappy, value: isHovered)
         .onHover { h in
             withAnimation(.appSnappy) { isHovered = h }
+        }
+        .onTapGesture {
+            if isBatchMode { onToggle() }
+            else if hasRead { showPopover = true }
+        }
+        .popover(isPresented: $showPopover, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    let day = calendar.component(.day, from: date)
+                    let weekday = calendar.component(.weekday, from: date)
+                    let names = ["日", "一", "二", "三", "四", "五", "六"]
+                    Text("\(day)日 周\(names[weekday - 1])")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                    Spacer()
+                    Text("\(totalMinutes) 分钟")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(AppColors.readingAmber)
+                }
+
+                if !bookSummaries.isEmpty {
+                    Divider()
+                    ForEach(Array(bookSummaries.enumerated()), id: \.offset) { _, summary in
+                        HStack {
+                            Text("《\(summary.title)》")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.primary.opacity(0.8))
+                                .lineLimit(1)
+                            Spacer()
+                            if !summary.detail.isEmpty {
+                                Text(summary.detail)
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.teal)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(20)
+            .frame(width: 320)
         }
     }
 }

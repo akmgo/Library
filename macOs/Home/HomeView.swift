@@ -117,9 +117,7 @@ struct HomeView: View {
                 contentID: "\(greeting)-\(dashboard.weekCount)-\(dashboard.monthlyDays)-\(dashboard.yearlyCount)"
             ) {
                 AppHeaderTitle("阅读主页", subtitle: greeting)
-            } trailingContent: {
-                AppHeaderStatsView(homeHeaderStats)
-            }
+            } trailingContent: { PageStatsCompact(items: homeHeaderStats) }
         }
     }
 }
@@ -159,11 +157,13 @@ extension HomeView {
         }
     }
     private var yearTarget: Int { configs.first?.yearlyBooksGoal ?? 50 }
-    private var homeHeaderStats: [AppHeaderStatItem] {
-        [
-            AppHeaderStatItem(current: dashboard.weekCount, target: 7, label: "本周打卡"),
-            AppHeaderStatItem(current: dashboard.monthlyDays, target: 30, label: "本月历程"),
-            AppHeaderStatItem(current: dashboard.yearlyCount, target: yearTarget, label: "年度阅卷")
+    private var homeHeaderStats: [PageStatItemData] {
+        let libraryTarget = configs.first?.libraryBooksGoal ?? 100
+        return [
+            PageStatItemData(title: "本周打卡", value: "\(dashboard.weekCount)/7", color: .indigo),
+            PageStatItemData(title: "本月历程", value: "\(dashboard.monthlyDays)/30", color: AppColors.readingAmber),
+            PageStatItemData(title: "年度阅卷", value: "\(dashboard.yearlyCount)/\(yearTarget)", color: .teal),
+            PageStatItemData(title: "馆藏进度", value: "\(dashboard.totalFinished)/\(libraryTarget)", color: .pink),
         ]
     }
 

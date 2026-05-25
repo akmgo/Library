@@ -92,7 +92,7 @@ struct MobileBookEditorSheet: View {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [6, 6]))
 
-                    VStack(spacing: 12) {
+                    VStack(spacing: AppSpacing.s) {
                         Image(systemName: "photo.badge.plus")
                             .font(.system(size: 32, weight: .light))
                             .foregroundColor(.blue.opacity(0.8))
@@ -145,4 +145,24 @@ struct MobileBookEditorSheet: View {
         dismiss()
     }
 }
+
+#if DEBUG
+private struct PreviewMobileBookEditor: View {
+    @State private var isPresented = true
+    var body: some View {
+        PreviewWithData {
+            Color.clear
+                .sheet(isPresented: $isPresented) {
+                    MobileBookEditorSheet()
+                }
+        }
+    }
+}
+
+#Preview("编辑书籍弹窗") {
+    PreviewMobileBookEditor()
+}
+#endif
+
+
 #endif

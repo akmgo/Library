@@ -9,9 +9,9 @@ struct MobileKnowledgeSpectrumCard: View {
     
     var body: some View {
         GroupBox {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
                 if dataPoints.isEmpty {
-                    VStack(spacing: 8) {
+                    VStack(spacing: AppSpacing.xs) {
                         Image(systemName: "chart.pie")
                             .font(.system(size: 24))
                             .foregroundColor(.secondary.opacity(0.4))
@@ -22,7 +22,7 @@ struct MobileKnowledgeSpectrumCard: View {
                     .frame(maxWidth: .infinity, minHeight: 80)
                 } else {
                     // 🌈 光谱彩带渲染区
-                    VStack(spacing: 24) {
+                    VStack(spacing: AppSpacing.xl) {
                         GeometryReader { geo in
                             let spacing: CGFloat = 4
                             let gapsCount = CGFloat(max(0, dataPoints.count - 1))
@@ -39,16 +39,14 @@ struct MobileKnowledgeSpectrumCard: View {
                         }
                         .frame(height: 16)
                         
-                        // 🏷️ 底部图例标签区
-                        HStack(spacing: 0) {
+                        // 底部图例标签区
+                        HStack(alignment: .top, spacing: 0) {
                             ForEach(dataPoints, id: \.tagName) { point in
-                                HStack(spacing: 6) {
+                                VStack(spacing: 6) {
                                     Circle()
                                         .fill(point.color)
                                         .frame(width: 10, height: 10)
-                                    
-                                    // ✨ 修复：将文字部分的 VStack 改为居中对齐，并稍微增加一点间距
-                                    VStack(alignment: .center, spacing: 2) {
+                                    VStack(spacing: 2) {
                                         Text(point.tagName)
                                             .font(.system(size: 12, weight: .semibold, design: .rounded))
                                             .foregroundColor(.primary)
@@ -58,15 +56,13 @@ struct MobileKnowledgeSpectrumCard: View {
                                             .foregroundColor(.secondary)
                                     }
                                 }
-                                .fixedSize()
-                                Spacer(minLength: 0)
+                                .frame(maxWidth: .infinity)
                             }
                         }
-                        .padding(.horizontal, 2)
                     }
                 }
             }
-            .padding(.top, 8)
+            .padding(.top, AppSpacing.xs)
         } label: {
             HStack {
                 Text("知识基因")
@@ -79,4 +75,21 @@ struct MobileKnowledgeSpectrumCard: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("知识基因卡") {
+    let points = [
+        SpectrumDataPoint(tagName: "科幻", percentage: 0.35, color: .blue),
+        SpectrumDataPoint(tagName: "文学", percentage: 0.25, color: .orange),
+        SpectrumDataPoint(tagName: "哲学", percentage: 0.20, color: .green),
+        SpectrumDataPoint(tagName: "历史", percentage: 0.12, color: .red),
+        SpectrumDataPoint(tagName: "科技", percentage: 0.08, color: .purple),
+    ]
+    return MobileKnowledgeSpectrumCard(dataPoints: points)
+        .padding()
+        .background(Color(UIColor.systemGroupedBackground))
+}
+#endif
+
+
 #endif

@@ -67,7 +67,6 @@ struct GalleryView: View {
             // 1. 主体滚动区
             ScrollView {
                 gridView(containerWidth: geo.size.width)
-                    .padding(.horizontal, AppPageHeaderMetrics.titleLeadingInset)
                     .padding(.top, AppPageHeaderMetrics.height + 12)
                     .padding(.bottom, 60)
             }
@@ -77,9 +76,7 @@ struct GalleryView: View {
                     contentID: "\(gallerySnapshot.books.count)-\(gallerySnapshot.totalInventoryCount)-\(filterStatus?.rawValue ?? "all")-\(sortKey)"
                 ) {
                     AppHeaderTitle("全景画廊", subtitle: "你的阅读对象与状态总览。")
-                } trailingContent: {
-                    AppHeaderStatsView(galleryHeaderStats)
-                }
+            } trailingContent: { PageStatsCompact(items: galleryHeaderStats) }
             }
             .overlay(alignment: .bottom) {
                 if isBatchDeletePresented {
@@ -118,15 +115,19 @@ struct GalleryView: View {
         }
     }
 
-    private var galleryHeaderStats: [AppHeaderStatItem] {
-        let counts = Dictionary(grouping: allBooks, by: \.status).mapValues(\.count)
+    private var galleryHeaderStats: [PageStatItemData] {
+        let total = allBooks.count
+        let readingCount = allBooks.filter { $0.status == .reading }.count
+        let finishedCount = allBooks.filter { $0.status == .finished }.count
+        let abandonedCount = allBooks.filter { $0.status == .abandoned }.count
+        let completionRate = (finishedCount + abandonedCount) > 0
+            ? Int(Double(finishedCount) / Double(finishedCount + abandonedCount) * 100)
+            : 0
         return [
-            AppHeaderStatItem(allBooks.count, label: "全部"),
-            AppHeaderStatItem(counts[.reading, default: 0], label: "在读"),
-            AppHeaderStatItem(counts[.finished, default: 0], label: "已读"),
-            AppHeaderStatItem(counts[.planned, default: 0], label: "想读"),
-            AppHeaderStatItem(counts[.unread, default: 0], label: "未读"),
-            AppHeaderStatItem(counts[.abandoned, default: 0], label: "弃读")
+            PageStatItemData(title: "全部馆藏", value: "\(total)", color: .indigo),
+            PageStatItemData(title: "在读", value: "\(readingCount)", color: AppColors.readingAmber),
+            PageStatItemData(title: "已读完", value: "\(finishedCount)", color: .teal),
+            PageStatItemData(title: "读完率", value: "\(completionRate)", color: .pink),
         ]
     }
 

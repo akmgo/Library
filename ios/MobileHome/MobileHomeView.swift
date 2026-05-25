@@ -22,6 +22,7 @@ struct MobileHomeView: View {
     @State private var showGlobalSearch = false
     
     @State private var activeBookDetail: BookDetailPresentation? = nil
+    @State private var focusedReadingBookID: String?
 
     private var dashboard: ReadingStatsCalculator.DashboardSnapshot {
         ReadingStatsCalculator.dashboardSnapshot(
@@ -32,85 +33,135 @@ struct MobileHomeView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
-                
-                // ================= 📚 核心滑动大盘 =================
-                ScrollView(.vertical, showsIndicators: false) {
+        ZStack {
+            AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
+            
+            // ================= 📚 核心滑动大盘 =================
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: AppSpacing.xl) {
                     
-                    // ✨ 隐形下拉探测器：用力下拉唤起全屏搜索
-                    GeometryReader { geo in
-                        Color.clear.onChange(of: geo.frame(in: .named("homeScroll")).minY) { _, y in
-                            if y > 75 && !showGlobalSearch {
-                                UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                    showGlobalSearch = true
-                                }
-                            }
-                        }
-                    }
-                    .frame(height: 0)
+                    // 📊 2. 数据大盘
+                    MobilePageStatsHeader(items: homeStats)
+
+                    VStack(spacing: AppSpacing.xl) {
                     
-                    VStack(spacing: 24) {
                         // 🌟 1. 视觉锚点 (在读焦点)
-                        if let heroBook = dashboard.activeReadingBook {
-                            Button(action: {
-                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                activeBookDetail = BookDetailPresentation(id: heroBook.id)
-                            }) {
-                                MobileReadingHeroCard(book: heroBook)
-                            }
-                            .buttonStyle(.plain)
+                        if let heroBook = focusedReadingBook {
+                            MobileReadingHeroCard(
+                                book: heroBook,
+                                secondaryBooks: secondaryReadingBooks,
+                                onTapDetail: {
+                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                    activeBookDetail = BookDetailPresentation(id: heroBook.id)
+                                },
+                                onSelectSecondaryBook: { candidate in
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                        focusedReadingBookID = candidate.id
+                                    }
+                                }
+                            )
                         } else {
                             MobileEmptyReadingCard()
                         }
-                        
-                        // 📊 2. 数据大盘
-                        MobileDashboardCard(
-                            weekCount: dashboard.weekCount, monthlyDays: dashboard.monthlyDays, todayMinutes: dashboard.todayMinutes,
-                            dailyGoal: dailyGoal, yearlyCount: dashboard.yearlyCount, yearTarget: yearTarget,
-                            totalFinished: dashboard.totalFinished, totalLibrary: dashboard.totalLibrary
+
+                        // ⏱️ 3. 阅读计时
+                        MobileReadingTimerCard(
+                            book: focusedReadingBook,
+                            todayTotalSeconds: todayTotalSeconds
                         )
-                        
-                        // 🌊 3. 双周动能
+
+                        // 🌊 4. 双周动能
                         MobileMomentumChartCard(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
-                        
-                        // 📚 4. 想读画廊
+
+                        // 📚 5. 想读画廊
                         MobileQueueCarouselCard(displayBooks: dashboard.queueBooks)
                         
-                        // 🧠 5. 深度复盘
+                        // 🧠 6. 深度复盘
                         MobileYearlyHeatmapCard(columns: dashboard.heatmapColumns, activeDays: dashboard.heatmapActiveDays)
                         MobileKnowledgeSpectrumCard(dataPoints: dashboard.spectrumPoints)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 60)
+                    .padding(.horizontal, AppSpacing.l)
                 }
-                .coordinateSpace(name: "homeScroll")
-                
-                // ================= 🔍 独立底部搜索覆盖层 =================
-                if showGlobalSearch {
-                    MobileBottomSearchView(isPresented: $showGlobalSearch)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                        .zIndex(100)
+                .padding(.bottom, AppSpacing.emptyState)
+                .background(alignment: .top) {
+                    pullToSearchDetector
                 }
             }
-            .navigationTitle(greeting)
-            .groupBoxStyle(NativeWidgetGroupBoxStyle())
+            .coordinateSpace(name: "homeScroll")
             
-            .sheet(item: $activeBookDetail) { presentation in
-                if let book = book(withID: presentation.id) {
-                    MobileBookDetailView(book: book)
+            // ================= 🔍 独立底部搜索覆盖层 =================
+            if showGlobalSearch {
+                MobileBottomSearchView(isPresented: $showGlobalSearch)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .zIndex(100)
+            }
+        }
+        .groupBoxStyle(NativeWidgetGroupBoxStyle())
+        .sheet(item: $activeBookDetail) { presentation in
+            if let book = book(withID: presentation.id) {
+                MobileBookDetailView(book: book)
+            }
+        }
+    }
+
+    private var pullToSearchDetector: some View {
+        GeometryReader { geo in
+            Color.clear.onChange(of: geo.frame(in: .named("homeScroll")).minY) { _, y in
+                if y > 75 && !showGlobalSearch {
+                    UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showGlobalSearch = true
+                    }
                 }
             }
         }
+        .allowsHitTesting(false)
     }
 }
 
 private extension MobileHomeView {
     func book(withID id: String) -> Book? {
         books.first { $0.id == id }
+    }
+
+    // MARK: - 在读焦点管理
+
+    private var orderedReadingBooks: [Book] {
+        books
+            .filter { $0.status == .reading }
+            .sorted { lhs, rhs in
+                readingPriorityDate(for: lhs) > readingPriorityDate(for: rhs)
+            }
+    }
+
+    private var focusedReadingBook: Book? {
+        if let focusedReadingBookID,
+           let focused = orderedReadingBooks.first(where: { $0.id == focusedReadingBookID }) {
+            return focused
+        }
+        return orderedReadingBooks.first
+    }
+
+    private var secondaryReadingBooks: [Book] {
+        guard let focusedReadingBook else { return [] }
+        return Array(orderedReadingBooks.filter { $0.id != focusedReadingBook.id }.prefix(3))
+    }
+
+    private var todayTotalSeconds: TimeInterval {
+        let calendar = Calendar.current
+        let today = Date()
+        return sessions
+            .filter { calendar.isDate($0.date, inSameDayAs: today) }
+            .reduce(0) { $0 + max($1.duration, 0) }
+    }
+
+    private func readingPriorityDate(for book: Book) -> Date {
+        let latestSessionDate = sessions
+            .filter { $0.book?.id == book.id }
+            .map(\.startedAt)
+            .max()
+        return latestSessionDate ?? book.lastReadAt ?? book.startDate ?? book.createdAt
     }
 }
 
@@ -152,7 +203,7 @@ struct MobileBottomSearchView: View {
             // ================= 2. 搜索结果层 =================
             VStack {
                 if searchText.isEmpty {
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppSpacing.m) {
                         Spacer()
                         Image(systemName: "sparkle.magnifyingglass")
                             .font(.system(size: 50))
@@ -172,7 +223,7 @@ struct MobileBottomSearchView: View {
                     .onTapGesture { closeSearch() }
                     
                 } else if isSearching {
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppSpacing.m) {
                         ProgressView().padding(.top, 80)
                         Text("正在穿梭于档案库...").font(.system(size: 14)).foregroundColor(.secondary)
                         Spacer()
@@ -180,7 +231,7 @@ struct MobileBottomSearchView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
                 } else if resultBooks.isEmpty && resultAnnotations.isEmpty && resultExcerpts.isEmpty {
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppSpacing.m) {
                         Spacer()
                         Image(systemName: "doc.text.magnifyingglass")
                             .font(.system(size: 40))
@@ -197,7 +248,7 @@ struct MobileBottomSearchView: View {
                 } else {
                     // ================= 核心结果列表 =================
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 32) {
+                        VStack(spacing: AppSpacing.xxl) {
                             
                             // 📚 1. 书籍档案卡片
                             if !resultBooks.isEmpty {
@@ -250,15 +301,15 @@ struct MobileBottomSearchView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, AppSpacing.l)
                         .padding(.top, 24)
-                        .padding(.bottom, 120)
+                        .padding(.bottom, AppSpacing.emptyState)
                     }
                     .scrollDismissesKeyboard(.interactively)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 80)
+            .padding(.bottom, AppSpacing.emptyState)
             
             // ================= 🌟 独立悬浮液态玻璃搜索框 =================
             HStack(spacing: 10) {
@@ -300,7 +351,7 @@ struct MobileBottomSearchView: View {
                 }
                 .shadow(color: .black.opacity(colorScheme == .dark ? 0.4 : 0.1), radius: 12, y: 6)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, AppSpacing.m)
             .padding(.bottom, 16)
             
             // ================= 🌟 4. 统一全屏阅读器层 =================
@@ -367,20 +418,20 @@ struct MobileBottomSearchView: View {
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 4)
             
-            VStack(spacing: 16) {
+            VStack(spacing: AppSpacing.m) {
                 content()
             }
         }
     }
     
     private func globalSearchBookCard(book: Book) -> some View {
-        HStack(spacing: 16) {
+        HStack(spacing: AppSpacing.m) {
             BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
                 .frame(width: 40, height: 60)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
                 .shadow(color: .black.opacity(0.1), radius: 3, y: 2)
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(book.title).font(.system(size: 16, weight: .bold)).foregroundColor(.primary)
                 HStack {
                     Text(book.author).font(.system(size: 13)).foregroundColor(.secondary)
@@ -400,12 +451,12 @@ struct MobileBottomSearchView: View {
     }
     
     private func globalSearchAnnotationCard(book: Book, annotation: Excerpt) -> some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: AppSpacing.m) {
             ZStack {
-                Circle().fill(Color.orange.opacity(0.15)).frame(width: 32, height: 32)
+                Circle().fill(AppColors.readingAmber.opacity(0.15)).frame(width: 32, height: 32)
                 Image(systemName: annotation.isNote ? "square.and.pencil" : "highlighter")
                     .font(.system(size: 13))
-                    .foregroundColor(.orange)
+                    .foregroundColor(AppColors.readingAmber)
             }
             
             VStack(alignment: .leading, spacing: 6) {
@@ -419,7 +470,7 @@ struct MobileBottomSearchView: View {
             .padding(.top, 2)
             Spacer(minLength: 0)
         }
-        .padding(16)
+        .padding(AppSpacing.m)
         .background(AppColors.secondaryBackground(for: colorScheme))
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
@@ -428,7 +479,7 @@ struct MobileBottomSearchView: View {
     }
     
     private func globalSearchExcerptCard(excerpt: Excerpt) -> some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: AppSpacing.m) {
             ZStack {
                 Circle().fill(excerpt.category.themeColor.opacity(0.15)).frame(width: 32, height: 32)
                 Image(systemName: "quote.bubble.fill").font(.system(size: 13)).foregroundColor(excerpt.category.themeColor)
@@ -445,7 +496,7 @@ struct MobileBottomSearchView: View {
             .padding(.top, 2)
             Spacer(minLength: 0)
         }
-        .padding(16)
+        .padding(AppSpacing.m)
         .background(AppColors.secondaryBackground(for: colorScheme))
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: AppRadius.card).stroke(Color.primary.opacity(0.05), lineWidth: 1))
@@ -548,11 +599,11 @@ struct MobileUnifiedFullscreenReadingView: View {
             AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
             
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 32) {
+                VStack(spacing: AppSpacing.xxl) {
                     
                     // 1. 头部 (按需显示)
                     if payload.title != nil || payload.author != nil {
-                        VStack(spacing: 12) {
+                        VStack(spacing: AppSpacing.s) {
                             if let title = payload.title {
                                 Text(title)
                                     .font(.system(size: 28, weight: .heavy, design: .serif))
@@ -586,12 +637,12 @@ struct MobileUnifiedFullscreenReadingView: View {
                                 .font(.system(size: 14, weight: .medium, design: .serif))
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.top, 16)
+                        .padding(.top, AppSpacing.m)
                     }
                     
                     // 4. 专属注解
                     if let annotation = payload.annotation {
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: AppSpacing.s) {
                             Divider()
                             Text("注解 / 释义").font(.system(size: 13, weight: .bold)).foregroundColor(.secondary)
                             Text(annotation)
@@ -604,7 +655,7 @@ struct MobileUnifiedFullscreenReadingView: View {
                     }
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 100)
+                .padding(.bottom, AppSpacing.emptyState)
                 .frame(maxWidth: .infinity)
             }
             
@@ -630,6 +681,16 @@ struct MobileUnifiedFullscreenReadingView: View {
 extension MobileHomeView {
     private var dailyGoal: Int { configs.first?.dailyMinutesGoal ?? 30 }
     private var yearTarget: Int { configs.first?.yearlyBooksGoal ?? 50 }
+    private var libraryTarget: Int { configs.first?.libraryBooksGoal ?? 100 }
+
+    private var homeStats: [PageStatItemData] {
+        [
+            PageStatItemData(title: "本周打卡", value: "\(dashboard.weekCount)/7", color: .pink),
+            PageStatItemData(title: "本月历程", value: "\(dashboard.monthlyDays)/30", color: AppColors.readingAmber),
+            PageStatItemData(title: "年度阅卷", value: "\(dashboard.yearlyCount)/\(yearTarget)", color: .teal),
+            PageStatItemData(title: "馆藏进度", value: "\(dashboard.totalFinished)/\(libraryTarget)", color: .indigo),
+        ]
+    }
     
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -639,4 +700,14 @@ extension MobileHomeView {
         else { return "入夜，纪元" }
     }
 }
+
+#if DEBUG
+#Preview("主页") {
+    PreviewWithData {
+        MobileHomeView()
+    }
+}
+#endif
+
+
 #endif

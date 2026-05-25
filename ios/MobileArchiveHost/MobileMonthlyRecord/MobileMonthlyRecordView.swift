@@ -1,160 +1,307 @@
 #if os(iOS)
 import SwiftUI
 import SwiftData
-import Charts
 
-// MARK: - 🗓️ 核心月度记录视图 (原生秒开版)
+// MARK: - 月度记录 (iOS 原生版)
 
 struct MobileMonthlyRecordView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
-    
-    let daysOfWeek = ["一", "二", "三", "四", "五", "六", "日"]
+    @Query(sort: \Book.title) private var books: [Book]
 
-    private var monthlySnapshot: ReadingStatsCalculator.MonthlyArchiveSnapshot {
-        ReadingStatsCalculator.monthlyArchiveSnapshot(sessions: sessions)
+    @State private var displayYear: Int = Calendar.current.component(.year, from: Date())
+    @State private var displayMonth: Int = Calendar.current.component(.month, from: Date())
+    @State private var isEditing = false
+    @State private var selectedDates: Set<Date> = []
+    @State private var showBatchDeleteAlert = false
+
+    private let calendar = Calendar.current
+
+    // MARK: - 当月数据
+
+    private var monthSessions: [ReadingSession] {
+        sessions.filter {
+            calendar.component(.year, from: $0.startedAt) == displayYear &&
+            calendar.component(.month, from: $0.startedAt) == displayMonth
+        }
     }
-    
+
+    private var sessionsByDay: [(date: Date, sessions: [ReadingSession])] {
+        let grouped = Dictionary(grouping: monthSessions) { calendar.startOfDay(for: $0.startedAt) }
+        return grouped.map { ($0.key, $0.value) }.sorted { $0.date > $1.date }
+    }
+
+    private var totalMinutes: Int {
+        Int(monthSessions.reduce(0) { $0 + $1.duration } / 60)
+    }
+
+    private var activeDays: Int {
+        Set(monthSessions.map { calendar.startOfDay(for: $0.startedAt) }).count
+    }
+
+    private var longestStreak: Int {
+        let sortedDays = Set(monthSessions.map { calendar.startOfDay(for: $0.startedAt) }).sorted()
+        var longest = 0, current = 0
+        for (i, day) in sortedDays.enumerated() {
+            if i == 0 || calendar.date(byAdding: .day, value: 1, to: sortedDays[i - 1]) == day {
+                current += 1
+            } else { current = 1 }
+            longest = max(longest, current)
+        }
+        return longest
+    }
+
+    private var dailyAverage: Int {
+        activeDays > 0 ? totalMinutes / activeDays : 0
+    }
+
+    private var monthStats: [PageStatItemData] {
+        [
+            PageStatItemData(title: "本月阅读", value: "\(totalMinutes)", color: .indigo),
+            PageStatItemData(title: "阅读天数", value: "\(activeDays)", color: AppColors.readingAmber),
+            PageStatItemData(title: "最高连续", value: "\(longestStreak)", color: .teal),
+            PageStatItemData(title: "日均阅读", value: "\(dailyAverage)", color: .pink),
+        ]
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        ScrollViewReader { proxy in
+        NavigationStack {
             ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 32, pinnedViews: [.sectionHeaders]) {
-                    ForEach(monthlySnapshot.sections) { section in
-                        Section(header: monthSectionHeader(section)) {
-                            monthGrid(section: section)
-                        }
-                        .id(section.id)
-                    }
-                }
-                .padding(.horizontal, 16)
-                // 因为没有了悬浮 Header，顶部留白可以大大缩减，更紧凑
-                .padding(.top, 8)
-                .padding(.bottom, 100)
-            }
-            // 完全摒弃 opacity 和 offset 动画，原生直出
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    proxy.scrollTo(monthlySnapshot.currentMonthID, anchor: .top)
-                }
-            }
-        }
-    }
-    
-    // MARK: - ✨ UI 组件模块
-    
-    private func monthSectionHeader(_ section: ReadingStatsCalculator.ReadingMonthSection) -> some View {
-        HStack(alignment: .lastTextBaseline) {
-            Text("\(String(section.year))年")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundColor(.secondary)
-            Text("\(section.month)月")
-                .font(.system(size: 24, weight: .black, design: .rounded))
-                .foregroundColor(.primary)
-            
-            Spacer()
-            
-            // 计算该月总时长
-            let totalMins = section.days.compactMap { d -> Int? in
-                guard let date = d, let duration = monthlySnapshot.durationByDay[Calendar.current.startOfDay(for: date)] else { return nil }
-                return Int(duration / 60)
-            }.reduce(0, +)
-            
-            if totalMins > 0 {
-                Text("\(totalMins / 60)h \(totalMins % 60)m")
-                    .font(.system(size: 12, weight: .heavy, design: .monospaced))
-                    .foregroundColor(.indigo)
-                    .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(Color.indigo.opacity(0.1))
-                    .clipShape(Capsule())
-            }
-        }
-        .padding(.vertical, 12)
-        .background(AppColors.primaryBackground(for: colorScheme)) // 吸顶时不透明
-    }
-    
-    private func monthGrid(section: ReadingStatsCalculator.ReadingMonthSection) -> some View {
-        VStack(spacing: 12) {
-            // 星期表头
-            HStack(spacing: 0) {
-                ForEach(daysOfWeek, id: \.self) { day in
-                    Text(day).font(.system(size: 11, weight: .bold)).foregroundColor(.secondary.opacity(0.5)).frame(maxWidth: .infinity)
-                }
-            }
-            
-            let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
-            LazyVGrid(columns: columns, spacing: 8) {
-                ForEach(0..<section.days.count, id: \.self) { index in
-                    if let date = section.days[index] {
-                        MobileDayCardView(
-                            date: date,
-                            duration: monthlySnapshot.durationByDay[Calendar.current.startOfDay(for: date)]
-                        )
+                VStack(spacing: AppSpacing.l) {
+                    MobilePageStatsHeader(items: monthStats)
+
+                    monthNavigator
+
+                    if sessionsByDay.isEmpty {
+                        emptyMonthView
+                            .padding(.top, 40)
                     } else {
-                        Color.clear.frame(height: 70)
+                        VStack(spacing: AppSpacing.s) {
+                            ForEach(sessionsByDay, id: \.date) { item in
+                                Button(action: {
+                                    if isEditing {
+                                        toggleDate(item.date)
+                                    }
+                                }) {
+                                    DayReadingCard(date: item.date, sessions: item.sessions, books: books)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                                                .stroke(isEditing && selectedDates.contains(item.date) ? Color.blue : Color.clear, lineWidth: 3)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, AppSpacing.l)
                     }
+                }
+                .padding(.bottom, AppSpacing.emptyState)
+            }
+            .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
+            .toolbar { monthlyToolbar }
+            .alert("批量删除", isPresented: $showBatchDeleteAlert) {
+                Button("取消", role: .cancel) {}
+                Button("删除", role: .destructive, action: batchDelete)
+            } message: {
+                Text("确定删除选中 \(selectedDates.count) 天的阅读记录吗？此操作不可撤销。")
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var monthlyToolbar: some ToolbarContent {
+        if isEditing {
+            ToolbarItem(placement: .navigationBarLeading) {
+                HStack(spacing: 16) {
+                    Button("取消") { withAnimation { exitEditMode() } }
+                    if !selectedDates.isEmpty {
+                        Text("\(selectedDates.count)")
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            if !selectedDates.isEmpty {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showBatchDeleteAlert = true }) {
+                        Image(systemName: "trash")
+                            .foregroundColor(AppColors.danger)
+                    }
+                }
+            }
+        } else {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { withAnimation { isEditing = true } }) {
+                    Image(systemName: "checklist")
                 }
             }
         }
     }
+
+    // MARK: - 月份导航
+
+    @ViewBuilder
+    private var monthNavigator: some View {
+        HStack(spacing: 0) {
+            Button(action: { goToPreviousMonth() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.secondary)
+                    .frame(width: 32, height: 32)
+                    .background(Circle().fill(Color.primary.opacity(0.06)))
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            Text("\(String(displayYear))年 \(displayMonth)月")
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(.primary)
+
+            Spacer()
+
+            Button(action: { goToNextMonth() }) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.secondary)
+                    .frame(width: 32, height: 32)
+                    .background(Circle().fill(Color.primary.opacity(0.06)))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, AppSpacing.l)
+    }
+
+    private var emptyMonthView: some View {
+        VStack(spacing: AppSpacing.m) {
+            Image(systemName: "book.pages")
+                .font(.system(size: 36))
+                .foregroundColor(.secondary.opacity(0.25))
+            Text("本月暂无阅读记录")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+    }
+
+    // MARK: - 月份切换
+
+    private func goToPreviousMonth() {
+        if displayMonth == 1 { displayMonth = 12; displayYear -= 1 }
+        else { displayMonth -= 1 }
+    }
+
+    private func goToNextMonth() {
+        if displayMonth == 12 { displayMonth = 1; displayYear += 1 }
+        else { displayMonth += 1 }
+    }
+
+    // MARK: - 批量操作
+
+    private func toggleDate(_ date: Date) {
+        if selectedDates.contains(date) { selectedDates.remove(date) }
+        else { selectedDates.insert(date) }
+    }
+
+    private func exitEditMode() {
+        isEditing = false
+        selectedDates = []
+    }
+
+    private func batchDelete() {
+        let targets = monthSessions.filter { selectedDates.contains(calendar.startOfDay(for: $0.startedAt)) }
+        for session in targets { modelContext.delete(session) }
+        try? modelContext.save()
+        exitEditMode()
+    }
 }
 
-// MARK: - ✨ 单日卡片 (精准应用 VisualEngines)
+// MARK: - 每日阅读卡片
 
-struct MobileDayCardView: View {
+private struct DayReadingCard: View {
     let date: Date
-    let duration: TimeInterval?
-    @Environment(\.colorScheme) private var colorScheme
-    
-    @State private var isPressed = false
-    
-    var body: some View {
-        let cal = Calendar.current
-        let isToday = cal.isDateInToday(date)
-        let mins = Int((duration ?? 0) / 60)
-        
-        ZStack {
-            // 底板
-            RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
-                .fill(duration != nil ? AppColors.secondaryBackground(for: colorScheme) : Color.secondary.opacity(0.04))
-            
-            // ✨ 视觉引擎：热力柱渲染
-            if duration != nil, mins > 0 {
-                VStack(spacing: 0) {
-                    Spacer()
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(VisualEngines.ReadingHeatmap.gradient(for: mins))
-                        // 移动端高度适配：在 Mac 规范基础上乘以 0.8
-                        .frame(height: VisualEngines.ReadingHeatmap.height(for: mins) * 0.8)
-                        .padding(4)
-                        .shadow(color: VisualEngines.ReadingHeatmap.shadowColor(for: mins).opacity(0.3), radius: 4, y: 2)
-                }
-            }
-            
-            // 日期数字
-            VStack {
-                HStack {
-                    ZStack {
-                        if isToday { Circle().fill(Color.red).frame(width: 18, height: 18) }
-                        Text("\(cal.component(.day, from: date))")
-                            .font(.system(size: 12, weight: isToday ? .bold : .medium, design: .rounded))
-                            .foregroundColor(isToday ? .white : (duration != nil ? .primary : .secondary.opacity(0.4)))
-                    }
-                    Spacer()
-                }
-                Spacer()
-            }
-            .padding(6)
+    let sessions: [ReadingSession]
+    let books: [Book]
+    private let calendar = Calendar.current
+
+    private var totalDayMinutes: Int {
+        Int(sessions.reduce(0) { $0 + $1.duration } / 60)
+    }
+
+    private var dayLabel: String {
+        let day = calendar.component(.day, from: date)
+        let weekday = calendar.component(.weekday, from: date)
+        let names = ["日", "一", "二", "三", "四", "五", "六"]
+        return "\(day)日 周\(names[weekday - 1])"
+    }
+
+    private var bookSummaries: [(title: String, delta: String)] {
+        var merged: [String: (totalDelta: Double, unit: ProgressUnit, totalDuration: TimeInterval)] = [:]
+        for session in sessions {
+            guard let bookID = session.book?.id, let book = books.first(where: { $0.id == bookID }) else { continue }
+            var entry = merged[bookID] ?? (0, session.progressUnit, 0)
+            entry.totalDelta += session.deltaAmount
+            entry.totalDuration += session.duration
+            merged[bookID] = entry
         }
-        .frame(height: 72)
-        .scaleEffect(isPressed ? 0.9 : 1.0)
-        .onTapGesture {
-            if duration != nil {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                withAnimation(.spring()) { isPressed = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { withAnimation { isPressed = false } }
+        return merged.compactMap { bookID, data in
+            guard let book = books.first(where: { $0.id == bookID }) else { return nil }
+            let mins = Int(data.totalDuration / 60)
+            var parts: [String] = []
+            if mins > 0 { parts.append("\(mins)分钟") }
+            if data.totalDelta > 0 {
+                switch data.unit {
+                case .page: parts.append("+\(Int(data.totalDelta))页")
+                case .percent: parts.append("+\(Int(data.totalDelta))%")
+                case .chapter: parts.append("+\(Int(data.totalDelta))章")
+                }
             }
+            return (book.title, parts.joined(separator: " · "))
         }
     }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(dayLabel)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                Spacer()
+                Text("\(totalDayMinutes) 分钟")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundColor(AppColors.readingAmber)
+            }
+
+            if !bookSummaries.isEmpty {
+                ForEach(Array(bookSummaries.enumerated()), id: \.offset) { _, summary in
+                    HStack {
+                        Text("《\(summary.title)》")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.primary.opacity(0.8))
+                            .lineLimit(1)
+                        Spacer()
+                        if !summary.delta.isEmpty {
+                            Text(summary.delta)
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundColor(.teal)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(AppSpacing.l)
+        .readingRecordCardStyle()
+    }
 }
+
+#if DEBUG
+#Preview("月度记录") {
+    PreviewWithData {
+        MobileMonthlyRecordView()
+    }
+}
+#endif
 
 #endif

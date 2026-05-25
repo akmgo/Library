@@ -10,10 +10,10 @@ struct MobileYearlyHeatmapCard: View {
     var body: some View {
         GroupBox {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
+                HStack(spacing: AppSpacing.xxs) {
                     ForEach(0..<columns.count, id: \.self) { colIndex in
                         let column = columns[colIndex]
-                        VStack(spacing: 4) {
+                        VStack(spacing: AppSpacing.xxs) {
                             ForEach(column, id: \.id) { day in
                                 RoundedRectangle(cornerRadius: 3, style: .continuous)
                                     .fill(
@@ -26,7 +26,7 @@ struct MobileYearlyHeatmapCard: View {
                         }
                     }
                 }
-                .padding(.top, 12)
+                .padding(.top, AppSpacing.s)
             }
             .defaultScrollAnchor(.trailing)
         } label: {
@@ -50,4 +50,31 @@ struct MobileYearlyHeatmapCard: View {
         }
     }
 }
+
+#if DEBUG
+private struct PreviewHeatmapCard: View {
+    var body: some View {
+        let columns = (0..<53).map { _ in
+            (0..<7).map { _ in
+                HeatmapDataPoint(
+                    date: Date(),
+                    minutes: Int.random(in: 0...180),
+                    intensity: .random(in: 0...1),
+                    isFuture: false,
+                    tooltip: ""
+                )
+            }
+        }
+        MobileYearlyHeatmapCard(columns: columns, activeDays: 89)
+            .padding()
+            .background(Color(UIColor.systemGroupedBackground))
+    }
+}
+
+#Preview("年度热力图卡") {
+    PreviewHeatmapCard()
+}
+#endif
+
+
 #endif

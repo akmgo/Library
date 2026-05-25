@@ -8,20 +8,85 @@ enum ExcerptWallDisplayMode: Equatable {
     case artistic
 }
 
+private struct ExcerptSpanMasonryLayout: Layout {
+    let columns: Int
+    let spacing: CGFloat
+    let spans: [Int]
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 1200
+        let columnWidth = (width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
+        var heights = Array(repeating: CGFloat(0), count: columns)
+
+        for (index, subview) in subviews.enumerated() {
+            let span = spanForItem(at: index)
+            let placement = findPlacement(for: span, in: heights)
+            let proposalWidth = columnWidth * CGFloat(span) + spacing * CGFloat(span - 1)
+            let size = subview.sizeThatFits(ProposedViewSize(width: proposalWidth, height: nil))
+            let newY = placement.y + size.height + spacing
+
+            for column in placement.column..<(placement.column + span) {
+                heights[column] = newY
+            }
+        }
+
+        return CGSize(width: width, height: heights.max() ?? 0)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let columnWidth = (bounds.width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
+        var heights = Array(repeating: bounds.minY, count: columns)
+
+        for (index, subview) in subviews.enumerated() {
+            let span = spanForItem(at: index)
+            let placement = findPlacement(for: span, in: heights)
+            let x = bounds.minX + CGFloat(placement.column) * (columnWidth + spacing)
+            let y = placement.y
+            let proposalWidth = columnWidth * CGFloat(span) + spacing * CGFloat(span - 1)
+
+            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: proposalWidth, height: nil))
+            let size = subview.sizeThatFits(ProposedViewSize(width: proposalWidth, height: nil))
+            let newY = y + size.height + spacing
+
+            for column in placement.column..<(placement.column + span) {
+                heights[column] = newY
+            }
+        }
+    }
+
+    private func spanForItem(at index: Int) -> Int {
+        min(max(1, spans.indices.contains(index) ? spans[index] : 1), columns)
+    }
+
+    private func findPlacement(for span: Int, in heights: [CGFloat]) -> (column: Int, y: CGFloat) {
+        var bestColumn = 0
+        var minY = CGFloat.infinity
+
+        for column in 0...(columns - span) {
+            let maxYInSpan = heights[column..<(column + span)].max() ?? 0
+            if maxYInSpan < minY {
+                minY = maxYInSpan
+                bestColumn = column
+            }
+        }
+
+        return (bestColumn, minY)
+    }
+}
+
 // MARK: - ✨ 灵感画廊 (核心视图)
 
 struct InspirationWallView: View {
     @Environment(\.modelContext) private var modelContext
-    @Binding var selectedBook: Book?
     let filterCategory: ExcerptCategory?
     let sortKey: AnnotationSortKey
     let displayMode: ExcerptWallDisplayMode
     @Binding var isBatchDeletePresented: Bool
     @Binding var selectedExcerptIDs: Set<String>
     @Query private var allExcerpts: [Excerpt]
-    @Query private var allBooks: [Book]
     
     @State private var shuffledExcerpts: [ExcerptListItem] = []
+    @State private var scrolledExcerptID: String?
     
     @State private var recordToEdit: Excerpt? = nil
     
@@ -34,12 +99,12 @@ struct InspirationWallView: View {
     
     var body: some View {
         let totalExcerptCharacters = shuffledExcerpts.reduce(0) { $0 + $1.content.count }
-        let uniqueBooksCount = Set(shuffledExcerpts.map { $0.bookTitle }).count
+        let uniqueBooksCount = Set(shuffledExcerpts.map(\.bookID)).filter { !$0.isEmpty }.count
         
         GeometryReader { geo in
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack {
-                    wallContentView(containerWidth: geo.size.width)
+                    wallContentView(containerSize: geo.size)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .frame(maxWidth: .infinity)
@@ -49,9 +114,7 @@ struct InspirationWallView: View {
                     contentID: "\(shuffledExcerpts.count)-\(totalExcerptCharacters)-\(uniqueBooksCount)-\(filterCategory?.rawValue ?? "all")-\(sortKey)-\(displayMode)"
                 ) {
                     AppHeaderTitle("摘录长廊", subtitle: "书中摘录与日常片段汇集于此。")
-                } trailingContent: {
-                    AppHeaderStatsView(excerptHeaderStats)
-                }
+            } trailingContent: { PageStatsCompact(items: excerptHeaderStats) }
             }
             .overlay(alignment: .bottom) {
                 if isBatchDeletePresented {
@@ -82,7 +145,7 @@ struct InspirationWallView: View {
     }
     
     @ViewBuilder
-    private func wallContentView(containerWidth: CGFloat) -> some View {
+    private func wallContentView(containerSize: CGSize) -> some View {
         if shuffledExcerpts.isEmpty {
             EmptyStateView(
                 systemImage: "leaf",
@@ -94,135 +157,105 @@ struct InspirationWallView: View {
         } else {
             switch displayMode {
             case .compact:
-                groupedCatalogView(containerWidth: containerWidth)
+                masonryGrid(containerWidth: containerSize.width)
             case .artistic:
-                masonryGrid(containerWidth: containerWidth)
+                carouselView(containerSize: containerSize)
             }
         }
     }
 
-    private func groupedCatalogView(containerWidth: CGFloat) -> some View {
-        LazyVStack(spacing: 60) {
-            let grouped = Dictionary(grouping: shuffledExcerpts, by: { $0.bookTitle })
-            let sortedKeys = grouped.keys.sorted()
-            
-            ForEach(sortedKeys, id: \.self) { bookTitle in
-                let excerpts = grouped[bookTitle]!
-                HStack(alignment: .top, spacing: 40) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        if let coverData = excerpts.first?.coverData {
-                            BookCoverView(coverID: excerpts.first?.bookID ?? "", coverData: coverData, fallbackTitle: bookTitle)
-                                .frame(width: 140, height: 210).clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                .shadow(color: Color.black.opacity(0.12), radius: 8, y: 4).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                        } else {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.secondary.opacity(0.1)).frame(width: 140, height: 210)
-                        }
-                        
-                        // ✨ 核心修改 2：书名与作者的上下排版
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(bookTitle)
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
-                            
-                            Text(excerpts.first?.bookAuthor ?? "佚名")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                            
-                            Text("\(excerpts.count) 条灵感")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.secondary)
-                                .padding(.horizontal, 8).padding(.vertical, 4)
-                                .background(Color.secondary.opacity(0.1)).clipShape(Capsule())
-                                .padding(.top, 4) // 增加呼吸感
-                        }
-                    }.frame(width: 140)
-                    
-                    LazyVStack(spacing: 16) {
-                        ForEach(excerpts) { excerpt in
-                            selectableExcerptCard(excerpt, isMasonry: false)
-                            .transition(.appCardGlide)
-                        }
+    private func carouselView(containerSize: CGSize) -> some View {
+        let viewportHeight = max(520, containerSize.height - AppPageHeaderMetrics.height - 92)
+
+        return ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 0) {
+                ForEach(shuffledExcerpts) { excerpt in
+                    ZStack(alignment: .center) {
+                        selectableExcerptCard(excerpt)
+                            .frame(width: min(800, max(320, containerSize.width - 120)))
+                            .scrollTransition(axis: .horizontal) { content, phase in
+                                content
+                                    .scaleEffect(phase.isIdentity ? 1.0 : 0.85)
+                                    .opacity(phase.isIdentity ? 1.0 : 0.3)
+                                    .offset(y: phase.isIdentity ? 0 : 30)
+                            }
                     }
+                    .frame(width: containerSize.width)
+                    .frame(minHeight: viewportHeight, alignment: .center)
+                    .id(excerpt.id)
                 }
             }
+            .scrollTargetLayout()
         }
-        .padding(.horizontal, 40).padding(.top, AppPageHeaderMetrics.height + 32).padding(.bottom, 60)
+        .scrollPosition(id: $scrolledExcerptID)
+        .scrollTargetBehavior(.viewAligned)
+        .padding(.top, AppPageHeaderMetrics.height + 32)
+        .padding(.bottom, 60)
+        .onChange(of: scrolledExcerptID) { oldValue, newValue in
+            if oldValue != newValue, newValue != nil {
+                NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+            }
+        }
     }
-    
+
     @ViewBuilder
     private func masonryGrid(containerWidth: CGFloat) -> some View {
         let minColumnWidth: CGFloat = 280
-        let spacing: CGFloat = 20
+        let spacing: CGFloat = 24
         let horizontalPadding: CGFloat = 80
         let availableWidth = max(minColumnWidth, containerWidth - horizontalPadding)
-        let columnsCount = max(1, Int((availableWidth + spacing) / (minColumnWidth + spacing)))
-        let exactColumnWidth = (availableWidth - spacing * CGFloat(columnsCount - 1)) / CGFloat(columnsCount)
-        
-        let columns = distributeExcerpts(into: columnsCount)
-        
-        HStack(alignment: .top, spacing: spacing) {
-            ForEach(0 ..< columnsCount, id: \.self) { colIndex in
-                LazyVStack(spacing: spacing) {
-                    ForEach(columns[colIndex]) { excerpt in
-                        selectableExcerptCard(excerpt, isMasonry: true)
-                        .transition(.appCardGlide)
-                    }
-                }
-                .frame(width: exactColumnWidth)
+        let columnsCount = availableWidth >= 680 ? 2 : 1
+        let spans = shuffledExcerpts.map { columnSpan(for: $0, columnsCount: columnsCount) }
+
+        ExcerptSpanMasonryLayout(columns: columnsCount, spacing: spacing, spans: spans) {
+            ForEach(shuffledExcerpts) { excerpt in
+                selectableExcerptCard(excerpt)
+                    .transition(.appCardGlide)
             }
         }
+        .frame(width: availableWidth)
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, 40).padding(.top, AppPageHeaderMetrics.height + 32).padding(.bottom, 60)
     }
-    
-    private func distributeExcerpts(into columnsCount: Int) -> [[ExcerptListItem]] {
-        var columns: [[ExcerptListItem]] = Array(repeating: [], count: columnsCount)
-        var columnHeights: [Double] = Array(repeating: 0, count: columnsCount)
-        for excerpt in shuffledExcerpts {
-            let approxHeight = 80.0 + Double(excerpt.content.count) * 0.8
-            let minIndex = columnHeights.enumerated().min(by: { $0.element < $1.element })?.offset ?? 0
-            columns[minIndex].append(excerpt)
-            columnHeights[minIndex] += approxHeight
+
+    private func columnSpan(for excerpt: ExcerptListItem, columnsCount: Int) -> Int {
+        guard columnsCount > 1 else { return 1 }
+        switch excerpt.category {
+        case .prose, .note:
+            return 2
+        case .bookExcerpt, .poetry, .lyric, .quote, .web, .movie:
+            return 1
         }
-        return columns
     }
 
-    private var excerptHeaderStats: [AppHeaderStatItem] {
-        let counts = Dictionary(grouping: allExcerpts, by: \.category).mapValues(\.count)
+    private var excerptHeaderStats: [PageStatItemData] {
+        let total = allExcerpts.count
+        let bookExcerptCount = allExcerpts.filter { $0.category == .bookExcerpt }.count
+        let uniqueBooks = Set(allExcerpts.compactMap { $0.book?.title }).count
+        let thisWeek = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        let newThisWeek = allExcerpts.filter { $0.createdAt >= thisWeek }.count
         return [
-            AppHeaderStatItem(allExcerpts.count, label: "全部"),
-            AppHeaderStatItem(counts[.bookExcerpt, default: 0], label: ExcerptCategory.bookExcerpt.displayName),
-            AppHeaderStatItem(counts[.note, default: 0], label: ExcerptCategory.note.displayName),
-            AppHeaderStatItem(counts[.poetry, default: 0], label: ExcerptCategory.poetry.displayName),
-            AppHeaderStatItem(counts[.lyric, default: 0], label: ExcerptCategory.lyric.displayName),
-            AppHeaderStatItem(counts[.prose, default: 0], label: ExcerptCategory.prose.displayName),
-            AppHeaderStatItem(counts[.quote, default: 0], label: ExcerptCategory.quote.displayName),
-            AppHeaderStatItem(counts[.web, default: 0], label: ExcerptCategory.web.displayName),
-            AppHeaderStatItem(counts[.movie, default: 0], label: ExcerptCategory.movie.displayName)
+            PageStatItemData(title: "全部摘录", value: "\(total)", color: .indigo),
+            PageStatItemData(title: "书中摘录", value: "\(bookExcerptCount)", color: AppColors.readingAmber),
+            PageStatItemData(title: "知识源泉", value: "\(uniqueBooks)", color: .teal),
+            PageStatItemData(title: "本周新增", value: "\(newThisWeek)", color: .pink),
         ]
     }
 
-    private func selectableExcerptCard(_ excerpt: ExcerptListItem, isMasonry: Bool) -> some View {
+    private func selectableExcerptCard(_ excerpt: ExcerptListItem) -> some View {
         ExcerptWallCardView(
             excerpt: excerpt,
-            isMasonry: isMasonry,
-            onDelete: deleteExcerpt,
             onEdit: { item in triggerEdit(for: item) },
-            onLocate: { item in
-                if isBatchDeletePresented {
-                    toggleSelection(for: item)
-                } else {
-                    locateBook(excerpt: item)
-                }
-            }
+            allowsEditGesture: !isBatchDeletePresented
         )
-        .overlay(alignment: .topTrailing) {
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                .stroke(isBatchDeletePresented && selectedExcerptIDs.contains(excerpt.id) ? Color.blue : Color.clear, lineWidth: 3)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
             if isBatchDeletePresented {
-                Image(systemName: selectedExcerptIDs.contains(excerpt.id) ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(selectedExcerptIDs.contains(excerpt.id) ? AppColors.readingAmber : Color.secondary)
-                    .padding(12)
+                toggleSelection(for: excerpt)
             }
         }
     }
@@ -259,34 +292,15 @@ extension InspirationWallView {
             type: filterCategory,
             searchText: "",
             sortKey: sortKey,
-            randomize: displayMode == .artistic
+            randomize: false
         ).excerpts
     }
     
-    @MainActor
-    private func deleteExcerpt(excerpt: ExcerptListItem) {
-        let targetID = excerpt.id
-        if let target = allExcerpts.first(where: { $0.id == targetID }) {
-            try? ReadingDataService.shared.deleteExcerpt(target, context: modelContext)
-        }
-        refreshData(animate: true)
-    }
-    
-    @MainActor
-    private func locateBook(excerpt: ExcerptListItem) {
-        let targetID = excerpt.bookID
-        if let book = allBooks.first(where: { $0.id == targetID }) {
-            selectedBook = book
-        }
-    }
-
     private func toggleSelection(for excerpt: ExcerptListItem) {
-        withAnimation(.appControlFeedback) {
-            if selectedExcerptIDs.contains(excerpt.id) {
-                selectedExcerptIDs.remove(excerpt.id)
-            } else {
-                selectedExcerptIDs.insert(excerpt.id)
-            }
+        if selectedExcerptIDs.contains(excerpt.id) {
+            selectedExcerptIDs.remove(excerpt.id)
+        } else {
+            selectedExcerptIDs.insert(excerpt.id)
         }
     }
 

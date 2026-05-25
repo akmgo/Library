@@ -36,7 +36,7 @@ struct MobileDataSettingsView: View {
                 MobileDataInlineRow(icon: "icloud.fill", iconColor: .blue, title: "iCloud 同步", subtitle: "利用 CloudKit 在所有 Apple 设备间无缝流转数据") {
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(isICloudAvailable ? Color.green : Color.red)
+                            .fill(isICloudAvailable ? AppColors.success : Color.red)
                             .frame(width: 8, height: 8)
                         Text(isICloudAvailable ? "已连接" : "未授权")
                             .font(.system(size: 13, weight: .bold))
@@ -55,14 +55,14 @@ struct MobileDataSettingsView: View {
                 }
                 
                 if enableAutoBackup {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: AppSpacing.s) {
                         Text("快照文件将安全地存储在系统的「文件」App 中，可跨设备恢复。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 4)
                         
                         // ✨ 独立的 3 个并排操作按钮，带各自独立边框与底色
-                        HStack(spacing: 12) {
+                        HStack(spacing: AppSpacing.s) {
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                 showFileImporter = true
@@ -98,10 +98,10 @@ struct MobileDataSettingsView: View {
                             }) {
                                 Text("清空历史")
                                     .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(.red)
+                                    .foregroundColor(AppColors.danger)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
-                                    .background(Color.red.opacity(0.1))
+                                    .background(AppColors.danger.opacity(0.1))
                                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                             }
                             .buttonStyle(.plain)
@@ -125,9 +125,9 @@ struct MobileDataSettingsView: View {
                             Text("清理缓存")
                                 .font(.system(size: 13, weight: .bold))
                                 .foregroundColor(currentCacheSizeMB <= 0.1 ? .secondary : .red)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(currentCacheSizeMB <= 0.1 ? Color(uiColor: .tertiarySystemGroupedBackground) : Color.red.opacity(0.1))
+                                .padding(.horizontal, AppSpacing.m)
+                                .padding(.vertical, AppSpacing.xs)
+                                .background(currentCacheSizeMB <= 0.1 ? Color(uiColor: .tertiarySystemGroupedBackground) : AppColors.danger.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         }
                         .buttonStyle(.plain)
@@ -135,7 +135,6 @@ struct MobileDataSettingsView: View {
                 }
             } header: { Text("存储管理") }
         }
-        .navigationTitle("数据与安全")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             checkICloudStatus()
@@ -265,7 +264,6 @@ struct MobileDataSettingsView: View {
                         let oldBooks = try modelContext.fetch(FetchDescriptor<Book>()); oldBooks.forEach { modelContext.delete($0) }
                         let oldRecords = try modelContext.fetch(FetchDescriptor<ReadingSession>()); oldRecords.forEach { modelContext.delete($0) }
                         let oldAnnos = try modelContext.fetch(FetchDescriptor<Excerpt>()); oldAnnos.forEach { modelContext.delete($0) }
-                        let oldExcerpts = try modelContext.fetch(FetchDescriptor<Excerpt>()); oldExcerpts.forEach { modelContext.delete($0) }
                         
                         // 重建配置
                         if let cDTO = payload.config { modelContext.insert(UserConfig(dailyMinutesGoal: cDTO.dailyMinutesGoal, yearlyBooksGoal: cDTO.yearlyBooksGoal, libraryBooksGoal: cDTO.libraryBooksGoal, updatedAt: cDTO.updatedAt)) }
@@ -294,7 +292,7 @@ struct MobileDataInlineRow<Content: View>: View {
     
     var body: some View {
         // ✨ 核心修复：强制设置为顶部对齐 (.top) 避免长文字换行导致的居中悬空
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: AppSpacing.s) {
             // 图标
             ZStack {
                 RoundedRectangle(cornerRadius: 6, style: .continuous).fill(iconColor).frame(width: 28, height: 28)
@@ -303,7 +301,7 @@ struct MobileDataInlineRow<Content: View>: View {
             .padding(.top, 2) // ✨ 视觉微调
             
             // 文案 (支持自动换行)
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(title)
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.primary)
@@ -442,4 +440,21 @@ struct BackupExcerptDTO: Codable {
         return newExcerpt
     }
 }
+
+#if DEBUG
+private struct PreviewDataSettings: View {
+    @State private var msg: AttributedString? = nil
+    var body: some View {
+        PreviewWithData {
+            MobileDataSettingsView(systemMessage: $msg)
+        }
+    }
+}
+
+#Preview("数据设置") {
+    PreviewDataSettings()
+}
+#endif
+
+
 #endif

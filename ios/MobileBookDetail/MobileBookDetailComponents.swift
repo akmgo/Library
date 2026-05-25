@@ -97,7 +97,7 @@ struct MobileCompactStatusPicker: View {
 struct MobileCompactDatePickers: View {
     @Bindable var book: Book
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: AppSpacing.xs) {
             VStack(spacing: 6) {
                 CompactDateBtn(icon: "play.fill", title: "开始", date: $book.startDate)
                 CompactDateBtn(icon: "flag.fill", title: "结束", date: $book.finishDate, isDisabled: book.status != .finished)
@@ -108,7 +108,7 @@ struct MobileCompactDatePickers: View {
                 VStack(spacing: 2) {
                     Text("\(days)")
                         .font(.system(size: 20, weight: .black, design: .rounded))
-                        .foregroundColor(.mint)
+                        .foregroundColor(AppColors.success)
                     Text("历时(天)")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.secondary)
@@ -162,15 +162,15 @@ struct CompactDateBtn: View {
 
 struct MobileCompactRatingView: View {
     @Bindable var book: Book
-    let ratingTexts = ["", "一星毒草", "二星平庸", "三星粮草", "四星推荐", "改变人生"]
-    
+
     var body: some View {
-        HStack(spacing: 4) {
-            HStack(spacing: 2) {
-                ForEach(1 ... 5, id: \.self) { star in
-                    let isFilled = book.rating >= star
+        let validRating = min(max(book.rating, 0), 7)
+        HStack(spacing: AppSpacing.xxs) {
+            HStack(spacing: 1) {
+                ForEach(1 ... 7, id: \.self) { star in
+                    let isFilled = validRating >= star
                     Image(systemName: "star.fill")
-                        .font(.system(size: 12))
+                        .font(.system(size: 11))
                         .foregroundColor(isFilled ? .yellow : Color.secondary.opacity(0.2))
                         .onTapGesture {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -179,11 +179,10 @@ struct MobileCompactRatingView: View {
                 }
             }
             Spacer()
-            if book.rating > 0 {
-                Text(book.rating < ratingTexts.count ? ratingTexts[book.rating] : "")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.orange)
-                if book.rating == 5 { Image(systemName: "crown.fill").font(.system(size: 10)).foregroundColor(.orange) }
+            if validRating > 0 {
+                Text(AppConstants.ratingPoeticTexts[validRating])
+                    .font(.system(size: 10, weight: .bold, design: .serif))
+                    .foregroundColor(AppColors.readingAmber)
             } else {
                 Text("暂无评价").font(.system(size: 10, weight: .medium)).foregroundColor(Color.gray.opacity(0.5))
             }
@@ -198,9 +197,9 @@ struct MobileCompactTagsView: View {
     let predefinedTags = ["哲学", "历史", "商业", "科技", "文学", "成长", "设计", "心理", "传记", "管理"]
     
     var body: some View {
-        let columns = [GridItem(.adaptive(minimum: 54, maximum: 70), spacing: 8)]
+        let columns = [GridItem(.adaptive(minimum: 54, maximum: 70), spacing: AppSpacing.xs)]
         
-        LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: AppSpacing.xs) {
             ForEach(predefinedTags, id: \.self) { tag in
                 let isSelected = book.tags.contains(tag)
                 let isMaxed = book.tags.count >= 3 && !isSelected
@@ -229,4 +228,112 @@ struct MobileCompactTagsView: View {
         }
     }
 }
+// MARK: - 阅读记录卡片
+
+struct MobileReadingSessionCard: View {
+    let book: Book
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isExpanded = false
+    private let maxCollapsed = 5
+
+    private var sessions: [ReadingSession] {
+        (book.sessions ?? []).sorted { $0.startedAt > $1.startedAt }
+    }
+
+    var body: some View {
+        let visible = isExpanded ? sessions : Array(sessions.prefix(maxCollapsed))
+        VStack(alignment: .leading, spacing: AppSpacing.s) {
+            HStack {
+                Label("阅读记录", systemImage: "clock.fill")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(AppColors.readingAmber)
+                Spacer()
+                if !sessions.isEmpty {
+                    Text("\(sessions.count) 条")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Capsule().fill(Color.primary.opacity(0.08)))
+                }
+            }
+
+            if sessions.isEmpty {
+                HStack {
+                    Spacer()
+                    Text("暂无阅读记录").font(.system(size: 13)).foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.vertical, 16)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(visible.enumerated()), id: \.element.id) { i, s in
+                        HStack(spacing: AppSpacing.s) {
+                            Text(s.startedAt.formatted(date: .abbreviated, time: .omitted))
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundColor(.primary)
+                                .frame(width: 72, alignment: .leading)
+                            Text(s.displayDuration)
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(AppColors.readingAmber)
+                            Spacer()
+                            if s.deltaAmount > 0 {
+                                Text(s.displayDelta)
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundColor(AppColors.readingAmber)
+                            }
+                        }
+                        .padding(.vertical, AppSpacing.xs)
+                        if i < visible.count - 1 {
+                            Divider().opacity(0.3)
+                        }
+                    }
+                }
+                .padding(AppSpacing.s)
+                .background(Color.primary.opacity(0.03))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                if sessions.count > maxCollapsed {
+                    Button(action: { withAnimation { isExpanded.toggle() } }) {
+                        Text(isExpanded ? "收起" : "查看全部 \(sessions.count) 条")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .padding(AppSpacing.m)
+        .background(AppColors.secondaryBackground(for: colorScheme))
+        .clipShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 0.5))
+        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 4)
+        .padding(.horizontal, AppSpacing.m)
+    }
+}
+
+
+#if DEBUG
+private struct PreviewDetailComponents: View {
+    @State private var showMax = false
+    var body: some View {
+        PreviewWithBook { book in
+            NavigationStack {
+                VStack(spacing: 20) {
+                    MobileCompactRatingView(book: book)
+                    MobileCompactTagsView(book: book)
+                    MobilePlannedStatusToggle(book: book, showMaxAlert: $showMax)
+                }
+                .padding()
+            }
+        }
+        .modelContainer(previewModelContainer)
+    }
+}
+
+#Preview("详情组件") {
+    PreviewDetailComponents()
+}
+#endif
+
+
 #endif

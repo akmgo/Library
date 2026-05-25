@@ -68,6 +68,8 @@ struct ContentView: View {
     @State private var excerptDisplayMode: ExcerptWallDisplayMode = .artistic
     @State private var isExcerptBatchDeletePresented = false
     @State private var selectedExcerptIDs: Set<String> = []
+    @State private var isMonthlyBatchDeletePresented = false
+    @State private var selectedMonthlyDates: Set<Date> = []
 
     var body: some View {
         ZStack {
@@ -221,7 +223,6 @@ struct ContentView: View {
             )
         case .excerpts:
             InspirationWallView(
-                selectedBook: $selectedBook,
                 filterCategory: excerptFilterCategory,
                 sortKey: excerptSortKey,
                 displayMode: excerptDisplayMode,
@@ -231,7 +232,10 @@ struct ContentView: View {
         case .yearly:
             YearlyTimelineView(selectedBook: $selectedBook, selectedYear: $yearlySelectedYear, availableYears: $yearlyAvailableYears)
         case .monthly:
-            MonthlyRecordView()
+            MonthlyRecordView(
+                isBatchDeletePresented: $isMonthlyBatchDeletePresented,
+                selectedDates: $selectedMonthlyDates
+            )
         case .none:
             ContentUnavailableView("请在左侧选择一个模块", systemImage: "sidebar.left")
         }
@@ -358,7 +362,7 @@ struct ContentView: View {
                         excerptDisplayMode = excerptDisplayMode == .compact ? .artistic : .compact
                     }
                 } label: {
-                    toolbarIcon(excerptDisplayMode == .compact ? "rectangle.grid.1x2" : "sparkles")
+                    toolbarIcon(excerptDisplayMode == .compact ? "sparkles" : "rectangle.grid.2x2")
                 }
                 .help("切换视图")
             }
@@ -406,6 +410,24 @@ struct ContentView: View {
                 }
                 .menuIndicator(.hidden)
                 .help("切换年份")
+            }
+        }
+
+        if selectedBook == nil, selectedModule == .monthly {
+            ToolbarItem { Spacer() }
+
+            ToolbarItem {
+                Button {
+                    withAnimation(.appContentFade) {
+                        isMonthlyBatchDeletePresented.toggle()
+                        if !isMonthlyBatchDeletePresented {
+                            selectedMonthlyDates.removeAll()
+                        }
+                    }
+                } label: {
+                    toolbarIcon(isMonthlyBatchDeletePresented ? "checkmark.circle.fill" : "checkmark.circle")
+                }
+                .help("批量删除")
             }
         }
     }

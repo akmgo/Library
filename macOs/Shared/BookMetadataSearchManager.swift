@@ -1,5 +1,9 @@
+#if os(macOS) || os(iOS)
 #if os(macOS)
 import AppKit
+#else
+import UIKit
+#endif
 import Foundation
 import WebKit
 
@@ -151,25 +155,39 @@ enum ImageProcessor {
     }
     
     private static func compressImage(data: Data) -> Data? {
+        #if os(macOS)
         guard let image = NSImage(data: data) else { return nil }
         let maxDimension: CGFloat = 600.0
         let originalSize = image.size
         guard originalSize.width > maxDimension || originalSize.height > maxDimension else {
             return image.jpegData(compressionQuality: 0.8)
         }
-        
         let ratio = maxDimension / max(originalSize.width, originalSize.height)
         let newSize = NSSize(width: originalSize.width * ratio, height: originalSize.height * ratio)
         let targetImage = NSImage(size: newSize)
-        
         targetImage.lockFocus()
         image.draw(in: NSRect(origin: .zero, size: newSize), from: NSRect(origin: .zero, size: originalSize), operation: .copy, fraction: 1.0)
         targetImage.unlockFocus()
-        
         return targetImage.jpegData(compressionQuality: 0.8)
+        #else
+        guard let image = UIImage(data: data) else { return nil }
+        let maxDimension: CGFloat = 600.0
+        let originalSize = image.size
+        guard originalSize.width > maxDimension || originalSize.height > maxDimension else {
+            return image.jpegData(compressionQuality: 0.8)
+        }
+        let ratio = maxDimension / max(originalSize.width, originalSize.height)
+        let newSize = CGSize(width: originalSize.width * ratio, height: originalSize.height * ratio)
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return resizedImage?.jpegData(compressionQuality: 0.8)
+        #endif
     }
 }
 
+#if os(macOS)
 private extension NSImage {
     func jpegData(compressionQuality: CGFloat) -> Data? {
         guard let tiffRepresentation = tiffRepresentation,
@@ -177,6 +195,7 @@ private extension NSImage {
         return bitmapImage.representation(using: .jpeg, properties: [.compressionFactor: compressionQuality])
     }
 }
+#endif
 
 // MARK: - ⚙️ 4. 门面封装 (Facade)
 

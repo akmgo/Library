@@ -1,12 +1,13 @@
 #if os(iOS)
+import SwiftData
 import SwiftUI
 
 // MARK: - 📚 想读列车画廊 (纯粹渲染版)
 
 struct MobileQueueCarouselCard: View {
-    // ✨ 修改命名以匹配 MobileHomeView 传参
     let displayBooks: [Book]
-    
+    @Environment(\.modelContext) private var modelContext
+
     var body: some View {
         GroupBox {
             if displayBooks.isEmpty {
@@ -27,10 +28,15 @@ struct MobileQueueCarouselCard: View {
                                     .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
                             }
                             .buttonStyle(.plain)
+                            .simultaneousGesture(TapGesture().onEnded {
+                                if book.status == .planned {
+                                    try? ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
+                                }
+                            })
                         }
                     }
                 }
-                .padding(.top, 8)
+                .padding(.top, AppSpacing.xs)
             }
         } label: {
             HStack {
@@ -39,9 +45,33 @@ struct MobileQueueCarouselCard: View {
                     .foregroundColor(.primary)
                 Spacer()
                 Image(systemName: "sparkles.rectangle.stack")
-                    .foregroundColor(.orange)
+                    .foregroundColor(AppColors.readingAmber)
             }
         }
     }
 }
+
+#if DEBUG
+private struct PreviewQueueCard: View {
+    var body: some View {
+        PreviewWithBooks(specs: [
+            ("苏菲的世界", "Jostein Gaarder", .planned, .page, 544, 0),
+            ("人类简史", "Yuval Noah Harari", .planned, .page, 440, 0),
+            ("枪炮、病菌与钢铁", "Jared Diamond", .planned, .page, 496, 0),
+            ("思考，快与慢", "Daniel Kahneman", .planned, .page, 424, 0),
+        ]) { books in
+            MobileQueueCarouselCard(displayBooks: books)
+                .padding()
+                .background(Color(UIColor.systemGroupedBackground))
+        }
+    }
+}
+
+#Preview("想读列车卡") {
+    PreviewQueueCard()
+        .modelContainer(previewModelContainer)
+}
+#endif
+
+
 #endif

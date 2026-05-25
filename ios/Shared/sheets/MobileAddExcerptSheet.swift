@@ -24,7 +24,7 @@ struct MobileAddExcerptSheet: View {
                     TextField("输入书中打动你的金句...", text: $content, axis: .vertical)
                         .lineLimit(8...15)
                         .focused($isFocused)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, AppSpacing.xs)
                         // 摘录通常更有文学感，所以我们强制使用衬线字体
                         .font(.system(size: 16, weight: .regular, design: .serif))
                 } footer: {
@@ -65,4 +65,23 @@ struct MobileAddExcerptSheet: View {
         }
     }
 }
+
+#if DEBUG
+private struct PreviewAddExcerpt: View {
+    var body: some View {
+        PreviewWithBook { book in
+            PreviewSheet {
+                MobileAddExcerptSheet(book: book)
+            }
+        }
+    }
+}
+
+#Preview("摘录录入弹窗") {
+    PreviewAddExcerpt()
+        .modelContainer(previewModelContainer)
+}
+#endif
+
+
 #endif

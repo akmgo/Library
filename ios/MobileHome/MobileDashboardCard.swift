@@ -42,7 +42,7 @@ struct MobileDashboardCard: View {
                 AppMicroMetric(title: "馆藏进度", current: totalFinished, target: max(totalLibrary, 1), color: .indigo, icon: "books.vertical.fill")
             }
             .padding(.horizontal, 2)
-            .padding(.vertical, 8)
+            .padding(.vertical, AppSpacing.xs)
         } label: {
             HStack {
                 Text("时光轨迹").font(.system(size: 16, weight: .bold, design: .rounded)).foregroundColor(.primary)
@@ -61,7 +61,7 @@ private struct AppMicroMetric: View {
         let safeTarget = max(Double(target), 1.0)
         let progress = min(Double(current) / safeTarget, 1.0)
         
-        VStack(spacing: 8) {
+        VStack(spacing: AppSpacing.xs) {
             ZStack {
                 Circle().stroke(color.opacity(0.15), lineWidth: 5.0)
                 Circle()
