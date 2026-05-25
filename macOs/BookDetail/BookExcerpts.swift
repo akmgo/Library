@@ -2,13 +2,6 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - ✨ 过滤器枚举
-enum AnnotationFilter: String, CaseIterable {
-    case all = "全部"
-    case excerpts = "摘录"
-    case notes = "笔记"
-}
-
 // MARK: - ✨ 双列瀑布流碎片渲染引擎
 struct BookExcerpts: View {
     let book: Book
@@ -20,7 +13,7 @@ struct BookExcerpts: View {
     @Environment(\.modelContext) private var modelContext
     @State private var itemToEdit: Excerpt? = nil
     
-    @State private var currentFilter: AnnotationFilter = .all
+    @State private var currentFilter: BookExcerptFilter = .all
     
     // ✨ 核心重构：从单表中一次性取出，自带时间排序，不再需要人造缝合！
     private var allRecords: [Excerpt] {
@@ -28,18 +21,8 @@ struct BookExcerpts: View {
     }
     
     private var filteredRecords: [Excerpt] {
-        switch currentFilter {
-        case .all:
-            return allRecords
-        case .excerpts:
-            return allRecords.filter { $0.type == .excerpt }
-        case .notes:
-            return allRecords.filter { $0.type == .note }
-        }
+        allRecords.filter(currentFilter.includes)
     }
-    
-    private var excerptCount: Int { book.excerpts?.filter({ $0.type == .excerpt }).count ?? 0 }
-    private var noteCount: Int { book.excerpts?.filter({ $0.type == .note }).count ?? 0 }
     
     var body: some View {
         VStack(spacing: 24) {
@@ -47,9 +30,14 @@ struct BookExcerpts: View {
             if !allRecords.isEmpty {
                 HStack {
                     HStack(spacing: 4) {
-                        FilterTab(title: "全部 (\(excerptCount + noteCount))", isSelected: currentFilter == .all) { currentFilter = .all }
-                        FilterTab(title: "摘录 (\(excerptCount))", isSelected: currentFilter == .excerpts) { currentFilter = .excerpts }
-                        FilterTab(title: "笔记 (\(noteCount))", isSelected: currentFilter == .notes) { currentFilter = .notes }
+                        ForEach(BookExcerptFilter.allCases, id: \.self) { filter in
+                            FilterTab(
+                                title: "\(filter.displayName) (\(filter.count(in: allRecords)))",
+                                isSelected: currentFilter == filter
+                            ) {
+                                currentFilter = filter
+                            }
+                        }
                     }
                     .padding(4)
                     .background(Color.secondary.opacity(0.05))
@@ -223,14 +211,13 @@ struct ExcerptCardView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .appInnerCardStyle(cornerRadius: AppRadius.m)
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(isHovered ? Color.indigo.opacity(0.3) : Color.secondary.opacity(0.1), lineWidth: isHovered ? 1.5 : 1)
+            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                .stroke(isHovered ? Color.indigo.opacity(0.24) : Color.clear, lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(isHovered ? 0.1 : 0.05), radius: isHovered ? 16 : 10, y: isHovered ? 8 : 4)
-        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.04), radius: isHovered ? 12 : 8, y: isHovered ? 6 : 3)
+        .scaleEffect(isHovered ? 1.008 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
         .onHover { h in isHovered = h }
         .onTapGesture(count: 2, perform: onEdit)
@@ -255,14 +242,13 @@ struct NoteCardView: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .appInnerCardStyle(cornerRadius: AppRadius.m)
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(isHovered ? Color.purple.opacity(0.3) : Color.orange.opacity(0.15), lineWidth: isHovered ? 1.5 : 1)
+            RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
+                .stroke(isHovered ? Color.purple.opacity(0.24) : Color.clear, lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(isHovered ? 0.1 : 0.05), radius: isHovered ? 16 : 10, y: isHovered ? 8 : 4)
-        .scaleEffect(isHovered ? 1.01 : 1.0)
+        .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.04), radius: isHovered ? 12 : 8, y: isHovered ? 6 : 3)
+        .scaleEffect(isHovered ? 1.008 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
         .onHover { h in isHovered = h }
         .onTapGesture(count: 2, perform: onEdit)

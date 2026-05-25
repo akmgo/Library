@@ -1,7 +1,14 @@
 #if os(macOS) || os(iOS)
 import SwiftUI
 
-struct GlassCardModifier: ViewModifier {
+enum AppCardStyleMetrics {
+    static let cardBackgroundOpacity: Double = 0.8
+    static let cardStrokeOpacity: Double = 0.05
+    static let innerBackgroundOpacity: Double = 0.72
+    static let innerStrokeOpacity: Double = 0.05
+}
+
+struct AppGlassCardModifier: ViewModifier {
     let cornerRadius: CGFloat
 
     init(cornerRadius: CGFloat = 16) {
@@ -18,11 +25,11 @@ struct GlassCardModifier: ViewModifier {
 
 extension View {
     func glassCard(cornerRadius: CGFloat = 16) -> some View {
-        modifier(GlassCardModifier(cornerRadius: cornerRadius))
+        modifier(AppGlassCardModifier(cornerRadius: cornerRadius))
     }
 }
 
-struct ReadingRecordCardStyleModifier: ViewModifier {
+struct AppCardStyleModifier: ViewModifier {
     let cornerRadius: CGFloat
     let backgroundOpacity: Double
     let strokeOpacity: Double
@@ -31,8 +38,8 @@ struct ReadingRecordCardStyleModifier: ViewModifier {
 
     init(
         cornerRadius: CGFloat = AppRadius.card,
-        backgroundOpacity: Double = 0.8,
-        strokeOpacity: Double = 0.05
+        backgroundOpacity: Double = AppCardStyleMetrics.cardBackgroundOpacity,
+        strokeOpacity: Double = AppCardStyleMetrics.cardStrokeOpacity
     ) {
         self.cornerRadius = cornerRadius
         self.backgroundOpacity = backgroundOpacity
@@ -55,17 +62,41 @@ struct ReadingRecordCardStyleModifier: ViewModifier {
 }
 
 extension View {
-    func readingRecordCardStyle(
+    func appCardStyle(
         cornerRadius: CGFloat = AppRadius.card,
-        backgroundOpacity: Double = 0.8,
-        strokeOpacity: Double = 0.05
+        backgroundOpacity: Double = AppCardStyleMetrics.cardBackgroundOpacity,
+        strokeOpacity: Double = AppCardStyleMetrics.cardStrokeOpacity
     ) -> some View {
         modifier(
-            ReadingRecordCardStyleModifier(
+            AppCardStyleModifier(
                 cornerRadius: cornerRadius,
                 backgroundOpacity: backgroundOpacity,
                 strokeOpacity: strokeOpacity
             )
+        )
+    }
+
+    func appInnerCardStyle(
+        cornerRadius: CGFloat = AppRadius.m,
+        backgroundOpacity: Double = AppCardStyleMetrics.innerBackgroundOpacity,
+        strokeOpacity: Double = AppCardStyleMetrics.innerStrokeOpacity
+    ) -> some View {
+        appCardStyle(
+            cornerRadius: cornerRadius,
+            backgroundOpacity: backgroundOpacity,
+            strokeOpacity: strokeOpacity
+        )
+    }
+
+    func readingRecordCardStyle(
+        cornerRadius: CGFloat = AppRadius.card,
+        backgroundOpacity: Double = AppCardStyleMetrics.cardBackgroundOpacity,
+        strokeOpacity: Double = AppCardStyleMetrics.cardStrokeOpacity
+    ) -> some View {
+        appCardStyle(
+            cornerRadius: cornerRadius,
+            backgroundOpacity: backgroundOpacity,
+            strokeOpacity: strokeOpacity
         )
     }
 }

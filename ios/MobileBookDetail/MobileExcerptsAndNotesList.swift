@@ -2,19 +2,6 @@
 import SwiftData
 import SwiftUI
 
-// MARK: - 过滤器
-
-enum AnnotationFilter: String, CaseIterable {
-    case all, excerpts, notes
-    var displayName: String {
-        switch self {
-        case .all: return "全部"
-        case .excerpts: return "摘录"
-        case .notes: return "笔记"
-        }
-    }
-}
-
 // MARK: - 🧩 混合列表渲染引擎 (全面拥抱大一统注解模型)
 
 /// 并列交织渲染书籍关联的所有碎片记录的双列瀑布流容器。
@@ -30,7 +17,7 @@ struct MobileExcerptsAndNotesList: View {
     /// ✨ 修复：传出参数统一更改为原生的 Excerpt
     let onDelete: (Excerpt) -> Void
 
-    @State private var filter: AnnotationFilter = .all
+    @State private var filter: BookExcerptFilter = .all
     @Environment(\.colorScheme) private var colorScheme
 
     private var sortedAnnotations: [Excerpt] {
@@ -38,15 +25,8 @@ struct MobileExcerptsAndNotesList: View {
     }
 
     private var filteredAnnotations: [Excerpt] {
-        switch filter {
-        case .all: return sortedAnnotations
-        case .excerpts: return sortedAnnotations.filter { $0.type == .excerpt }
-        case .notes: return sortedAnnotations.filter { $0.type == .note }
-        }
+        sortedAnnotations.filter(filter.includes)
     }
-
-    private var excerptCount: Int { sortedAnnotations.filter { $0.type == .excerpt }.count }
-    private var noteCount: Int { sortedAnnotations.filter { $0.type == .note }.count }
 
     var body: some View {
         if sortedAnnotations.isEmpty {
@@ -58,8 +38,8 @@ struct MobileExcerptsAndNotesList: View {
             .padding(.vertical, 60)
         } else {
             HStack(spacing: AppSpacing.xxs) {
-                ForEach(AnnotationFilter.allCases, id: \.self) { f in
-                    let count = f == .all ? (excerptCount + noteCount) : (f == .excerpts ? excerptCount : noteCount)
+                ForEach(BookExcerptFilter.allCases, id: \.self) { f in
+                    let count = f.count(in: sortedAnnotations)
                     Button(action: { withAnimation { filter = f } }) {
                         Text("\(f.displayName) (\(count))")
                             .font(.system(size: 12, weight: filter == f ? .bold : .medium, design: .rounded))
@@ -146,7 +126,7 @@ private struct MobileReadingExcerptCard: View {
         }
         .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .readingRecordCardStyle(cornerRadius: AppRadius.m, backgroundOpacity: 0.72, strokeOpacity: 0.05)
+        .appInnerCardStyle()
     }
 }
 
@@ -170,7 +150,7 @@ private struct MobileNoteCard: View {
         }
         .padding(AppSpacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .readingRecordCardStyle(cornerRadius: AppRadius.m, backgroundOpacity: 0.72, strokeOpacity: 0.05)
+        .appInnerCardStyle()
     }
 }
 

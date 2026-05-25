@@ -2,55 +2,6 @@
 import SwiftData
 import SwiftUI
 
-// MARK: - 枚举与模式
-
-enum ContentSheetMode: Hashable {
-    case excerpt
-    case note
-
-    var displayName: String {
-        switch self {
-        case .excerpt: return "摘录"
-        case .note: return "笔记"
-        }
-    }
-
-    var iconName: String {
-        switch self {
-        case .excerpt: return "text.quote"
-        case .note: return "note.text"
-        }
-    }
-
-    var tint: Color {
-        switch self {
-        case .excerpt: return .blue
-        case .note: return .purple
-        }
-    }
-
-    var category: ExcerptCategory {
-        switch self {
-        case .excerpt: return .bookExcerpt
-        case .note: return .note
-        }
-    }
-
-    var placeholder: String {
-        switch self {
-        case .excerpt: return "输入书中值得留下的句子..."
-        case .note: return "记录此刻的想法..."
-        }
-    }
-
-    var saveTitle: String {
-        switch self {
-        case .excerpt: return "保存摘录"
-        case .note: return "保存笔记"
-        }
-    }
-}
-
 private enum ContentEditorInputMetrics {
     static let font = Font.system(size: 15, weight: .regular)
     static let lineSpacing: CGFloat = 6
@@ -64,12 +15,12 @@ struct ContentEditorSheet: View {
     @Binding var isPresented: Bool
     
     let book: Book?
-    let mode: ContentSheetMode
+    let mode: BookContentEntryMode
     
     // ✨ 核心修复：接收全新的统一大实体 Excerpt
     var itemToEdit: Excerpt? = nil
     
-    @State private var selectedMode: ContentSheetMode = .excerpt
+    @State private var selectedMode: BookContentEntryMode = .excerpt
     @State private var contentText: String = ""
     @Namespace private var modeNamespace
     
@@ -138,7 +89,7 @@ struct ContentEditorSheet: View {
                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
                 
                 let isContentValid = !contentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                let originalMode: ContentSheetMode = itemToEdit?.isNote == true ? .note : .excerpt
+                let originalMode: BookContentEntryMode = itemToEdit?.isNote == true ? .note : .excerpt
                 let hasChanges = isEdit ? (contentText != itemToEdit?.content || selectedMode != originalMode) : true
                 let canSave = isContentValid && hasChanges
                 
@@ -165,7 +116,7 @@ struct ContentEditorSheet: View {
 
     private var modeSlider: some View {
         HStack(spacing: 0) {
-            ForEach([ContentSheetMode.excerpt, ContentSheetMode.note], id: \.self) { mode in
+            ForEach(BookContentEntryMode.allCases, id: \.self) { mode in
                 let isSelected = selectedMode == mode
 
                 Button {

@@ -68,7 +68,7 @@ struct MobileBookDetailCard<Content: View, Trailing: View>: View {
             content()
         }
         .padding(AppSpacing.l)
-        .readingRecordCardStyle()
+        .appCardStyle()
     }
 }
 

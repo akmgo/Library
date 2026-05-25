@@ -240,7 +240,7 @@ private struct DayReadingCard: View {
     private var bookSummaries: [(title: String, delta: String)] {
         var merged: [String: (totalDelta: Double, unit: ProgressUnit, totalDuration: TimeInterval)] = [:]
         for session in sessions {
-            guard let bookID = session.book?.id, let book = books.first(where: { $0.id == bookID }) else { continue }
+            guard let bookID = session.book?.id, books.contains(where: { $0.id == bookID }) else { continue }
             var entry = merged[bookID] ?? (0, session.progressUnit, 0)
             entry.totalDelta += session.deltaAmount
             entry.totalDuration += session.duration

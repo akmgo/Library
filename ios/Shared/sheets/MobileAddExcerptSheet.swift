@@ -2,53 +2,6 @@
 import SwiftUI
 import SwiftData
 
-private enum MobileBookContentMode: Hashable {
-    case excerpt
-    case note
-
-    var displayName: String {
-        switch self {
-        case .excerpt: return "摘录"
-        case .note: return "笔记"
-        }
-    }
-
-    var iconName: String {
-        switch self {
-        case .excerpt: return "text.quote"
-        case .note: return "note.text"
-        }
-    }
-
-    var tint: Color {
-        switch self {
-        case .excerpt: return .blue
-        case .note: return .purple
-        }
-    }
-
-    var category: ExcerptCategory {
-        switch self {
-        case .excerpt: return .bookExcerpt
-        case .note: return .note
-        }
-    }
-
-    var placeholder: String {
-        switch self {
-        case .excerpt: return "输入书中值得留下的句子..."
-        case .note: return "记录此刻的想法..."
-        }
-    }
-
-    var saveTitle: String {
-        switch self {
-        case .excerpt: return "保存摘录"
-        case .note: return "保存笔记"
-        }
-    }
-}
-
 private enum MobileBookContentInputMetrics {
     static let font = Font.system(size: 17, weight: .regular, design: .serif)
     static let lineSpacing: CGFloat = 6
@@ -64,7 +17,7 @@ struct MobileAddExcerptSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     
-    @State private var selectedMode: MobileBookContentMode = .excerpt
+    @State private var selectedMode: BookContentEntryMode = .excerpt
     @State private var content: String = ""
     @FocusState private var isFocused: Bool
     @Namespace private var modeNamespace
@@ -110,7 +63,7 @@ struct MobileAddExcerptSheet: View {
 
     private var modeSlider: some View {
         HStack(spacing: 0) {
-            ForEach([MobileBookContentMode.excerpt, MobileBookContentMode.note], id: \.self) { mode in
+            ForEach(BookContentEntryMode.allCases, id: \.self) { mode in
                 let isSelected = selectedMode == mode
 
                 Button {
@@ -146,7 +99,7 @@ struct MobileAddExcerptSheet: View {
 
     private var contentEditor: some View {
         VStack(alignment: .leading, spacing: AppSpacing.s) {
-            Text(selectedMode == .excerpt ? "摘录正文" : "笔记正文")
+            Text(selectedMode.contentLabel)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.secondary)
 

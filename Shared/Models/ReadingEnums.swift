@@ -75,4 +75,87 @@ enum ExcerptCategory: String, Codable, CaseIterable {
         }
     }
 }
+
+enum BookExcerptFilter: String, CaseIterable {
+    case all
+    case excerpts
+    case notes
+
+    var displayName: String {
+        switch self {
+        case .all: return "全部"
+        case .excerpts: return "摘录"
+        case .notes: return "笔记"
+        }
+    }
+
+    func includes(_ excerpt: Excerpt) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .excerpts:
+            return excerpt.type == .excerpt
+        case .notes:
+            return excerpt.type == .note
+        }
+    }
+
+    func count(in excerpts: [Excerpt]) -> Int {
+        excerpts.filter { includes($0) }.count
+    }
+}
+
+enum BookContentEntryMode: Hashable, CaseIterable {
+    case excerpt
+    case note
+
+    var displayName: String {
+        switch self {
+        case .excerpt: return "摘录"
+        case .note: return "笔记"
+        }
+    }
+
+    var contentLabel: String {
+        switch self {
+        case .excerpt: return "摘录正文"
+        case .note: return "笔记正文"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .excerpt: return "text.quote"
+        case .note: return "note.text"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .excerpt: return .blue
+        case .note: return .purple
+        }
+    }
+
+    var category: ExcerptCategory {
+        switch self {
+        case .excerpt: return .bookExcerpt
+        case .note: return .note
+        }
+    }
+
+    var placeholder: String {
+        switch self {
+        case .excerpt: return "输入书中值得留下的句子..."
+        case .note: return "记录此刻的想法..."
+        }
+    }
+
+    var saveTitle: String {
+        switch self {
+        case .excerpt: return "保存摘录"
+        case .note: return "保存笔记"
+        }
+    }
+}
 #endif

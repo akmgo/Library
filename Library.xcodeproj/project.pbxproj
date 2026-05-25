@@ -85,7 +85,7 @@
 		C5FD83BD2F9535DD0003A500 /* MobileBookDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83BC2F9535DD0003A500 /* MobileBookDetailComponents.swift */; };
 		C5FD83BF2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83BE2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift */; };
 		C5FD83C12F9536B50003A500 /* MobileArchiveHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83C02F9536B50003A500 /* MobileArchiveHostView.swift */; };
-		C5FD84502F9700000003A500 /* GlassCardModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD84512F9700000003A500 /* GlassCardModifier.swift */; };
+		C5FD84502F9700000003A500 /* AppCardStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD84512F9700000003A500 /* AppCardStyles.swift */; };
 		C6A100022FA80000006D5686 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100012FA80000006D5686 /* Book.swift */; };
 		C6A100052FA80000006D5686 /* ReadingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100042FA80000006D5686 /* ReadingSession.swift */; };
 		C6A100062FA80000006D5686 /* ReadingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100042FA80000006D5686 /* ReadingSession.swift */; };
@@ -217,7 +217,7 @@
 		C5FD83BC2F9535DD0003A500 /* MobileBookDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileBookDetailComponents.swift; sourceTree = "<group>"; };
 		C5FD83BE2F9535FA0003A500 /* MobileExcerptsAndNotesList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileExcerptsAndNotesList.swift; sourceTree = "<group>"; };
 		C5FD83C02F9536B50003A500 /* MobileArchiveHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileArchiveHostView.swift; sourceTree = "<group>"; };
-		C5FD84512F9700000003A500 /* GlassCardModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCardModifier.swift; sourceTree = "<group>"; };
+		C5FD84512F9700000003A500 /* AppCardStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCardStyles.swift; sourceTree = "<group>"; };
 		C6A100012FA80000006D5686 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
 		C6A100042FA80000006D5686 /* ReadingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSession.swift; sourceTree = "<group>"; };
 		C6A100072FA80000006D5686 /* Excerpt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Excerpt.swift; sourceTree = "<group>"; };
@@ -357,17 +357,9 @@
 		C54819C22FA3402F006D5686 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				C54819C32FA34045006D5686 /* MobileUIComponents */,
 				C5FD82BC2F90C5C10003A500 /* sheets */,
 			);
 			path = Shared;
-			sourceTree = "<group>";
-		};
-		C54819C32FA34045006D5686 /* MobileUIComponents */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = MobileUIComponents;
 			sourceTree = "<group>";
 		};
 		C5481A032FA86010006D5686 /* Search */ = {
@@ -410,9 +402,6 @@
 				C5FD831D2F934BD20003A500 /* CommonUI */,
 				C5FD821F2F90C3820003A500 /* Models */,
 				C5FD82202F90C3990003A500 /* Database */,
-				C54819012F9B67EC006D5686 /* AppConstants.swift */,
-				C54819032F9B684C006D5686 /* AppFormatters.swift */,
-				C54819072F9B775B006D5686 /* VisualEngines.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -522,7 +511,6 @@
 				C5FD83222F934C250003A500 /* Background.swift */,
 				C5FD83232F934C250003A500 /* ConfettiView.swift */,
 				C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */,
-				C5FD84512F9700000003A500 /* GlassCardModifier.swift */,
 			);
 			path = CommonUI;
 			sourceTree = "<group>";
@@ -674,6 +662,9 @@
 			isa = PBXGroup;
 			children = (
 				C54819052F9B6875006D5686 /* AppNotifications.swift */,
+				C54819012F9B67EC006D5686 /* AppConstants.swift */,
+				C54819032F9B684C006D5686 /* AppFormatters.swift */,
+				C54819072F9B775B006D5686 /* VisualEngines.swift */,
 				C6A101012FA80000006D5686 /* ReadingDateHelper.swift */,
 				C6A101032FA80000006D5686 /* ReadingStatsCalculator.swift */,
 				C6A101052FA80000006D5686 /* ReadingValidation.swift */,
@@ -704,6 +695,7 @@
 				C6A103012FA80000006D5686 /* StatusBadgeView.swift */,
 				C6A103032FA80000006D5686 /* ProgressBarView.swift */,
 				E00000010000000000000001 /* PageStatsHeader.swift */,
+				C5FD84512F9700000003A500 /* AppCardStyles.swift */,
 				A11111111111111111111111 /* ReadingSemiCircleArc.swift */,
 				A22222222222222222222221 /* ReadingTimerGauge.swift */,
 				C6A103052FA80000006D5686 /* EmptyStateView.swift */,
@@ -851,7 +843,7 @@
 				C5FD83282F934C250003A500 /* BookCoverView.swift in Sources */,
 				C5FD83292F934C250003A500 /* Background.swift in Sources */,
 				C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */,
-				C5FD84502F9700000003A500 /* GlassCardModifier.swift in Sources */,
+				C5FD84502F9700000003A500 /* AppCardStyles.swift in Sources */,
 				C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */,
 				C54819022F9B67EC006D5686 /* AppConstants.swift in Sources */,
 				C6A100022FA80000006D5686 /* Book.swift in Sources */,
