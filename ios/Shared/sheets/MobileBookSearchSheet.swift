@@ -7,6 +7,7 @@ import SwiftUI
 struct MobileBookSearchSheet: View {
     @Binding var isPresented: Bool
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var query = ""
     @State private var results: [BookSearchResult] = []
@@ -15,10 +16,10 @@ struct MobileBookSearchSheet: View {
     @State private var importingID: UUID?
     @State private var didImportIDs: Set<UUID> = []
     @State private var searchTask: Task<Void, Never>?
+    @State private var coverCache: [UUID: Data] = [:]
 
     // 进度设置子 sheet
     @State private var selectedResult: BookSearchResult?
-    @State private var showProgressSheet = false
 
     var body: some View {
         NavigationStack {
@@ -26,22 +27,26 @@ struct MobileBookSearchSheet: View {
                 // 搜索栏
                 HStack(spacing: AppSpacing.s) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(AppColors.readingAmber)
                     TextField("搜索书名、作者或 ISBN...", text: $query)
                         .textFieldStyle(.plain)
-                        .onSubmit { performSearch() }
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
                     if !query.isEmpty {
                         Button(action: { query = ""; results = []; errorMessage = nil }) {
                             Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 16))
                                 .foregroundColor(.secondary.opacity(0.5))
                         }
                         .buttonStyle(.plain)
+                        .transition(.opacity.combined(with: .scale))
                     }
                 }
-                .padding(AppSpacing.s)
-                .background(Color.primary.opacity(0.06))
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous))
-                .padding(AppSpacing.m)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .appInnerBlockStyle(cornerRadius: AppRadius.m)
+                .padding(.horizontal, AppSpacing.m)
+                .padding(.vertical, AppSpacing.s)
 
                 Divider()
 
@@ -59,21 +64,27 @@ struct MobileBookSearchSheet: View {
                     Spacer()
                 } else if results.isEmpty && !query.isEmpty {
                     Spacer()
-                    Text("输入书名或作者后按回车搜索").font(.system(size: 14)).foregroundColor(.secondary)
+                    Text("输入书名或作者开始搜索").font(.system(size: 14)).foregroundColor(.secondary)
                     Spacer()
                 } else {
-                    List {
-                        ForEach(results) { result in
-                            Button(action: { selectResult(result) }) {
-                                searchResultRow(result)
+                    ScrollView(.vertical, showsIndicators: results.count > 5) {
+                        LazyVStack(spacing: AppSpacing.s) {
+                            ForEach(results) { result in
+                                Button(action: { selectResult(result) }) {
+                                    AppCard {
+                                        searchResultRow(result)
+                                    }
+                                    .opacity(didImportIDs.contains(result.id) ? 0.55 : 1)
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(didImportIDs.contains(result.id) || importingID != nil)
                             }
-                            .buttonStyle(.plain)
-                            .disabled(didImportIDs.contains(result.id))
                         }
+                        .padding(AppSpacing.s)
                     }
-                    .listStyle(.plain)
                 }
             }
+            .background(AppColors.primaryBackground(for: colorScheme))
             .navigationTitle("添加书籍")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -81,10 +92,16 @@ struct MobileBookSearchSheet: View {
                     Button("取消") { isPresented = false }
                 }
             }
-            .sheet(isPresented: $showProgressSheet) {
-                if let selected = selectedResult {
-                    importProgressSheet(result: selected)
-                }
+            .sheet(item: $selectedResult) { result in
+                ImportProgressSheet(
+                    bookTitle: result.title,
+                    onImport: { draft in importResult(result, draft: draft) }
+                )
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+            }
+            .onChange(of: query) { _, newValue in
+                triggerSearch(query: newValue)
             }
             .onDisappear { searchTask?.cancel() }
         }
@@ -94,17 +111,9 @@ struct MobileBookSearchSheet: View {
 
     private func searchResultRow(_ result: BookSearchResult) -> some View {
         HStack(spacing: AppSpacing.s) {
-            AsyncImage(url: URL(string: result.coverURL ?? "")) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                default:
-                    Color.secondary.opacity(0.1)
-                        .overlay(Image(systemName: "book.closed").foregroundColor(.secondary.opacity(0.3)))
-                }
-            }
-            .frame(width: 48, height: 72)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.xs, style: .continuous))
+            coverView(for: result)
+                .frame(width: 48, height: 72)
+                .clipShape(RoundedRectangle(cornerRadius: AppRadius.xs, style: .continuous))
 
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text(result.title)
@@ -125,59 +134,86 @@ struct MobileBookSearchSheet: View {
 
             Spacer()
 
-            if didImportIDs.contains(result.id) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(AppColors.success)
-                    .font(.system(size: 20))
-            } else if importingID == result.id {
-                ProgressView()
-            } else {
-                Image(systemName: "plus.circle")
-                    .foregroundColor(.accentColor)
-                    .font(.system(size: 20))
+            trailingState(for: result)
+        }
+        .task(id: result.id) {
+            guard coverCache[result.id] == nil,
+                  let url = result.coverURL, !url.isEmpty
+            else { return }
+            if let data = await BookMetadataSearchManager.shared.fetchCoverData(from: url) {
+                coverCache[result.id] = data
             }
         }
-        .padding(.vertical, AppSpacing.xxs)
     }
 
-    // MARK: - 导入进度设置 Sheet
+    @ViewBuilder
+    private func coverView(for result: BookSearchResult) -> some View {
+        if let coverData = coverCache[result.id], let uiImage = UIImage(data: coverData) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+        } else {
+            Color.secondary.opacity(0.1)
+                .overlay(Image(systemName: "book.closed").foregroundColor(.secondary.opacity(0.3)))
+        }
+    }
 
-    private func importProgressSheet(result: BookSearchResult) -> some View {
-        ImportProgressSheet(
-            bookTitle: result.title,
-            isPresented: $showProgressSheet,
-            onImport: { draft in importResult(result, draft: draft) }
-        )
+    @ViewBuilder
+    private func trailingState(for result: BookSearchResult) -> some View {
+        if didImportIDs.contains(result.id) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(AppColors.success)
+                .font(.system(size: 20))
+        } else if importingID == result.id {
+            ProgressView()
+        } else {
+            Image(systemName: "plus")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(AppColors.readingAmber)
+                .frame(width: 30, height: 30)
+                .background(AppColors.readingAmber.opacity(0.11), in: Circle())
+        }
     }
 
     // MARK: - Actions
 
     private func selectResult(_ result: BookSearchResult) {
         selectedResult = result
-        showProgressSheet = true
     }
 
-    private func performSearch() {
-        let cleaned = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleaned.isEmpty else { return }
+    private func triggerSearch(query: String) {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            searchTask?.cancel()
+            results = []
+            errorMessage = nil
+            isSearching = false
+            return
+        }
         searchTask?.cancel()
         isSearching = true
         results = []
         errorMessage = nil
         searchTask = Task {
-            do {
-                let fetched = try await BookMetadataSearchManager.shared.search(query: cleaned)
-                guard !Task.isCancelled else { return }
-                results = Array(fetched.prefix(10))
-                isSearching = false
-                if results.isEmpty {
-                    errorMessage = "没有找到与「\(cleaned)」相关的书籍"
-                }
-            } catch {
-                guard !Task.isCancelled else { return }
-                isSearching = false
-                errorMessage = error.localizedDescription
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            await performSearch(query: trimmed)
+        }
+    }
+
+    private func performSearch(query: String) async {
+        do {
+            let fetched = try await BookMetadataSearchManager.shared.search(query: query)
+            guard !Task.isCancelled else { return }
+            results = Array(fetched.prefix(10))
+            isSearching = false
+            if results.isEmpty {
+                errorMessage = "没有找到与「\(query)」相关的书籍"
             }
+        } catch {
+            guard !Task.isCancelled else { return }
+            isSearching = false
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -205,7 +241,7 @@ struct MobileBookSearchSheet: View {
 
             importingID = nil
             didImportIDs.insert(result.id)
-            showProgressSheet = false
+            selectedResult = nil
 
             // 导入成功后短暂延迟再关闭
             try? await Task.sleep(nanoseconds: 500_000_000)
@@ -219,9 +255,10 @@ struct MobileBookSearchSheet: View {
 
 private struct ImportProgressSheet: View {
     let bookTitle: String
-    @Binding var isPresented: Bool
     let onImport: (ReadingProgressDraft) -> Void
 
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @State private var progressDraft = ReadingProgressDraft.bookImportDefault
 
     var body: some View {
@@ -236,11 +273,10 @@ private struct ImportProgressSheet: View {
                     .padding(AppSpacing.xl)
 
                 HStack {
-                    Button("取消") { isPresented = false }
+                    Button("取消") { dismiss() }
                         .buttonStyle(.plain)
                         .padding(.horizontal, AppSpacing.m).padding(.vertical, AppSpacing.xs)
-                        .background(Color.secondary.opacity(0.1))
-                        .clipShape(Capsule())
+                        .appCapsuleStyle(tint: .secondary, fillOpacity: 0.10, strokeOpacity: 0.08)
 
                     Spacer()
 
@@ -248,15 +284,15 @@ private struct ImportProgressSheet: View {
                         onImport(progressDraft)
                     }
                     .buttonStyle(.plain)
-                    .foregroundColor(.white)
+                    .foregroundColor(AppColors.readingAmber)
                     .padding(.horizontal, AppSpacing.l).padding(.vertical, AppSpacing.xs)
-                    .background(AppColors.readingAmber)
-                    .clipShape(Capsule())
+                    .appCapsuleStyle(tint: AppColors.readingAmber)
                     .disabled(!progressDraft.isValidForBookImport)
                 }
                 .padding(.horizontal, AppSpacing.xl)
                 .padding(.bottom, AppSpacing.xl)
             }
+            .background(AppColors.primaryBackground(for: colorScheme))
             .navigationTitle("设置进度")
             .navigationBarTitleDisplayMode(.inline)
         }

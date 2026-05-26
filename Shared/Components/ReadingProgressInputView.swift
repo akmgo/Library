@@ -51,38 +51,15 @@ struct ReadingProgressInputView: View {
     }
 
     private var unitSelector: some View {
-        HStack(spacing: 0) {
-            ForEach(ProgressUnit.allCases, id: \.self) { unit in
-                let isSelected = draft.unit == unit
-
-                Button {
-                    withAnimation(.spring(response: 0.34, dampingFraction: 0.82)) {
-                        draft.setUnit(unit, currentBookAmount: minimumCurrentAmount)
-                    }
-                } label: {
-                    ZStack {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.clear)
-                                .glassEffect(.regular.tint(AppColors.readingAmber), in: .rect(cornerRadius: 10))
-                        }
-
-                        HStack(spacing: 6) {
-                            Image(systemName: unit.systemImage)
-                                .font(.system(size: 11, weight: .bold))
-                            Text(unit.longDisplayName)
-                                .font(.system(size: 13, weight: isSelected ? .bold : .semibold))
-                        }
-                        .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.78))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                    .frame(height: 36)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(4)
-        .background(Color.clear.glassEffect(in: .rect(cornerRadius: 12)))
+        AppSlidingSegmentedControl(
+            selection: unitBinding,
+            options: ProgressUnit.allCases.map {
+                AppSlidingSegmentedOption(value: $0, title: $0.longDisplayName, systemImage: $0.systemImage)
+            },
+            tint: AppColors.readingAmber,
+            height: 36,
+            cornerRadius: 12
+        )
     }
 
     private var unitBinding: Binding<ProgressUnit> {

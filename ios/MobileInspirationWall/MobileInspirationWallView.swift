@@ -11,6 +11,7 @@ struct MobileInspirationWallView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @Query var allExcerpts: [Excerpt]
+    @Binding private var highlightedExcerptID: String?
 
     @State private var displayExcerpts: [ExcerptListItem] = []
     @State private var filterCategory: ExcerptCategory? = nil
@@ -20,11 +21,19 @@ struct MobileInspirationWallView: View {
     @State private var showBatchDeleteAlert = false
     @State private var showAddExcerpt = false
 
+    init(highlightedExcerptID: Binding<String?> = .constant(nil)) {
+        _highlightedExcerptID = highlightedExcerptID
+    }
+
     private var annotationFingerprint: String {
         allExcerpts
             .map { "\($0.id)|\($0.type.rawValue)|\($0.createdAt.timeIntervalSince1970)|\($0.content.hashValue)|\($0.book?.id ?? "")" }
             .joined(separator: ";")
             + "|\(filterCategory?.rawValue ?? "all")|\(sortKey)"
+    }
+
+    private var displayFingerprint: String {
+        displayExcerpts.map(\.id).joined(separator: ";")
     }
 
     private var excerptStats: [PageStatItemData] {
@@ -48,17 +57,21 @@ struct MobileInspirationWallView: View {
                 AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
 
                 GeometryReader { geometry in
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: AppSpacing.xl) {
-                            MobilePageStatsHeader(items: excerptStats)
+                    ScrollViewReader { proxy in
+                        ScrollView(.vertical, showsIndicators: false) {
+                            LazyVStack(spacing: AppSpacing.xl) {
+                                MobilePageStatsHeader(items: excerptStats)
 
-                            if displayExcerpts.isEmpty {
-                                emptyStateView
-                            } else {
-                                singleColumnList(containerWidth: geometry.size.width)
+                                if displayExcerpts.isEmpty {
+                                    emptyStateView
+                                } else {
+                                    singleColumnList(containerWidth: geometry.size.width)
+                                }
                             }
+                            .padding(.bottom, AppSpacing.emptyState)
                         }
-                        .padding(.bottom, AppSpacing.emptyState)
+                        .onChange(of: highlightedExcerptID) { _, id in scrollToHighlightedExcerpt(id, proxy: proxy) }
+                        .onChange(of: displayFingerprint) { _, _ in scrollToHighlightedExcerpt(highlightedExcerptID, proxy: proxy) }
                     }
                 }
             }
@@ -183,29 +196,38 @@ struct MobileInspirationWallView: View {
 
     @ViewBuilder
     private func selectableExcerptCard(_ excerpt: ExcerptListItem) -> some View {
+        let isHighlighted = highlightedExcerptID == excerpt.id
+        let isSelected = selectedIDs.contains(excerpt.id)
+
         if isEditing {
             Button(action: {
-                withAnimation(.spring(response: 0.25)) { toggleSelection(excerpt.id) }
+                withAnimation(.easeOut(duration: 0.14)) { toggleSelection(excerpt.id) }
             }) {
                 MobileUnifiedExcerptCardView(
                     excerpt: excerpt
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                        .stroke(selectedIDs.contains(excerpt.id) ? Color.blue : Color.clear, lineWidth: 3)
+                        .stroke(isSelected || isHighlighted ? Color.blue : Color.clear, lineWidth: 3)
                 )
             }
             .buttonStyle(.plain)
+            .id(excerpt.id)
         } else {
             MobileUnifiedExcerptCardView(
                 excerpt: excerpt
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
+                    .stroke(isHighlighted ? Color.blue : Color.clear, lineWidth: 3)
+            )
+            .id(excerpt.id)
         }
     }
     
     // MARK: - ⚙️ 核心数据引擎
     
-    private func refreshData(animate: Bool) {
+    private func refreshData(animate _: Bool) {
         let results = ReadingStatsCalculator.inspirationSnapshot(
             excerpts: allExcerpts,
             type: filterCategory,
@@ -214,10 +236,15 @@ struct MobileInspirationWallView: View {
             randomize: false
         ).excerpts
 
-        if animate {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { self.displayExcerpts = results }
-        } else {
-            self.displayExcerpts = results
+        self.displayExcerpts = results
+    }
+
+    private func scrollToHighlightedExcerpt(_ id: String?, proxy: ScrollViewProxy) {
+        guard let id, displayExcerpts.contains(where: { $0.id == id }) else { return }
+        DispatchQueue.main.async {
+            withAnimation(.easeOut(duration: 0.22)) {
+                proxy.scrollTo(id, anchor: .center)
+            }
         }
     }
 
@@ -253,203 +280,28 @@ struct MobileInspirationWallView: View {
     
 }
 
-private struct MobileInkExcerptHeightPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
 struct MobileUnifiedExcerptCardView: View {
     let excerpt: ExcerptListItem
     @State private var naturalInkHeight: CGFloat = 0
     @State private var isInkFullscreenPresented = false
 
     private let inkMaxHeight: CGFloat = 700
-    private var isInkTruncated: Bool { naturalInkHeight > inkMaxHeight }
     
     var body: some View {
-        inkGalleryCard
+        ExcerptWallCardContent(
+            excerpt: excerpt,
+            naturalHeight: $naturalInkHeight,
+            maxHeight: inkMaxHeight,
+            ellipsisBottomPadding: AppSpacing.l
+        ) {
+            isInkFullscreenPresented = true
+        }
         .fullScreenCover(isPresented: $isInkFullscreenPresented) {
             MobileInkExcerptFullscreenView(excerpt: excerpt) {
                 isInkFullscreenPresented = false
             }
         }
     }
-
-    private var inkGalleryCard: some View {
-        ZStack(alignment: .bottom) {
-            inkTextLayout
-                .padding(.horizontal, AppSpacing.l)
-                .padding(.vertical, AppSpacing.xl)
-                .frame(maxWidth: .infinity)
-                .fixedSize(horizontal: false, vertical: true)
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear.preference(key: MobileInkExcerptHeightPreferenceKey.self, value: geometry.size.height)
-                    }
-                )
-                .frame(height: isInkTruncated ? inkMaxHeight : nil, alignment: .top)
-                .mask {
-                    if isInkTruncated {
-                        LinearGradient(
-                            stops: [
-                                .init(color: .black, location: 0),
-                                .init(color: .black, location: 0.75),
-                                .init(color: .clear, location: 1)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    } else {
-                        Color.black
-                    }
-                }
-                .clipped()
-
-            if isInkTruncated {
-                Button {
-                    isInkFullscreenPresented = true
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 16, weight: .bold))
-                        .frame(width: 44, height: 28)
-                        .foregroundColor(.white)
-                        .background(excerpt.category.themeColor.opacity(0.9))
-                        .clipShape(Capsule())
-                        .shadow(color: .black.opacity(0.14), radius: 6, y: 3)
-                }
-                .buttonStyle(.plain)
-                .padding(.bottom, AppSpacing.l)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .overlay(alignment: .topTrailing) {
-            Text(excerpt.category.displayName)
-                .font(.system(size: 11, weight: .bold))
-                .foregroundColor(excerpt.category.themeColor)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(excerpt.category.themeColor.opacity(0.15))
-                .clipShape(Capsule())
-                .padding([.top, .trailing], 16)
-        }
-        .onPreferenceChange(MobileInkExcerptHeightPreferenceKey.self) { height in
-            if abs(naturalInkHeight - height) > 1 {
-                naturalInkHeight = height
-            }
-        }
-        .glassCardSurface()
-    }
-
-    @ViewBuilder
-    private var inkTextLayout: some View {
-        VStack(alignment: .center, spacing: 0) {
-            if [.poetry, .lyric, .prose].contains(excerpt.category) {
-                inkTitleAndAuthor
-            }
-
-            switch excerpt.category {
-            case .poetry:
-                Text(excerpt.content)
-                    .font(.system(size: 18, weight: .regular, design: .serif))
-                    .lineSpacing(14)
-                    .foregroundColor(.primary.opacity(0.85))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            case .lyric, .prose:
-                Text(indentedContent)
-                    .font(.system(size: 18, weight: .regular, design: .serif))
-                    .lineSpacing(14)
-                    .foregroundColor(.primary.opacity(0.85))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            case .quote:
-                Text(excerpt.content)
-                    .font(.system(size: 18, weight: .regular, design: .serif))
-                    .lineSpacing(14)
-                    .foregroundColor(.primary.opacity(0.85))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom, 24)
-                HStack {
-                    Spacer()
-                    Text("—— \(excerpt.sourceAuthorDisplay)")
-                        .font(.system(size: 13, weight: .medium, design: .serif))
-                        .foregroundColor(.secondary)
-                }
-            case .movie:
-                Text(excerpt.content)
-                    .font(.system(size: 18, weight: .regular, design: .serif))
-                    .lineSpacing(14)
-                    .foregroundColor(.primary.opacity(0.85))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom, 24)
-                HStack {
-                    Spacer()
-                    Text("—— \(excerpt.sourceAuthorDisplay)（\(excerpt.sourceTitleDisplay)）")
-                        .font(.system(size: 13, weight: .medium, design: .serif))
-                        .foregroundColor(.secondary)
-                }
-            case .web:
-                Text(excerpt.content)
-                    .font(.system(size: 18, weight: .regular, design: .serif))
-                    .lineSpacing(14)
-                    .foregroundColor(.primary.opacity(0.85))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            case .bookExcerpt, .note:
-                Text(excerpt.content)
-                    .font(.system(size: 18, weight: .regular, design: .serif))
-                    .lineSpacing(14)
-                    .foregroundColor(.primary.opacity(0.85))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom, 24)
-                if excerpt.isBookBound {
-                    HStack {
-                        Spacer()
-                        Text("《\(excerpt.bookDisplayTitle)》")
-                            .font(.system(size: 13, weight: .medium, design: .serif))
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-        }
-    }
-
-    private var inkTitleAndAuthor: some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            Spacer()
-            Text(excerpt.sourceTitleDisplay)
-                .font(.system(size: 28, weight: .heavy, design: .serif))
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
-            Text("")
-                .frame(width: 0)
-                .overlay(alignment: .bottomLeading) {
-                    if excerpt.sourceAuthorDisplay != "佚名" {
-                        Text(excerpt.sourceAuthorDisplay)
-                            .font(.system(size: 13, weight: .medium, design: .serif))
-                            .foregroundColor(.secondary)
-                            .fixedSize()
-                            .offset(x: 20, y: -2)
-                    }
-                }
-            Spacer()
-        }
-        .padding(.bottom, 20)
-    }
-
-    private var indentedContent: String {
-        excerpt.content
-            .components(separatedBy: .newlines)
-            .map { "\u{3000}\u{3000}" + $0 }
-            .joined(separator: "\n")
-    }
-
 }
 
 private struct MobileInkExcerptFullscreenView: View {
@@ -479,12 +331,9 @@ private struct MobileInkExcerptFullscreenView: View {
         ZStack(alignment: .topTrailing) {
             AppColors.primaryBackground(for: colorScheme)
                 .ignoresSafeArea()
-            Rectangle()
-                .fill(AppMaterials.modal)
-                .ignoresSafeArea()
 
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 36) {
+                LazyVStack(spacing: 36) {
                     header
                     content
                     attribution

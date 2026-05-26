@@ -167,6 +167,7 @@ private extension ExcerptCategory {
 
 struct ExcerptEditorSheet: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \Book.createdAt, order: .reverse) private var allBooks: [Book]
 
     @Binding var isPresented: Bool
@@ -229,7 +230,7 @@ struct ExcerptEditorSheet: View {
                 Divider().opacity(0.45)
 
                 ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 22) {
+                    LazyVStack(alignment: .leading, spacing: 22) {
                         dynamicFields
                         contentEditor
                     }
@@ -252,13 +253,13 @@ struct ExcerptEditorSheet: View {
     }
 
     private var categorySidebar: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 4) {
             Text("分类")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
-                .padding(.horizontal, 14)
-                .padding(.top, 18)
-                .padding(.bottom, 4)
+                .padding(.horizontal, 12)
+                .padding(.top, 14)
+                .padding(.bottom, 2)
 
             ForEach(ExcerptCategory.allCases, id: \.self) { category in
                 categoryButton(category)
@@ -266,9 +267,9 @@ struct ExcerptEditorSheet: View {
 
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 16)
-        .frame(width: 122)
+        .padding(.horizontal, 8)
+        .padding(.bottom, 12)
+        .frame(width: 114)
         .background(Color.primary.opacity(0.025))
     }
 
@@ -291,8 +292,8 @@ struct ExcerptEditorSheet: View {
                 Spacer(minLength: 0)
             }
             .foregroundStyle(isSelected ? AppColors.readingAmber : Color.primary.opacity(0.72))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .fill(isSelected ? AppColors.readingAmber.opacity(0.14) : Color.clear)
@@ -435,7 +436,14 @@ struct ExcerptEditorSheet: View {
                 .padding(.horizontal, ExcerptInputMetrics.fieldHorizontalPadding)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: ExcerptInputMetrics.fieldCornerRadius))
+                .background(
+                    AppColors.innerBlock(for: colorScheme),
+                    in: RoundedRectangle(cornerRadius: ExcerptInputMetrics.fieldCornerRadius, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: ExcerptInputMetrics.fieldCornerRadius, style: .continuous)
+                        .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+                )
             }
             .buttonStyle(.plain)
             .menuIndicator(.hidden)
@@ -491,7 +499,14 @@ struct ExcerptEditorSheet: View {
                 .font(ExcerptInputMetrics.fieldFont)
                 .padding(.horizontal, ExcerptInputMetrics.fieldHorizontalPadding)
                 .padding(.vertical, ExcerptInputMetrics.fieldVerticalPadding)
-                .glassEffect(in: .rect(cornerRadius: ExcerptInputMetrics.fieldCornerRadius))
+                .background(
+                    AppColors.innerBlock(for: colorScheme),
+                    in: RoundedRectangle(cornerRadius: ExcerptInputMetrics.fieldCornerRadius, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: ExcerptInputMetrics.fieldCornerRadius, style: .continuous)
+                        .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+                )
         }
         .frame(maxWidth: .infinity)
     }
@@ -518,7 +533,14 @@ struct ExcerptEditorSheet: View {
                     .padding(ExcerptInputMetrics.contentPadding)
             }
             .frame(minHeight: 230, alignment: .top)
-            .glassEffect(in: .rect(cornerRadius: ExcerptInputMetrics.contentCornerRadius))
+            .background(
+                AppColors.innerBlock(for: colorScheme),
+                in: RoundedRectangle(cornerRadius: ExcerptInputMetrics.contentCornerRadius, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: ExcerptInputMetrics.contentCornerRadius, style: .continuous)
+                    .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+            )
         }
     }
 
@@ -555,7 +577,11 @@ struct ExcerptEditorSheet: View {
             .font(.system(size: 15, weight: .medium))
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 8))
+            .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+            )
 
             Button(isEdit ? "保存修改" : "确认录入") {
                 saveExcerpt()
@@ -564,10 +590,17 @@ struct ExcerptEditorSheet: View {
             .buttonStyle(.plain)
             .disabled(!canSave)
             .font(.system(size: 15, weight: .bold))
-            .foregroundStyle(canSave ? Color.primary : Color.secondary)
+            .foregroundStyle(canSave ? Color.white : Color.secondary)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .glassEffect(canSave ? .regular.tint(selectedCategory.themeColor).interactive() : .clear, in: .rect(cornerRadius: 8))
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(canSave ? selectedCategory.themeColor : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(canSave ? selectedCategory.themeColor.opacity(0.3) : Color.clear, lineWidth: 1)
+            )
             .opacity(canSave ? 1 : 0.42)
         }
         .padding(.horizontal, 24)

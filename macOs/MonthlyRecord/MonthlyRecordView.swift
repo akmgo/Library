@@ -24,9 +24,14 @@ struct MonthlyRecordView: View {
 
     @State private var visibleYear: Int = Calendar.current.component(.year, from: Date())
     @State private var visibleMonth: Int = Calendar.current.component(.month, from: Date())
-    
-    private var monthlySnapshot: ReadingStatsCalculator.MonthlyArchiveSnapshot {
-        ReadingStatsCalculator.monthlyArchiveSnapshot(sessions: sessions)
+    @State private var monthlySnapshot: ReadingStatsCalculator.MonthlyArchiveSnapshot = .empty
+    @State private var sessionsByDay: [Date: [ReadingSession]] = [:]
+
+    private var sessionsFingerprint: String {
+        let newestStart = sessions.map(\.startedAt).max()?.timeIntervalSinceReferenceDate ?? 0
+        let newestEnd = sessions.map(\.endedAt).max()?.timeIntervalSinceReferenceDate ?? 0
+        let totalDuration = sessions.reduce(0) { $0 + max($1.duration, 0) }
+        return "\(sessions.count)-\(newestStart)-\(newestEnd)-\(totalDuration)"
     }
     
     var body: some View {
@@ -35,14 +40,14 @@ struct MonthlyRecordView: View {
             ScrollViewReader { proxy in
                 ScrollView(.vertical, showsIndicators: false) {
                     ZStack {
-                        VStack(spacing: 30) {
+                        LazyVStack(spacing: 30) {
                             ForEach(monthlySnapshot.sections) { section in
                                 MonthGridSection(
                                     section: section,
                                     recordsDict: monthlySnapshot.durationByDay,
                                     isBatchMode: isBatchDeletePresented,
                                     selectedDates: $selectedDates,
-                                    sessions: sessions,
+                                    sessionsByDay: sessionsByDay,
                                     books: books
                                 )
                                 .id(section.id)
@@ -100,9 +105,13 @@ struct MonthlyRecordView: View {
         .toolbarBackground(.hidden, for: .windowToolbar)
         .ignoresSafeArea(edges: .top)
         .onAppear {
+            refreshMonthlySnapshot()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
                 NotificationCenter.default.post(name: .scrollToToday, object: nil)
             }
+        }
+        .onChange(of: sessionsFingerprint) { _, _ in
+            refreshMonthlySnapshot()
         }
     }
 
@@ -145,14 +154,6 @@ struct MonthlyRecordView: View {
         Int(visibleMonthDuration / 60)
     }
 
-    private var visibleMonthSessions: [ReadingSession] {
-        let calendar = Calendar.current
-        return sessions.filter {
-            calendar.component(.year, from: $0.startedAt) == visibleYear &&
-            calendar.component(.month, from: $0.startedAt) == visibleMonth
-        }
-    }
-
     private var monthlyBatchDeleteCapsule: some View {
         HStack(spacing: 14) {
             Button {
@@ -168,7 +169,9 @@ struct MonthlyRecordView: View {
 
             Button(role: .destructive) {
                 let calendar = Calendar.current
-                let targets = visibleMonthSessions.filter { selectedDates.contains(calendar.startOfDay(for: $0.startedAt)) }
+                let targets = selectedDates.flatMap { day in
+                    sessionsByDay[calendar.startOfDay(for: day)] ?? []
+                }
                 for s in targets { modelContext.delete(s) }
                 try? modelContext.save()
                 withAnimation { selectedDates.removeAll(); isBatchDeletePresented = false }
@@ -178,8 +181,13 @@ struct MonthlyRecordView: View {
             .buttonStyle(.plain).disabled(selectedDates.isEmpty).help("删除")
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+        .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.12, strokeOpacity: 0.10)
+    }
+
+    private func refreshMonthlySnapshot() {
+        let calendar = Calendar.current
+        monthlySnapshot = ReadingStatsCalculator.monthlyArchiveSnapshot(sessions: sessions, calendar: calendar)
+        sessionsByDay = Dictionary(grouping: sessions) { calendar.startOfDay(for: $0.startedAt) }
     }
 
 }
@@ -191,8 +199,12 @@ private struct MonthGridSection: View {
     let recordsDict: [Date: TimeInterval]
     let isBatchMode: Bool
     @Binding var selectedDates: Set<Date>
-    let sessions: [ReadingSession]
+    let sessionsByDay: [Date: [ReadingSession]]
     let books: [Book]
+
+    private var booksByID: [String: Book] {
+        Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
+    }
     
     private var monthTotalMinutes: Int {
         section.days.compactMap { d -> Int? in
@@ -226,20 +238,24 @@ private struct MonthGridSection: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(0..<section.days.count, id: \.self) { index in
                     if let date = section.days[index] {
-                        let daySessions = sessions.filter { Calendar.current.isDate($0.startedAt, inSameDayAs: date) }
-                        DayCardView(
+                        let startOfDay = Calendar.current.startOfDay(for: date)
+                        let daySessions = sessionsByDay[startOfDay] ?? []
+                        let snapshot = ReadingStatsCalculator.ReadingDaySnapshot(
                             date: date,
-                            duration: recordsDict[Calendar.current.startOfDay(for: date)],
+                            duration: recordsDict[startOfDay],
+                            sessions: daySessions,
+                            booksByID: booksByID
+                        )
+                        DayCardView(
+                            snapshot: snapshot,
                             isBatchMode: isBatchMode,
-                            isSelected: selectedDates.contains(Calendar.current.startOfDay(for: date)),
+                            isSelected: selectedDates.contains(startOfDay),
                             onToggle: {
-                                let startOfDay = Calendar.current.startOfDay(for: date)
                                 if selectedDates.contains(startOfDay) { selectedDates.remove(startOfDay) }
                                 else { selectedDates.insert(startOfDay) }
-                            },
-                            daySessions: daySessions,
-                            books: books
+                            }
                         )
+                        .equatable()
                     } else {
                         Color.clear.frame(height: 110)
                     }
@@ -251,68 +267,35 @@ private struct MonthGridSection: View {
 
 // MARK: - ✨ 高定方形数据卡片 (每日网格)
 
-private struct DayCardView: View {
-    let date: Date
-    let duration: TimeInterval?
+private struct DayCardView: View, Equatable {
+    let snapshot: ReadingStatsCalculator.ReadingDaySnapshot
     let isBatchMode: Bool
     let isSelected: Bool
     let onToggle: () -> Void
-    let daySessions: [ReadingSession]
-    let books: [Book]
 
-    @State private var isHovered = false
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showPopover = false
 
-    private let calendar = Calendar.current
-
-    private var totalMinutes: Int {
-        Int(daySessions.reduce(0) { $0 + $1.duration } / 60)
-    }
-
-    private var bookSummaries: [(title: String, detail: String)] {
-        var merged: [String: (totalDelta: Double, unit: ProgressUnit, totalDuration: TimeInterval)] = [:]
-        for session in daySessions {
-            guard let bookID = session.book?.id, books.contains(where: { $0.id == bookID }) else { continue }
-            var entry = merged[bookID] ?? (0, session.progressUnit, 0)
-            entry.totalDelta += session.deltaAmount
-            entry.totalDuration += session.duration
-            merged[bookID] = entry
-        }
-        return merged.compactMap { bookID, data in
-            guard let book = books.first(where: { $0.id == bookID }) else { return nil }
-            let mins = Int(data.totalDuration / 60)
-            var parts: [String] = []
-            if mins > 0 { parts.append("\(mins)分钟") }
-            if data.totalDelta > 0 {
-                switch data.unit {
-                case .page: parts.append("\(Int(data.totalDelta))页")
-                case .percent: parts.append("\(Int(data.totalDelta))%")
-                case .chapter: parts.append("\(Int(data.totalDelta))章")
-                }
-            }
-            return (book.title, parts.joined(separator: " · "))
-        }
+    static func == (lhs: DayCardView, rhs: DayCardView) -> Bool {
+        lhs.snapshot == rhs.snapshot
+            && lhs.isBatchMode == rhs.isBatchMode
+            && lhs.isSelected == rhs.isSelected
     }
 
     var body: some View {
-        let isToday = calendar.isDateInToday(date)
-        let hasRead = duration != nil
-        let dateString = "\(calendar.component(.day, from: date))"
-        let totalSeconds = Int(duration ?? 0)
-        let dailyMinutes = totalSeconds > 0 ? max(1, totalSeconds / 60) : 0
-        let isCelebration = dailyMinutes > 50
+        let isCelebration = snapshot.dailyMinutes > 50
 
         ZStack {
             Rectangle()
-                .fill(hasRead ? Color(nsColor: .controlBackgroundColor) : Color.secondary.opacity(0.03))
+                .fill(snapshot.hasRead ? Color(nsColor: .controlBackgroundColor) : Color.secondary.opacity(0.03))
 
-            if hasRead {
+            if snapshot.hasRead {
                 VStack(spacing: 0) {
                     Spacer()
                     Rectangle()
-                        .fill(VisualEngines.ReadingHeatmap.gradient(for: dailyMinutes))
-                        .frame(height: VisualEngines.ReadingHeatmap.height(for: dailyMinutes))
-                        .shadow(color: VisualEngines.ReadingHeatmap.shadowColor(for: dailyMinutes).opacity(0.5), radius: isHovered ? 8 : 4, y: -2)
+                        .fill(VisualEngines.ReadingHeatmap.gradient(for: snapshot.dailyMinutes))
+                        .frame(height: VisualEngines.ReadingHeatmap.height(for: snapshot.dailyMinutes))
+                        .shadow(color: VisualEngines.ReadingHeatmap.shadowColor(for: snapshot.dailyMinutes).opacity(0.5), radius: 4, y: -2)
                 }
             }
 
@@ -320,30 +303,29 @@ private struct DayCardView: View {
                 HStack(alignment: .top) {
                     if isBatchMode {
                         ZStack {
-                            if isToday { Circle().fill(Color.primary).frame(width: 24, height: 24) }
-                            Text(dateString)
-                                .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
-                                .foregroundColor(isToday ? Color(nsColor: .windowBackgroundColor) : (hasRead ? .primary : .secondary.opacity(0.4)))
+                            if snapshot.isToday { Circle().fill(Color.primary).frame(width: 24, height: 24) }
+                            Text(snapshot.dayNumberText)
+                                .font(.system(size: 16, weight: snapshot.isToday ? .bold : .semibold, design: .rounded))
+                                .foregroundColor(snapshot.isToday ? AppColors.primaryBackground(for: colorScheme) : (snapshot.hasRead ? .primary : .secondary.opacity(0.4)))
                         }
                     } else {
                         ZStack {
-                            if isToday { Circle().fill(Color.primary).frame(width: 24, height: 24) }
-                            Text(dateString)
-                                .font(.system(size: 16, weight: isToday ? .bold : .semibold, design: .rounded))
-                                .foregroundColor(isToday ? Color(nsColor: .windowBackgroundColor) : (hasRead ? .primary : .secondary.opacity(0.4)))
+                            if snapshot.isToday { Circle().fill(Color.primary).frame(width: 24, height: 24) }
+                            Text(snapshot.dayNumberText)
+                                .font(.system(size: 16, weight: snapshot.isToday ? .bold : .semibold, design: .rounded))
+                                .foregroundColor(snapshot.isToday ? AppColors.primaryBackground(for: colorScheme) : (snapshot.hasRead ? .primary : .secondary.opacity(0.4)))
                         }
                     }
                     Spacer()
-                    if hasRead && !isBatchMode {
+                    if snapshot.hasRead && !isBatchMode {
                         HStack(spacing: 2) {
                             if isCelebration { Image(systemName: "flame.fill").font(.system(size: 9)) }
-                            Text("\(dailyMinutes)m")
+                            Text("\(snapshot.dailyMinutes)m")
                         }
                         .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundColor(VisualEngines.ReadingHeatmap.shadowColor(for: dailyMinutes))
+                        .foregroundColor(VisualEngines.ReadingHeatmap.shadowColor(for: snapshot.dailyMinutes))
                         .padding(.horizontal, 6).padding(.vertical, 4)
-                        .background(Color.primary.opacity(0.05))
-                        .clipShape(Capsule())
+                        .appCapsuleStyle(tint: VisualEngines.ReadingHeatmap.shadowColor(for: snapshot.dailyMinutes), fillOpacity: 0.12)
                     }
                 }
                 .padding(10)
@@ -352,52 +334,45 @@ private struct DayCardView: View {
         }
         .frame(height: 110)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(isBatchMode && isSelected ? Color.blue : Color.primary.opacity(isHovered ? 0.2 : 0.05), lineWidth: isBatchMode && isSelected ? 3 : (isHovered ? 2 : 1)))
-        .shadow(color: Color.black.opacity(isHovered ? 0.08 : 0.0), radius: isHovered ? 8 : 0, y: isHovered ? 3 : 0)
-        .scaleEffect(isHovered ? 1.012 : 1.0)
-        .zIndex(isHovered ? 1 : 0)
-        .animation(.appSnappy, value: isHovered)
-        .onHover { h in
-            withAnimation(.appSnappy) { isHovered = h }
-        }
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(isBatchMode && isSelected ? Color.blue : Color.primary.opacity(0.05), lineWidth: isBatchMode && isSelected ? 3 : 1))
         .onTapGesture {
             if isBatchMode { onToggle() }
-            else if hasRead { showPopover = true }
+            else if snapshot.hasRead { showPopover = true }
         }
         .popover(isPresented: $showPopover, arrowEdge: .bottom) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    let day = calendar.component(.day, from: date)
-                    let weekday = calendar.component(.weekday, from: date)
-                    let names = ["日", "一", "二", "三", "四", "五", "六"]
-                    Text("\(day)日 周\(names[weekday - 1])")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-                    Spacer()
-                    Text("\(totalMinutes) 分钟")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundColor(AppColors.readingAmber)
-                }
+            AppCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text(snapshot.dayLabel)
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                        Spacer()
+                        Text("\(snapshot.totalMinutes) 分钟")
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(AppColors.readingAmber)
+                    }
 
-                if !bookSummaries.isEmpty {
-                    Divider()
-                    ForEach(Array(bookSummaries.enumerated()), id: \.offset) { _, summary in
-                        HStack {
-                            Text("《\(summary.title)》")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.primary.opacity(0.8))
-                                .lineLimit(1)
-                            Spacer()
-                            if !summary.detail.isEmpty {
-                                Text(summary.detail)
-                                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                                    .foregroundColor(.teal)
+                    if !snapshot.bookSummaries.isEmpty {
+                        Divider()
+                        ForEach(snapshot.bookSummaries) { summary in
+                            HStack {
+                                Text("《\(summary.title)》")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.primary.opacity(0.8))
+                                    .lineLimit(1)
+                                Spacer()
+                                if !summary.detail.isEmpty {
+                                    Text(summary.detail)
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.teal)
+                                }
                             }
                         }
                     }
                 }
             }
-            .padding(20)
             .frame(width: 320)
+            .padding(10)
+            .background(AppColors.primaryBackground(for: colorScheme))
         }
     }
 }

@@ -109,7 +109,6 @@ struct GalleryView: View {
                         isSelected: selectedBookIDs.contains(book.id),
                         onToggleSelection: { toggleSelection(for: book) }
                     )
-                    .transition(.appCardGlide)
                 }
             }
         }
@@ -168,8 +167,7 @@ struct GalleryView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+        .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.12, strokeOpacity: 0.10)
     }
 
     private func toggleSelection(for book: Book) {

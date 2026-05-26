@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 struct BookEditorSheet: View {
     @Query var allBooks: [Book]
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
 
     @Binding var isPresented: Bool
 
@@ -92,7 +93,11 @@ struct BookEditorSheet: View {
                     .buttonStyle(.plain)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 8))
+                    .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+                    )
 
                 let isFormEmpty = titleInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 let hasChanges = titleInput != bookToEdit.title || authorInput != bookToEdit.author || selectedCoverData != bookToEdit.coverData
@@ -104,7 +109,14 @@ struct BookEditorSheet: View {
                     .disabled(!canSave)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .glassEffect(canSave ? .regular.tint(.blue).interactive() : .clear, in: .rect(cornerRadius: 8))
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(canSave ? Color.blue : Color.clear)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .stroke(canSave ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
+                    )
                     .opacity(canSave ? 1.0 : 0.4)
             }
             .padding(16)
@@ -134,7 +146,8 @@ struct BookEditorSheet: View {
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.1), lineWidth: 1))
             } else {
                 ZStack {
-                    Color.clear.glassEffect(.regular.interactive(), in: .rect(cornerRadius: 8.0))
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(AppColors.innerBlock(for: colorScheme))
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [6, 6]))
                     VStack(spacing: 12) {

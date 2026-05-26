@@ -12,6 +12,7 @@ private enum ContentEditorInputMetrics {
 
 struct ContentEditorSheet: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var isPresented: Bool
     
     let book: Book?
@@ -22,7 +23,6 @@ struct ContentEditorSheet: View {
     
     @State private var selectedMode: BookContentEntryMode = .excerpt
     @State private var contentText: String = ""
-    @Namespace private var modeNamespace
     
     var body: some View {
         let isEdit = itemToEdit != nil
@@ -41,6 +41,7 @@ struct ContentEditorSheet: View {
                 }
 
                 modeSlider
+                    .frame(height: 50)
             }
             .padding(.horizontal, 24)
             .padding(.top, 24)
@@ -86,19 +87,30 @@ struct ContentEditorSheet: View {
                     .keyboardShortcut(.cancelAction)
                     .buttonStyle(.plain)
                     .padding(.horizontal, 16).padding(.vertical, 6)
-                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
-                
+                    .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+                    )
+
                 let isContentValid = !contentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 let originalMode: BookContentEntryMode = itemToEdit?.isNote == true ? .note : .excerpt
                 let hasChanges = isEdit ? (contentText != itemToEdit?.content || selectedMode != originalMode) : true
                 let canSave = isContentValid && hasChanges
-                
+
                 Button(isEdit ? "保存修改" : selectedMode.saveTitle) { saveContent() }
                     .buttonStyle(.plain)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canSave)
                     .padding(.horizontal, 16).padding(.vertical, 6)
-                    .glassEffect(canSave ? .regular.tint(selectedMode.tint).interactive() : .clear, in: .rect(cornerRadius: 6))
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(canSave ? selectedMode.tint : Color.clear)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .stroke(canSave ? selectedMode.tint.opacity(0.3) : Color.clear, lineWidth: 1)
+                    )
                     .opacity(canSave ? 1.0 : 0.4)
             }
             .padding(16)
@@ -115,38 +127,15 @@ struct ContentEditorSheet: View {
     }
 
     private var modeSlider: some View {
-        HStack(spacing: 0) {
-            ForEach(BookContentEntryMode.allCases, id: \.self) { mode in
-                let isSelected = selectedMode == mode
-
-                Button {
-                    withAnimation(.easeInOut(duration: 0.18)) {
-                        selectedMode = mode
-                    }
-                } label: {
-                    ZStack {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(Color.clear)
-                                .glassEffect(.regular.tint(mode.tint), in: .rect(cornerRadius: 10))
-                                .matchedGeometryEffect(id: "content-mode", in: modeNamespace)
-                        }
-
-                        HStack(spacing: 7) {
-                            Image(systemName: mode.iconName)
-                                .font(.system(size: 12, weight: .semibold))
-                            Text(mode.displayName)
-                                .font(.system(size: 14, weight: isSelected ? .bold : .medium))
-                        }
-                        .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.72))
-                        .frame(maxWidth: .infinity, minHeight: 34)
-                    }
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(4)
-        .background(Color.clear.glassEffect(in: .rect(cornerRadius: 12)))
+        AppSlidingSegmentedControl(
+            selection: $selectedMode,
+            options: BookContentEntryMode.allCases.map {
+                AppSlidingSegmentedOption(value: $0, title: $0.displayName, systemImage: $0.iconName)
+            },
+            tint: AppColors.selection,
+            height: 30,
+            cornerRadius: 10
+        )
     }
     
     // MARK: - 存储逻辑

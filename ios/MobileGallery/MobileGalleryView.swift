@@ -55,7 +55,7 @@ struct MobileGalleryView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: AppSpacing.m) {
+                LazyVStack(spacing: AppSpacing.m) {
                     MobilePageStatsHeader(items: galleryStats)
 
                 if processedBooks.isEmpty {
@@ -236,27 +236,13 @@ struct MobileGalleryView: View {
 
 struct MobileBookGridCell: View {
     let book: Book
-    
+
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            Color.clear
-                .aspectRatio(2 / 3, contentMode: .fit)
-                .overlay(BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title).scaledToFill())
-                .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
-                .shadow(color: Color.black.opacity(0.15), radius: 8, y: 4)
-                .overlay(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .white.opacity(0.3), location: 0.0),
-                            .init(color: .white.opacity(0.0), location: 0.08)
-                        ],
-                        startPoint: .leading, endPoint: .trailing
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
-                )
-                .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover).stroke(Color.black.opacity(0.1), lineWidth: 0.5))
-        }
-        .contentShape(Rectangle())
+        BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+            .aspectRatio(2 / 3, contentMode: .fill)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
+            .shadow(color: Color.black.opacity(0.10), radius: 6, y: 3)
+            .contentShape(Rectangle())
     }
 }
 

@@ -65,9 +65,9 @@ final class ReadingSession {
     var displayDelta: String {
         let amount = max(deltaAmount, 0)
         switch progressUnit {
-        case .page: return "+\(Int(amount)) 页"
-        case .percent: return "+\(Int(amount))%"
-        case .chapter: return "+\(Int(amount)) 章"
+        case .page: return "\(Int(amount)) 页"
+        case .percent: return "\(Int(amount))%"
+        case .chapter: return "\(Int(amount)) 章"
         }
     }
 }

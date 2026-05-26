@@ -104,12 +104,12 @@ struct BookMetadataSpotlightSearchView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 28, weight: .medium))
                 .focused($isSearchFocused)
-                .onSubmit { handleReturn() }
-                .onChange(of: query) { _, _ in
+                .onChange(of: query) { _, newValue in
                     duplicateTitle = nil
                     if errorMessage != nil && !isSearching {
                         errorMessage = nil
                     }
+                    triggerSearch(query: newValue)
                 }
 
             trailingControl
@@ -141,7 +141,7 @@ struct BookMetadataSpotlightSearchView: View {
     private var resultList: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView(.vertical, showsIndicators: results.count > 7) {
-                VStack(spacing: 4) {
+                LazyVStack(spacing: 4) {
                     ForEach(Array(results.prefix(10).enumerated()), id: \.element.id) { index, result in
                         BookMetadataSpotlightResultRow(
                             result: result,
@@ -204,6 +204,43 @@ struct BookMetadataSpotlightSearchView: View {
             Spacer()
         }
         .padding(AppSpacing.l)
+    }
+
+    private func triggerSearch(query: String) {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            searchTask?.cancel()
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+                results.removeAll()
+                errorMessage = nil
+                duplicateTitle = nil
+                didImport = false
+                importedID = nil
+                isSearching = false
+                isContentExpanded = false
+                shouldRenderContent = false
+            }
+            return
+        }
+        searchTask?.cancel()
+        withAnimation(.spring(response: 0.34, dampingFraction: 0.88)) {
+            visibleResultIDs.removeAll()
+            results.removeAll()
+            errorMessage = nil
+            duplicateTitle = nil
+            didImport = false
+            importedID = nil
+            isSearching = true
+            isContentExpanded = false
+            shouldRenderContent = false
+            selectedResultIndex = 0
+        }
+        let captured = trimmed
+        searchTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled, captured == trimmedQuery else { return }
+            await search(captured)
+        }
     }
 
     private func performSearch() {
@@ -318,18 +355,17 @@ struct BookMetadataSpotlightSearchView: View {
     }
 
     private func handleReturn() {
-        if isContentExpanded, !results.isEmpty {
-            selectedResultIndex = min(max(selectedResultIndex, 0), results.prefix(10).count - 1)
-            progressOpenSignal += 1
-        } else {
-            performSearch()
-        }
+        guard isContentExpanded, !results.isEmpty else { return }
+        selectedResultIndex = min(max(selectedResultIndex, 0), results.prefix(10).count - 1)
+        progressOpenSignal += 1
     }
 
     private var shortcuts: some View {
         Group {
             Button("") { handleEscape() }
                 .keyboardShortcut(.cancelAction)
+            Button("") { handleReturn() }
+                .keyboardShortcut(.return)
             Button("") { moveSelection(1) }
                 .keyboardShortcut(.downArrow, modifiers: [])
             Button("") { moveSelection(-1) }
@@ -413,45 +449,43 @@ private struct BookMetadataSpotlightResultRow: View {
     @State private var coverData: Data?
     @State private var coverImage: NSImage?
     @State private var isLoadingCover = false
-    @State private var isHovered = false
     @State private var isProgressPopoverPresented = false
     @State private var progressDraft = ReadingProgressDraft.bookImportDefault
 
     var body: some View {
-        HStack(spacing: AppSpacing.m) {
-            coverView
+        AppCard(cornerRadius: AppRadius.l, usesClearMaterial: true) {
+            HStack(spacing: AppSpacing.m) {
+                coverView
 
-            VStack(alignment: .leading, spacing: 7) {
-                Text(result.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(result.title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
 
-                Text(result.author.isEmpty ? "未知作者" : result.author)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    Text(result.author.isEmpty ? "未知作者" : result.author)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
 
-                Text(publisherText)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
+                    Text(publisherText)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: AppSpacing.s)
+
+                trailingState
             }
-
-            Spacer(minLength: AppSpacing.s)
-
-            trailingState
         }
-        .padding(.horizontal, AppSpacing.m)
-        .padding(.vertical, 10)
-        .frame(minHeight: 82, alignment: .center)
-        .contentShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
-        .background(rowBackground)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous)
+                .fill(isSelected ? AppColors.accentSoft(for: colorScheme).opacity(0.42) : Color.clear)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous))
         .opacity(isDimmed ? 0.38 : 1)
         .disabled(isDimmed || isImporting || isImported)
-        .onHover { hovering in
-            withAnimation(.easeOut(duration: 0.12)) { isHovered = hovering }
-        }
         .task(id: result.coverURL) {
             guard let url = result.coverURL, !url.isEmpty else { return }
             isLoadingCover = true
@@ -504,10 +538,10 @@ private struct BookMetadataSpotlightResultRow: View {
                 isProgressPopoverPresented = true
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundStyle(AppColors.readingAmber)
-                    .frame(width: 30, height: 30)
-                    .background(AppColors.readingAmber.opacity(isHovered ? 0.18 : 0.11), in: Circle())
+                    .frame(width: 36, height: 36)
+                    .background(AppColors.readingAmber.opacity(0.12), in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(isDimmed)
@@ -547,10 +581,11 @@ private struct BookMetadataSpotlightResultRow: View {
                     .frame(height: 34)
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.white)
-            .background(
-                progressDraft.isValidForBookImport ? AppColors.readingAmber : Color.secondary.opacity(0.35),
-                in: Capsule()
+            .foregroundStyle(progressDraft.isValidForBookImport ? Color.white : Color.secondary)
+            .appCapsuleStyle(
+                tint: progressDraft.isValidForBookImport ? AppColors.readingAmber : Color.secondary,
+                fillOpacity: progressDraft.isValidForBookImport ? 1 : 0.12,
+                strokeOpacity: progressDraft.isValidForBookImport ? 0 : 0.08
             )
             .disabled(!progressDraft.isValidForBookImport)
             .keyboardShortcut(.defaultAction)
@@ -593,10 +628,6 @@ private struct BookMetadataSpotlightResultRow: View {
         .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
     }
 
-    private var rowBackground: some View {
-        RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous)
-            .fill(isSelected ? AppColors.accentSoft(for: colorScheme).opacity(0.42) : (isHovered ? AppColors.accentSoft(for: colorScheme).opacity(0.36) : Color.clear))
-    }
 }
 
 struct GlobalSpotlightSearchView: View {
@@ -607,6 +638,7 @@ struct GlobalSpotlightSearchView: View {
     @Binding var isPresented: Bool
     @Binding var selectedModule: NavigationModule?
     @Binding var selectedBook: Book?
+    @Binding var highlightedExcerptID: String?
 
     @State private var query = ""
     @State private var selectedIndex = 0
@@ -618,24 +650,29 @@ struct GlobalSpotlightSearchView: View {
         query.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var results: [GlobalSpotlightResult] {
+    private var bookResults: [GlobalSpotlightResult] {
         guard !trimmedQuery.isEmpty else { return [] }
-        let query = trimmedQuery.lowercased()
-        let bookResults = books.filter { book in
-            book.title.lowercased().contains(query)
-                || book.author.lowercased().contains(query)
-                || book.tags.contains { $0.lowercased().contains(query) }
+        let query = trimmedQuery
+        return books.filter { book in
+            SearchMatcher.matchesBook(book, query: query)
         }.prefix(6).map(GlobalSpotlightResult.book)
+    }
 
-        let excerptResults = excerpts.filter { excerpt in
-            excerpt.content.lowercased().contains(query)
-                || excerpt.category.displayName.lowercased().contains(query)
-                || excerpt.displayTitle.lowercased().contains(query)
-                || excerpt.displayAuthor.lowercased().contains(query)
-                || excerpt.displaySource.lowercased().contains(query)
+    private var excerptResults: [GlobalSpotlightResult] {
+        guard !trimmedQuery.isEmpty else { return [] }
+        let query = trimmedQuery
+        return excerpts.filter { excerpt in
+            SearchMatcher.matchesExcerpt(excerpt, query: query)
         }.prefix(8).map(GlobalSpotlightResult.excerpt)
+    }
 
-        return Array((bookResults + excerptResults).prefix(12))
+    private var allResults: [GlobalSpotlightResult] {
+        bookResults + excerptResults
+    }
+
+    private var selectedResult: GlobalSpotlightResult? {
+        guard allResults.indices.contains(selectedIndex) else { return nil }
+        return allResults[selectedIndex]
     }
 
     var body: some View {
@@ -650,18 +687,33 @@ struct GlobalSpotlightSearchView: View {
 
                 if trimmedQuery.isEmpty {
                     emptyPrompt("搜索书籍和摘录")
-                } else if results.isEmpty {
+                } else if allResults.isEmpty {
                     emptyPrompt("没有找到相关内容")
                 } else {
                     Divider().opacity(0.24).padding(.horizontal, AppSpacing.m)
-                    ScrollView(.vertical, showsIndicators: results.count > 5) {
-                        VStack(spacing: AppSpacing.s) {
-                            ForEach(Array(results.enumerated()), id: \.element.id) { index, result in
-                                GlobalSpotlightResultCard(
-                                    result: result,
-                                    isSelected: index == selectedIndex
-                                ) {
-                                    open(result)
+                    ScrollView(.vertical, showsIndicators: allResults.count > 5) {
+                        LazyVStack(spacing: AppSpacing.l) {
+                            if !bookResults.isEmpty {
+                                resultSectionHeader(title: "书籍档案", count: bookResults.count)
+                                ForEach(bookResults) { result in
+                                    GlobalSpotlightResultCard(
+                                        result: result,
+                                        isSelected: result.id == selectedResult?.id
+                                    ) {
+                                        open(result)
+                                    }
+                                }
+                            }
+
+                            if !excerptResults.isEmpty {
+                                resultSectionHeader(title: "摘录笔记", count: excerptResults.count)
+                                ForEach(excerptResults) { result in
+                                    GlobalSpotlightResultCard(
+                                        result: result,
+                                        isSelected: result.id == selectedResult?.id
+                                    ) {
+                                        open(result)
+                                    }
                                 }
                             }
                         }
@@ -685,7 +737,7 @@ struct GlobalSpotlightSearchView: View {
         }
         .animation(.easeOut(duration: 0.18), value: hasEntered)
         .animation(.easeOut(duration: 0.16), value: isClosing)
-        .animation(.easeOut(duration: 0.18), value: results.count)
+        .animation(.easeOut(duration: 0.18), value: allResults.count)
         .onAppear {
             hasEntered = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
@@ -715,6 +767,19 @@ struct GlobalSpotlightSearchView: View {
         .onTapGesture { isFocused = true }
     }
 
+    private func resultSectionHeader(title: String, count: Int) -> some View {
+        HStack(spacing: AppSpacing.xs) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+            Text("(\(count))")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, AppSpacing.xs)
+        .padding(.top, 4)
+    }
+
     private func emptyPrompt(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 14, weight: .medium))
@@ -738,13 +803,13 @@ struct GlobalSpotlightSearchView: View {
     }
 
     private func moveSelection(_ delta: Int) {
-        guard !results.isEmpty else { return }
-        selectedIndex = min(max(selectedIndex + delta, 0), results.count - 1)
+        guard !allResults.isEmpty else { return }
+        selectedIndex = min(max(selectedIndex + delta, 0), allResults.count - 1)
     }
 
     private func openSelected() {
-        guard results.indices.contains(selectedIndex) else { return }
-        open(results[selectedIndex])
+        guard let result = selectedResult else { return }
+        open(result)
     }
 
     private func open(_ result: GlobalSpotlightResult) {
@@ -752,10 +817,10 @@ struct GlobalSpotlightSearchView: View {
         case .book(let book):
             selectedModule = .gallery
             selectedBook = book
-        case .excerpt:
+        case .excerpt(let excerpt):
             selectedBook = nil
             selectedModule = .excerpts
-            // TODO: scroll to and softly highlight the selected excerpt when the Excerpts page exposes an anchor API.
+            highlightedExcerptID = excerpt.id
         }
         close()
     }
@@ -792,15 +857,17 @@ private struct GlobalSpotlightResultCard: View {
 
     var body: some View {
         Button(action: action) {
-            content
-                .padding(AppSpacing.m)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(background)
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous)
-                        .stroke(.primary.opacity(isSelected ? 0.10 : 0.06), lineWidth: 1)
-                )
-                .contentShape(RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous))
+            AppCard(cornerRadius: AppRadius.l, usesClearMaterial: true) {
+                content
+            }
+            .background(
+                RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous)
+                    .fill(isSelected ? AppColors.accentSoft(for: colorScheme).opacity(0.46) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous)
+                    .stroke(.primary.opacity(isSelected ? 0.10 : 0.06), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -829,8 +896,6 @@ private struct GlobalSpotlightResultCard: View {
                 }
                 Spacer()
             }
-            .frame(minHeight: 82)
-
         case .excerpt(let excerpt):
             VStack(alignment: .leading, spacing: AppSpacing.s) {
                 HStack(alignment: .top) {
@@ -846,33 +911,29 @@ private struct GlobalSpotlightResultCard: View {
                     .font(.system(size: 15, weight: .regular))
                     .foregroundStyle(.primary)
                     .lineLimit(5)
-                    .frame(maxHeight: 118, alignment: .top)
 
                 Text(excerpt.book == nil ? excerpt.displayAuthor : "来自《\(excerpt.book?.title ?? "未知书籍")》")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }
-            .frame(maxHeight: 178, alignment: .top)
         }
     }
 
-    private var background: some View {
-        RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous)
-            .fill(isSelected ? AppColors.accentSoft(for: colorScheme).opacity(0.46) : Color.primary.opacity(0.035))
-    }
 }
 
 private struct CategoryCapsule: View {
     let category: ExcerptCategory
 
     var body: some View {
-        Text(category.displayName)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(category.themeColor)
-            .padding(.horizontal, 9)
-            .frame(height: 24)
-            .background(category.themeColor.opacity(0.12), in: Capsule())
+        AppCapsuleLabel(
+            text: category.displayName,
+            tint: category.themeColor,
+            fontWeight: .semibold,
+            horizontalPadding: 9,
+            verticalPadding: 5,
+            fillOpacity: 0.12
+        )
     }
 }
 #endif

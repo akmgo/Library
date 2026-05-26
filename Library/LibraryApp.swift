@@ -15,7 +15,6 @@ struct LibraryApp: App {
             ContentView()
                 // 1. 核心：卡死窗口的最小尺寸
                 .frame(minWidth: 1200, idealWidth: 1420, minHeight: 900, idealHeight: 1080)
-                .overlay(ConfettiView())
         }
         .windowToolbarStyle(.unified(showsTitle: false))
         // 2. 核心：设定程序第一次全新打开时的默认尺寸
@@ -27,6 +26,10 @@ struct LibraryApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("搜索并导入图书...") { NotificationCenter.default.post(name: .showAddBookModal, object: nil) }
                     .keyboardShortcut("n", modifiers: .command)
+            }
+            CommandGroup(after: .appInfo) {
+                Button("全局搜索") { NotificationCenter.default.post(name: .showGlobalSearch, object: nil) }
+                    .keyboardShortcut("k", modifiers: .command)
             }
         }
         .modelContainer(SharedDatabase.shared.container)

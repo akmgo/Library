@@ -19,7 +19,8 @@ struct ReadingHero: View {
     private let secondaryListWidth: CGFloat = 220
     
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.m) {
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
             HStack {
                 Text("当前在读")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -65,7 +66,7 @@ struct ReadingHero: View {
                     .frame(width: secondaryListWidth, height: heroContentHeight)
             }
         }
-        .glassCard(cornerRadius: AppRadius.panel)
+        }
     }
 
     private var secondaryReadingList: some View {
@@ -109,18 +110,7 @@ struct ReadingHero: View {
                     .monospacedDigit()
             }
 
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.primary.opacity(0.08))
-
-                    Capsule()
-                        .fill(AppColors.readingAmber)
-                        .frame(width: proxy.size.width * book.progressRatio)
-                        .animation(.appContentFade, value: book.progressRatio)
-                }
-            }
-            .frame(height: 8)
+            ProgressBarView(progress: book.progressRatio, tint: AppColors.readingAmber)
         }
     }
     
@@ -184,24 +174,24 @@ struct ReadingTimerCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.m) {
-            HStack {
-                Text("阅读计时")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
+                HStack {
+                    Text("阅读计时")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
 
-                Spacer()
+                    Spacer()
 
-                Image(systemName: "timer")
-                    .foregroundColor(AppColors.readingAmber)
+                    Image(systemName: "timer")
+                        .foregroundColor(AppColors.readingAmber)
+                }
+
+                timerContent
+                    .frame(height: timerContentHeight)
+                    .frame(maxWidth: .infinity)
             }
-
-            timerContent
-                .frame(height: timerContentHeight)
-                .frame(maxWidth: .infinity)
         }
-        .padding(24)
-        .glassEffect(in: .rect(cornerRadius: 16.0))
         .onReceive(timer) { now in
             elapsedSeconds = timerStore.elapsedSeconds(for: book.id, now: now)
         }
@@ -366,7 +356,7 @@ struct ReadingTimerCard: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
-            .background(AppColors.readingAmber, in: Capsule())
+            .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
             .keyboardShortcut(.defaultAction)
 
             Button("取消") {
@@ -412,7 +402,7 @@ struct ReadingTimerCard: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
-            .background(AppColors.readingAmber, in: Capsule())
+            .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
             .keyboardShortcut(.defaultAction)
 
             Button("取消") {
@@ -445,11 +435,9 @@ struct ReadingTimerCard: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(timedDurationMinutes == minutes ? Color.white : AppColors.readingAmber)
-                    .background(
-                        timedDurationMinutes == minutes
-                            ? AppColors.readingAmber
-                            : AppColors.readingAmber.opacity(0.1),
-                        in: Capsule()
+                    .appCapsuleStyle(
+                        tint: AppColors.readingAmber,
+                        fillOpacity: timedDurationMinutes == minutes ? 1 : 0.10
                     )
                 }
             }
@@ -495,7 +483,7 @@ struct ReadingTimerCard: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
-            .background(AppColors.readingAmber, in: Capsule())
+            .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
             .keyboardShortcut(.defaultAction)
 
             Button("取消") {
@@ -597,15 +585,7 @@ private struct SecondaryReadingBookRow: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
-                GeometryReader { proxy in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Color.primary.opacity(0.08))
-                        Capsule()
-                            .fill(AppColors.readingAmber.opacity(0.82))
-                            .frame(width: proxy.size.width * book.progressRatio)
-                    }
-                }
-                .frame(height: 8)
+                ProgressBarView(progress: book.progressRatio, tint: AppColors.readingAmber, fillOpacity: 0.82, animated: false)
             }
             .frame(height: contentHeight, alignment: .center)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -699,7 +679,8 @@ struct EmptyReadingTimerCard: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.m) {
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
             HStack {
                 Text("阅读计时")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -727,7 +708,7 @@ struct EmptyReadingTimerCard: View {
 
             Spacer()
         }
-        .glassCard(cornerRadius: AppRadius.panel)
+        }
     }
 }
 
@@ -835,21 +816,21 @@ struct ReadingTimerGauge_Previews: PreviewProvider {
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
                             .foregroundStyle(.white)
-                            .background(AppColors.readingAmber, in: Capsule())
+                            .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
 
                         Text("定时阅读")
                             .font(.system(size: 17, weight: .bold))
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
                             .foregroundStyle(.white)
-                            .background(AppColors.warning, in: Capsule())
+                            .appCapsuleStyle(tint: AppColors.warning, fillOpacity: 1)
                     }
 
                     Text("手动录入")
                         .font(.system(size: 17, weight: .bold))
                         .frame(width: 220, height: 48)
                         .foregroundStyle(.white)
-                        .background(AppColors.success, in: Capsule())
+                        .appCapsuleStyle(tint: AppColors.success, fillOpacity: 1)
                 }
             }
             .padding(AppSpacing.xl)
@@ -873,13 +854,13 @@ struct ReadingTimerGauge_Previews: PreviewProvider {
                         .font(.system(size: 17, weight: .bold))
                         .frame(width: 220, height: 48)
                         .foregroundStyle(.white)
-                        .background(AppColors.danger, in: Capsule())
+                        .appCapsuleStyle(tint: AppColors.danger, fillOpacity: 1)
 
                     Text("手动录入")
                         .font(.system(size: 17, weight: .bold))
                         .frame(width: 220, height: 48)
                         .foregroundStyle(.white)
-                        .background(AppColors.success, in: Capsule())
+                        .appCapsuleStyle(tint: AppColors.success, fillOpacity: 1)
                 }
             }
             .padding(AppSpacing.xl)

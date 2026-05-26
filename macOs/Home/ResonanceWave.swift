@@ -27,8 +27,8 @@ struct ResonanceWave: View {
     }
     
     var body: some View {
-        // ✨ 核心重构：抛弃 GroupBox，换上原生的液态玻璃舱
-        VStack(alignment: .leading, spacing: AppSpacing.m) {
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
             // 头部 Label
             HStack {
                 Text("思想共鸣")
@@ -66,8 +66,7 @@ struct ResonanceWave: View {
             }
             .frame(maxHeight: .infinity)
         }
-        .glassCard(cornerRadius: AppRadius.panel)
-        .onHover { h in if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
+        }
         .onTapGesture { switchExcerpt() }
         .onReceive(timer) { _ in switchExcerpt() }
     }

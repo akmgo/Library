@@ -132,8 +132,8 @@ enum BookContentEntryMode: Hashable, CaseIterable {
 
     var tint: Color {
         switch self {
-        case .excerpt: return .blue
-        case .note: return .purple
+        case .excerpt: return Color(red: 200 / 255, green: 155 / 255, blue: 90 / 255)
+        case .note: return Color(red: 214 / 255, green: 160 / 255, blue: 79 / 255)
         }
     }
 

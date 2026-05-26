@@ -28,22 +28,21 @@ struct MobileBookDetailView: View {
     var body: some View {
         ZStack {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: AppSpacing.l) {
+                LazyVStack(spacing: AppSpacing.l) {
                     MobileBookIdentityHeader(book: book)
                         .padding(.bottom, AppSpacing.xs)
 
                     MobileReadingStatusCard(book: book, showMaxAlert: $showMaxPlannedAlert)
                     MobileReadingDateCard(book: book)
                     MobileBookRatingCard(book: book)
-                    MobileBookTagsCard(book: book)
-                    MobileReadingSessionCard(book: book)
-                    MobileBookExcerptsCard(
+                    MobileBookDetailLowerSections(
                         book: book,
                         isDeleteMode: $isDeleteMode,
                         onDelete: { itemToDelete in
                             deleteRecord(itemToDelete)
                         }
                     )
+                    .equatable()
                 }
                 .padding(.horizontal, AppSpacing.l)
                 .padding(.top, AppSpacing.xl)
@@ -92,15 +91,54 @@ struct MobileBookDetailView: View {
     /// 执行摘录与笔记物理销毁。
     /// ✨ 修复：适配单表大一统，直接接收 Excerpt 进行操作
     private func deleteRecord(_ item: Excerpt) {
-        withAnimation(.spring()) {
+        withAnimation(.easeInOut(duration: 0.18)) {
             try? ReadingDataService.shared.deleteExcerpt(item, context: modelContext)
         }
         
         let count = book.excerpts?.count ?? 0
         // 若删完最后一条，自动切回普通模式
         if count <= 1 {
-            withAnimation { isDeleteMode = false }
+            withAnimation(.easeInOut(duration: 0.18)) { isDeleteMode = false }
         }
+    }
+}
+
+private struct MobileBookDetailLowerSections: View, Equatable {
+    let book: Book
+    @Binding var isDeleteMode: Bool
+    let onDelete: (Excerpt) -> Void
+
+    private var tagsVersion: String {
+        book.tags.joined(separator: "\u{1f}")
+    }
+
+    private var sessionsVersion: String {
+        let sessions = book.sessions ?? []
+        let newestStart = sessions.map(\.startedAt).max()?.timeIntervalSinceReferenceDate ?? 0
+        let newestEnd = sessions.map(\.endedAt).max()?.timeIntervalSinceReferenceDate ?? 0
+        let totalDuration = sessions.reduce(0) { $0 + max($1.duration, 0) }
+        return "\(sessions.count)-\(newestStart)-\(newestEnd)-\(totalDuration)"
+    }
+
+    private var excerptsVersion: String {
+        let excerpts = book.excerpts ?? []
+        let newest = excerpts.map(\.createdAt).max()?.timeIntervalSinceReferenceDate ?? 0
+        let contentLength = excerpts.reduce(0) { $0 + $1.content.count }
+        return "\(excerpts.count)-\(newest)-\(contentLength)"
+    }
+
+    static func == (lhs: MobileBookDetailLowerSections, rhs: MobileBookDetailLowerSections) -> Bool {
+        lhs.book.id == rhs.book.id
+            && lhs.isDeleteMode == rhs.isDeleteMode
+            && lhs.tagsVersion == rhs.tagsVersion
+            && lhs.sessionsVersion == rhs.sessionsVersion
+            && lhs.excerptsVersion == rhs.excerptsVersion
+    }
+
+    var body: some View {
+        MobileBookTagsCard(book: book)
+        MobileReadingSessionCard(book: book)
+        MobileBookExcerptsCard(book: book, isDeleteMode: $isDeleteMode, onDelete: onDelete)
     }
 }
 

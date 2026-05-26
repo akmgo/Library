@@ -194,7 +194,7 @@ struct MobileExcerptEditorSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 22) {
+                LazyVStack(alignment: .leading, spacing: 22) {
                     categoryRail
                     dynamicFields
                     contentEditor
@@ -270,10 +270,7 @@ struct MobileExcerptEditorSheet: View {
             .foregroundStyle(isSelected ? AppColors.readingAmber : Color.primary.opacity(0.72))
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
-            .background(
-                Capsule()
-                    .fill(isSelected ? AppColors.readingAmber.opacity(0.14) : Color.primary.opacity(0.05))
-            )
+            .appCapsuleStyle(tint: isSelected ? AppColors.readingAmber : .secondary, fillOpacity: isSelected ? 0.14 : 0.10, strokeOpacity: isSelected ? 0 : 0.08)
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -451,7 +448,7 @@ struct MobileExcerptEditorSheet: View {
     }
 
     private var fieldBackground: some ShapeStyle {
-        AppColors.secondaryBackground(for: colorScheme).opacity(0.78)
+        AppColors.innerBlock(for: colorScheme)
     }
 
     private func fieldCaption(_ text: String, isRequired: Bool) -> some View {

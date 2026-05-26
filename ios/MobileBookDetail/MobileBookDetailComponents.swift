@@ -39,6 +39,7 @@ struct MobileBookDetailCard<Content: View, Trailing: View>: View {
     let title: String
     let systemImage: String
     let tint: Color
+    let useClearGlassSurface: Bool
     let trailing: () -> Trailing
     let content: () -> Content
 
@@ -46,29 +47,27 @@ struct MobileBookDetailCard<Content: View, Trailing: View>: View {
         title: String,
         systemImage: String,
         tint: Color,
+        useClearGlassSurface: Bool = false,
         @ViewBuilder trailing: @escaping () -> Trailing,
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.title = title
         self.systemImage = systemImage
         self.tint = tint
+        self.useClearGlassSurface = useClearGlassSurface
         self.trailing = trailing
         self.content = content
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.m) {
-            HStack(spacing: AppSpacing.s) {
-                Label(title, systemImage: systemImage)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(tint)
-                Spacer(minLength: AppSpacing.s)
-                trailing()
+        AppCard(usesClearMaterial: useClearGlassSurface) {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
+                DetailSectionHeader(title: title, systemImage: systemImage, tint: tint) {
+                    trailing()
+                }
+                content()
             }
-            content()
         }
-        .padding(AppSpacing.l)
-        .glassCardSurface()
     }
 }
 
@@ -77,23 +76,17 @@ extension MobileBookDetailCard where Trailing == EmptyView {
         title: String,
         systemImage: String,
         tint: Color,
+        useClearGlassSurface: Bool = false,
         @ViewBuilder content: @escaping () -> Content
     ) {
-        self.init(title: title, systemImage: systemImage, tint: tint, trailing: { EmptyView() }, content: content)
-    }
-}
-
-private struct MobileCountBadge: View {
-    let text: String
-    var tint: Color?
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: 12, weight: .semibold, design: .rounded))
-            .foregroundStyle(tint.map { AnyShapeStyle($0) } ?? AnyShapeStyle(.secondary))
-            .padding(.horizontal, AppSpacing.xs)
-            .padding(.vertical, 3)
-            .appInnerCapsuleStyle()
+        self.init(
+            title: title,
+            systemImage: systemImage,
+            tint: tint,
+            useClearGlassSurface: useClearGlassSurface,
+            trailing: { EmptyView() },
+            content: content
+        )
     }
 }
 
@@ -104,51 +97,53 @@ struct MobileReadingStatusCard: View {
     @Binding var showMaxAlert: Bool
 
     @Environment(\.modelContext) private var modelContext
-    @Namespace private var animationNamespace
+    @State private var selectedStatus: BookStatus?
 
-    var body: some View {
-        MobileBookDetailCard(title: "阅读状态", systemImage: "book.fill", tint: AppColors.selection) {
-            HStack(spacing: 0) {
-                ForEach(AppConstants.statusOptions, id: \.0) { option in
-                    statusButton(status: option.0, title: option.1)
-                }
-            }
-            .padding(4)
-            .appInnerBlockStyle(cornerRadius: AppRadius.m)
-        }
+    private var displayedStatus: BookStatus {
+        selectedStatus ?? book.status
     }
 
-    private func statusButton(status: BookStatus, title: String) -> some View {
-        let isSelected = book.status == status
-        return Button {
-            handleStatusChange(to: status)
-        } label: {
-            ZStack {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
-                        .fill(Color.clear)
-                        .glassEffect(.regular.tint(AppColors.selection), in: .rect(cornerRadius: AppRadius.s))
-                        .matchedGeometryEffect(id: "mobile-book-status", in: animationNamespace)
-                }
-                Text(title)
-                    .font(.system(size: 12, weight: isSelected ? .bold : .medium, design: .rounded))
-                    .foregroundColor(isSelected ? .white : .secondary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 34)
-                    .contentShape(Rectangle())
+    var body: some View {
+        MobileBookDetailCard(
+            title: "阅读状态",
+            systemImage: "book.fill",
+            tint: AppColors.selection,
+        ) {
+            AppSlidingSegmentedControl(
+                selection: Binding(
+                    get: { displayedStatus },
+                    set: { handleStatusChange(to: $0) }
+                ),
+                options: AppConstants.statusOptions.map {
+                    AppSlidingSegmentedOption(value: $0.0, title: $0.1)
+                },
+                tint: AppColors.selection,
+                height: 34,
+                cornerRadius: AppRadius.m,
+                showsIcons: false
+            )
+        }
+        .onAppear {
+            selectedStatus = book.status
+        }
+        .onChange(of: book.status) { _, newValue in
+            if selectedStatus != newValue {
+                selectedStatus = newValue
             }
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
     }
 
     private func handleStatusChange(to newStatus: BookStatus) {
-        guard newStatus != book.status else { return }
+        guard newStatus != displayedStatus else { return }
 
         if newStatus == .planned {
             do {
-                let allBooks = try modelContext.fetch(FetchDescriptor<Book>())
-                let plannedCount = allBooks.filter { $0.id != book.id && $0.status == .planned }.count
+                let plannedStatus = BookStatus.planned
+                let descriptor = FetchDescriptor<Book>(
+                    predicate: #Predicate<Book> { $0.status == plannedStatus }
+                )
+                let plannedBooks = try modelContext.fetch(descriptor)
+                let plannedCount = plannedBooks.filter { $0.id != book.id }.count
                 guard plannedCount < 4 else {
                     UINotificationFeedbackGenerator().notificationOccurred(.error)
                     showMaxAlert = true
@@ -159,8 +154,12 @@ struct MobileReadingStatusCard: View {
             }
         }
 
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        withAnimation(.easeInOut(duration: 0.18)) {
+        withAnimation(.easeOut(duration: 0.16)) {
+            selectedStatus = newStatus
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            guard book.status != newStatus else { return }
             try? ReadingDataService.shared.updateStatus(book, to: newStatus, context: modelContext)
         }
     }
@@ -185,10 +184,17 @@ struct MobileReadingDateCard: View {
             title: "阅读旅程",
             systemImage: "calendar",
             tint: .mint,
-            trailing: { MobileCountBadge(text: totalDaysText, tint: .mint) }
+            trailing: { AppCapsuleLabel(text: totalDaysText, tint: .mint) }
         ) {
             VStack(spacing: AppSpacing.s) {
-                MobileDateControlRow(icon: "calendar.badge.plus", title: "开始", date: $book.startDate, tint: .mint)
+                MobileDateControlRow(
+                    icon: "calendar.badge.plus",
+                    title: "开始",
+                    date: $book.startDate,
+                    tint: .mint,
+                    isDisabled: book.status != .reading && book.status != .finished,
+                    disabledText: "在读或已读后可设置"
+                )
                 MobileDateControlRow(
                     icon: "calendar.badge.checkmark",
                     title: "结束",
@@ -295,7 +301,7 @@ struct MobileBookRatingCard: View {
                         .contentShape(Rectangle())
                         .onTapGesture {
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                            withAnimation(.spring(response: 0.22, dampingFraction: 0.88)) {
+                            withAnimation(.easeOut(duration: 0.14)) {
                                 book.rating = validRating == index ? 0 : index
                             }
                         }
@@ -318,7 +324,7 @@ struct MobileBookTagsCard: View {
             title: "知识标签",
             systemImage: "tag.fill",
             tint: .purple,
-            trailing: { MobileCountBadge(text: "\(book.tags.count) / 3") }
+            trailing: { AppCapsuleLabel(text: "\(book.tags.count) / 3", tint: .purple) }
         ) {
             LazyVGrid(columns: columns, alignment: .leading, spacing: AppSpacing.xs) {
                 ForEach(AppConstants.predefinedTags, id: \.self) { tag in
@@ -334,7 +340,7 @@ struct MobileBookTagsCard: View {
 
         return Button {
             guard !isMaxed else { return }
-            withAnimation(.spring(response: 0.22, dampingFraction: 0.88)) {
+            withAnimation(.easeOut(duration: 0.14)) {
                 if isSelected {
                     book.tags.removeAll(where: { $0 == tag })
                 } else {
@@ -350,8 +356,7 @@ struct MobileBookTagsCard: View {
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
-                            .fill(Color.clear)
-                            .glassEffect(.regular.tint(.purple), in: .rect(cornerRadius: AppRadius.s))
+                            .fill(Color.purple)
                     } else {
                         RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
                             .fill(AppColors.innerBlock(for: colorScheme))
@@ -375,12 +380,12 @@ struct MobileReadingSessionCard: View {
     @State private var isExpanded = false
     private let maxCollapsed = 5
 
-    private var sessions: [ReadingSession] {
-        (book.sessions ?? []).sorted { $0.startedAt > $1.startedAt }
-    }
-
-    private var visibleSessions: [ReadingSession] {
-        isExpanded ? sessions : Array(sessions.prefix(maxCollapsed))
+    private var snapshot: ReadingStatsCalculator.ReadingSessionListSnapshot {
+        ReadingStatsCalculator.ReadingSessionListSnapshot(
+            sessions: book.sessions ?? [],
+            isExpanded: isExpanded,
+            maxCollapsed: maxCollapsed
+        )
     }
 
     var body: some View {
@@ -389,36 +394,30 @@ struct MobileReadingSessionCard: View {
             systemImage: "clock.fill",
             tint: AppColors.readingAmber,
             trailing: {
-                if !sessions.isEmpty {
-                    MobileCountBadge(text: "\(sessions.count) 条")
+                if !snapshot.isEmpty {
+                    AppCapsuleLabel(text: "\(snapshot.totalCount) 条", tint: AppColors.readingAmber)
                 }
             }
         ) {
-            if sessions.isEmpty {
+            if snapshot.isEmpty {
                 MobileEmptyDetailState(
                     systemImage: "clock.badge.questionmark",
                     title: "暂无阅读记录",
                     subtitle: "开始阅读或手动录入后，记录将显示在这里"
                 )
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(visibleSessions.enumerated()), id: \.element.id) { index, session in
-                        MobileSessionRowView(session: session)
-                        if index < visibleSessions.count - 1 {
-                            Divider().opacity(0.25)
-                        }
-                    }
-                }
+                MobileSessionRowsView(rows: snapshot.rows)
+                    .equatable()
                 .appInnerBlockStyle(cornerRadius: AppRadius.m)
 
-                if sessions.count > maxCollapsed {
+                if snapshot.totalCount > maxCollapsed {
                     Button {
                         withAnimation(.easeInOut(duration: 0.18)) { isExpanded.toggle() }
                     } label: {
                         HStack(spacing: AppSpacing.xxs) {
                             Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                                 .font(.system(size: 10, weight: .bold))
-                            Text(isExpanded ? "收起" : "查看全部 \(sessions.count) 条记录")
+                            Text(isExpanded ? "收起" : "查看全部 \(snapshot.totalCount) 条记录")
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                         }
                         .foregroundStyle(.secondary)
@@ -433,38 +432,26 @@ struct MobileReadingSessionCard: View {
     }
 }
 
-private struct MobileSessionRowView: View {
-    let session: ReadingSession
+private struct MobileSessionRowsView: View, Equatable {
+    let rows: [ReadingStatsCalculator.ReadingSessionRowSnapshot]
 
     var body: some View {
-        HStack(spacing: AppSpacing.s) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(AppFormatters.chineseFullDateFormatter.string(from: session.startedAt))
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                Text(session.displayTimeRange)
-                    .font(.system(size: 11, weight: .medium, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(session.displayDuration)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppColors.readingAmber)
-                HStack(spacing: 6) {
-                    if session.deltaAmount > 0 {
-                        Text(session.displayDelta)
-                    }
-                    Text(session.inputMode == .timer ? "计时" : "手动")
+        LazyVStack(spacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                MobileSessionRowView(snapshot: row)
+                if index < rows.count - 1 {
+                    Divider().opacity(0.25)
                 }
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary.opacity(0.65))
             }
         }
-        .padding(.horizontal, AppSpacing.s)
-        .padding(.vertical, AppSpacing.s)
+    }
+}
+
+private struct MobileSessionRowView: View, Equatable {
+    let snapshot: ReadingStatsCalculator.ReadingSessionRowSnapshot
+
+    var body: some View {
+        ReadingSessionRowContent(snapshot: snapshot, layout: .compact)
     }
 }
 
@@ -486,7 +473,7 @@ struct MobileBookExcerptsCard: View {
             tint: .teal,
             trailing: {
                 if totalCount > 0 {
-                    MobileCountBadge(text: "\(totalCount) 条")
+                    AppCapsuleLabel(text: "\(totalCount) 条", tint: .teal)
                 }
             }
         ) {
@@ -527,7 +514,7 @@ private struct PreviewDetailComponents: View {
         PreviewWithBook { book in
             NavigationStack {
                 ScrollView {
-                    VStack(spacing: AppSpacing.l) {
+                    LazyVStack(spacing: AppSpacing.l) {
                         MobileBookIdentityHeader(book: book)
                         MobileReadingStatusCard(book: book, showMaxAlert: $showMax)
                         MobileReadingDateCard(book: book)

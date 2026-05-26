@@ -29,11 +29,13 @@ struct BookDetailView: View {
             
             // ================= 2. 全局无界内容区 =================
             ScrollView(.vertical, showsIndicators: false) {
-                BookDossier(
-                    book: book,
-                    isDeleteMode: $isDeleteMode,
-                    onDeleteExcerpt: { deleteRecord($0) }
-                )
+                LazyVStack(spacing: 0) {
+                    BookDossier(
+                        book: book,
+                        isDeleteMode: $isDeleteMode,
+                        onDeleteExcerpt: { deleteRecord($0) }
+                    )
+                }
                 .padding(.horizontal, 60)
                 .padding(.bottom, 100)
                 .padding(.top, 100)
@@ -127,14 +129,14 @@ struct BookDetailView: View {
     // MARK: - 记录销毁逻辑 (✨ 升级为单一模型 Excerpt)
     
     private func deleteRecord(_ item: Excerpt) {
-        withAnimation(.spring()) {
+        withAnimation(.appContentFade) {
             try? ReadingDataService.shared.deleteExcerpt(item, context: modelContext)
         }
         
         // 统计这本树下所有的批注数量（合并后的表）
         let totalCount = book.excerpts?.count ?? 0
         if totalCount <= 1 {
-            withAnimation { isDeleteMode = false }
+            withAnimation(.appContentFade) { isDeleteMode = false }
         }
     }
 }

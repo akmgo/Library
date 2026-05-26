@@ -65,9 +65,10 @@ struct ContentView: View {
     @State private var selectedGalleryBookIDs: Set<String> = []
     @State private var excerptFilterCategory: ExcerptCategory?
     @State private var excerptSortKey: AnnotationSortKey = .newest
-    @State private var excerptDisplayMode: ExcerptWallDisplayMode = .artistic
+    @State private var excerptDisplayMode: ExcerptWallDisplayMode = .compact
     @State private var isExcerptBatchDeletePresented = false
     @State private var selectedExcerptIDs: Set<String> = []
+    @State private var highlightedExcerptID: String?
     @State private var isMonthlyBatchDeletePresented = false
     @State private var selectedMonthlyDates: Set<Date> = []
 
@@ -84,8 +85,6 @@ struct ContentView: View {
             }
             .zIndex(1)
             .background(AppColors.primaryBackground(for: colorScheme))
-
-            ConfettiView().ignoresSafeArea().allowsHitTesting(false).zIndex(2)
         }
         .ignoresSafeArea(edges: .top)
         .sheet(isPresented: $showAddExcerptModal) { ExcerptEditorSheet(isPresented: $showAddExcerptModal) }
@@ -99,7 +98,8 @@ struct ContentView: View {
                 GlobalSpotlightSearchView(
                     isPresented: $showGlobalSpotlight,
                     selectedModule: $selectedModule,
-                    selectedBook: $selectedBook
+                    selectedBook: $selectedBook,
+                    highlightedExcerptID: $highlightedExcerptID
                 )
                 .zIndex(30)
             }
@@ -113,6 +113,11 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
             openAddBookSpotlight()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showGlobalSearch)) { _ in
+            withAnimation(.easeOut(duration: 0.16)) {
+                showGlobalSpotlight = true
+            }
         }
         .onAppear {
             applyTheme(appTheme)
@@ -227,7 +232,8 @@ struct ContentView: View {
                 sortKey: excerptSortKey,
                 displayMode: excerptDisplayMode,
                 isBatchDeletePresented: $isExcerptBatchDeletePresented,
-                selectedExcerptIDs: $selectedExcerptIDs
+                selectedExcerptIDs: $selectedExcerptIDs,
+                highlightedExcerptID: $highlightedExcerptID
             )
         case .yearly:
             YearlyTimelineView(selectedBook: $selectedBook, selectedYear: $yearlySelectedYear, availableYears: $yearlyAvailableYears)

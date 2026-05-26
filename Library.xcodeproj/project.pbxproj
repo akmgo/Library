@@ -49,9 +49,7 @@
 		C5FD82EA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C5FD82FA2F90CD1F0003A500 /* SharedDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD828A2F90C4BB0003A500 /* SharedDatabase.swift */; };
 		C5FD82FC2F90CD2E0003A500 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A100012FA80000006D5686 /* Book.swift */; };
-		C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */; };
 		C5FD83282F934C250003A500 /* BookCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83242F934C250003A500 /* BookCoverView.swift */; };
-		C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83232F934C250003A500 /* ConfettiView.swift */; };
 		C5FD834D2F9513080003A500 /* ReadingHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD834C2F9513080003A500 /* ReadingHero.swift */; };
 		C5FD83532F9513340003A500 /* MomentumChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83522F9513340003A500 /* MomentumChart.swift */; };
 		C5FD83572F95134E0003A500 /* HeatmapRibbon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */; };
@@ -94,6 +92,7 @@
 		C6A101022FA80000006D5686 /* ReadingDateHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A101012FA80000006D5686 /* ReadingDateHelper.swift */; };
 		C6A101042FA80000006D5686 /* ReadingStatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A101032FA80000006D5686 /* ReadingStatsCalculator.swift */; };
 		C6A101062FA80000006D5686 /* ReadingValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A101052FA80000006D5686 /* ReadingValidation.swift */; };
+		C6B201002FB20000006D5686 /* SearchMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B200FF2FB20000006D5686 /* SearchMatcher.swift */; };
 		C6A102022FA80000006D5686 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A102012FA80000006D5686 /* AppColors.swift */; };
 		C6A102042FA80000006D5686 /* AppTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A102032FA80000006D5686 /* AppTypography.swift */; };
 		C6A102062FA80000006D5686 /* AppSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A102052FA80000006D5686 /* AppSpacing.swift */; };
@@ -102,8 +101,16 @@
 		C6A1020C2FA80000006D5686 /* AppMaterials.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1020B2FA80000006D5686 /* AppMaterials.swift */; };
 		C6A1020E2FA80000006D5686 /* AppComponentSizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A1020D2FA80000006D5686 /* AppComponentSizes.swift */; };
 		C6A103042FA80000006D5686 /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A103032FA80000006D5686 /* ProgressBarView.swift */; };
+		C6B200042FB10000006D5686 /* YearlyTimelineBookCardContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B200032FB10000006D5686 /* YearlyTimelineBookCardContent.swift */; };
+		C6B200062FB10000006D5686 /* SettingsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B200052FB10000006D5686 /* SettingsRow.swift */; };
+		C6B200082FB10000006D5686 /* DetailSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B200072FB10000006D5686 /* DetailSectionHeader.swift */; };
+		C6B2000A2FB10000006D5686 /* ReadingSessionRowContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B200092FB10000006D5686 /* ReadingSessionRowContent.swift */; };
+		C6B2000C2FB10000006D5686 /* BookExcerptCardContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B2000B2FB10000006D5686 /* BookExcerptCardContent.swift */; };
+		C6B2000E2FB10000006D5686 /* ExcerptWallCardContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B2000D2FB10000006D5686 /* ExcerptWallCardContent.swift */; };
 		E00000010000000000000002 /* PageStatsHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00000010000000000000001 /* PageStatsHeader.swift */; };
 		C6A103062FA80000006D5686 /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A103052FA80000006D5686 /* EmptyStateView.swift */; };
+		C6B200022FB00000006D5686 /* AppSlidingSegmentedControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B200012FB00000006D5686 /* AppSlidingSegmentedControl.swift */; };
+		C7B300012FC00000007D6789 /* AppCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7B300002FC00000007D6789 /* AppCard.swift */; };
 		C6A105022FA80000006D5686 /* ReadingProgressDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A105012FA80000006D5686 /* ReadingProgressDraft.swift */; };
 		C6A105042FA80000006D5686 /* ReadingProgressInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A105032FA80000006D5686 /* ReadingProgressInputView.swift */; };
 		C6A105062FA80000006D5686 /* ReadingTimerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A105052FA80000006D5686 /* ReadingTimerStore.swift */; };
@@ -176,9 +183,7 @@
 		C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
 		C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
 		C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibraryWidgetsExtension.entitlements; sourceTree = "<group>"; };
-		C5FD83232F934C250003A500 /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		C5FD83242F934C250003A500 /* BookCoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookCoverView.swift; sourceTree = "<group>"; };
-		C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeWidgetGroupBoxStyle.swift; sourceTree = "<group>"; };
 		C5FD834C2F9513080003A500 /* ReadingHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingHero.swift; sourceTree = "<group>"; };
 		C5FD83522F9513340003A500 /* MomentumChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentumChart.swift; sourceTree = "<group>"; };
 		C5FD83552F95134E0003A500 /* HeatmapRibbon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeatmapRibbon.swift; sourceTree = "<group>"; };
@@ -217,6 +222,7 @@
 		C6A101012FA80000006D5686 /* ReadingDateHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingDateHelper.swift; sourceTree = "<group>"; };
 		C6A101032FA80000006D5686 /* ReadingStatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingStatsCalculator.swift; sourceTree = "<group>"; };
 		C6A101052FA80000006D5686 /* ReadingValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingValidation.swift; sourceTree = "<group>"; };
+		C6B200FF2FB20000006D5686 /* SearchMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchMatcher.swift; sourceTree = "<group>"; };
 		C6A102012FA80000006D5686 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		C6A102032FA80000006D5686 /* AppTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTypography.swift; sourceTree = "<group>"; };
 		C6A102052FA80000006D5686 /* AppSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSpacing.swift; sourceTree = "<group>"; };
@@ -225,8 +231,16 @@
 		C6A1020B2FA80000006D5686 /* AppMaterials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMaterials.swift; sourceTree = "<group>"; };
 		C6A1020D2FA80000006D5686 /* AppComponentSizes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppComponentSizes.swift; sourceTree = "<group>"; };
 		C6A103032FA80000006D5686 /* ProgressBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarView.swift; sourceTree = "<group>"; };
+		C6B200032FB10000006D5686 /* YearlyTimelineBookCardContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearlyTimelineBookCardContent.swift; sourceTree = "<group>"; };
+		C6B200052FB10000006D5686 /* SettingsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRow.swift; sourceTree = "<group>"; };
+		C6B200072FB10000006D5686 /* DetailSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailSectionHeader.swift; sourceTree = "<group>"; };
+		C6B200092FB10000006D5686 /* ReadingSessionRowContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingSessionRowContent.swift; sourceTree = "<group>"; };
+		C6B2000B2FB10000006D5686 /* BookExcerptCardContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookExcerptCardContent.swift; sourceTree = "<group>"; };
+		C6B2000D2FB10000006D5686 /* ExcerptWallCardContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExcerptWallCardContent.swift; sourceTree = "<group>"; };
 		E00000010000000000000001 /* PageStatsHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageStatsHeader.swift; sourceTree = "<group>"; };
 		C6A103052FA80000006D5686 /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		C6B200012FB00000006D5686 /* AppSlidingSegmentedControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSlidingSegmentedControl.swift; sourceTree = "<group>"; };
+		C7B300002FC00000007D6789 /* AppCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCard.swift; sourceTree = "<group>"; };
 		C6A105012FA80000006D5686 /* ReadingProgressDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingProgressDraft.swift; sourceTree = "<group>"; };
 		C6A105032FA80000006D5686 /* ReadingProgressInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingProgressInputView.swift; sourceTree = "<group>"; };
 		C6A105052FA80000006D5686 /* ReadingTimerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimerStore.swift; sourceTree = "<group>"; };
@@ -495,8 +509,6 @@
 		C5FD831D2F934BD20003A500 /* CommonUI */ = {
 			isa = PBXGroup;
 			children = (
-				C5FD83232F934C250003A500 /* ConfettiView.swift */,
-				C5FD83252F934C250003A500 /* NativeWidgetGroupBoxStyle.swift */,
 			);
 			path = CommonUI;
 			sourceTree = "<group>";
@@ -654,6 +666,7 @@
 				C6A101012FA80000006D5686 /* ReadingDateHelper.swift */,
 				C6A101032FA80000006D5686 /* ReadingStatsCalculator.swift */,
 				C6A101052FA80000006D5686 /* ReadingValidation.swift */,
+				C6B200FF2FB20000006D5686 /* SearchMatcher.swift */,
 				C6A105012FA80000006D5686 /* ReadingProgressDraft.swift */,
 				C6A105052FA80000006D5686 /* ReadingTimerStore.swift */,
 			);
@@ -679,11 +692,19 @@
 			children = (
 				C5FD83242F934C250003A500 /* BookCoverView.swift */,
 				C6A103032FA80000006D5686 /* ProgressBarView.swift */,
+				C6B200032FB10000006D5686 /* YearlyTimelineBookCardContent.swift */,
+				C6B200052FB10000006D5686 /* SettingsRow.swift */,
+				C6B200072FB10000006D5686 /* DetailSectionHeader.swift */,
+				C6B200092FB10000006D5686 /* ReadingSessionRowContent.swift */,
+				C6B2000B2FB10000006D5686 /* BookExcerptCardContent.swift */,
+				C6B2000D2FB10000006D5686 /* ExcerptWallCardContent.swift */,
 				E00000010000000000000001 /* PageStatsHeader.swift */,
 				C5FD84512F9700000003A500 /* AppCardStyles.swift */,
 				A11111111111111111111111 /* ReadingSemiCircleArc.swift */,
 				A22222222222222222222221 /* ReadingTimerGauge.swift */,
 				C6A103052FA80000006D5686 /* EmptyStateView.swift */,
+				C6B200012FB00000006D5686 /* AppSlidingSegmentedControl.swift */,
+				C7B300002FC00000007D6789 /* AppCard.swift */,
 				C6A105032FA80000006D5686 /* ReadingProgressInputView.swift */,
 			);
 			path = Components;
@@ -766,7 +787,6 @@
 			mainGroup = C5FD82022F90C3530003A500;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				C54819212F9E0B3B006D5686 /* XCLocalSwiftPackageReference "SwiftSoup-master" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C5FD820C2F90C3530003A500 /* Products */;
@@ -822,10 +842,8 @@
 				C54819892FA19CA7006D5686 /* TopToastManager.swift in Sources */,
 				C548191E2F9DABBE006D5686 /* ExcerptEditorSheet.swift in Sources */,
 				C5FD82D12F90C6150003A500 /* SettingsView.swift in Sources */,
-				C5FD83262F934C250003A500 /* NativeWidgetGroupBoxStyle.swift in Sources */,
 				C5FD83762F9517330003A500 /* InspirationWallView.swift in Sources */,
 				C5FD83282F934C250003A500 /* BookCoverView.swift in Sources */,
-				C5FD832A2F934C250003A500 /* ConfettiView.swift in Sources */,
 				C5FD84502F9700000003A500 /* AppCardStyles.swift in Sources */,
 				C5FD82B52F90C5A70003A500 /* MobileContentView.swift in Sources */,
 				C54819022F9B67EC006D5686 /* AppConstants.swift in Sources */,
@@ -837,6 +855,7 @@
 				C6A101022FA80000006D5686 /* ReadingDateHelper.swift in Sources */,
 				C6A101042FA80000006D5686 /* ReadingStatsCalculator.swift in Sources */,
 				C6A101062FA80000006D5686 /* ReadingValidation.swift in Sources */,
+				C6B201002FB20000006D5686 /* SearchMatcher.swift in Sources */,
 				C6A105022FA80000006D5686 /* ReadingProgressDraft.swift in Sources */,
 				C6A105062FA80000006D5686 /* ReadingTimerStore.swift in Sources */,
 				C6A102022FA80000006D5686 /* AppColors.swift in Sources */,
@@ -847,10 +866,18 @@
 				C6A1020C2FA80000006D5686 /* AppMaterials.swift in Sources */,
 				C6A1020E2FA80000006D5686 /* AppComponentSizes.swift in Sources */,
 				C6A103042FA80000006D5686 /* ProgressBarView.swift in Sources */,
+				C6B200042FB10000006D5686 /* YearlyTimelineBookCardContent.swift in Sources */,
+				C6B200062FB10000006D5686 /* SettingsRow.swift in Sources */,
+				C6B200082FB10000006D5686 /* DetailSectionHeader.swift in Sources */,
+				C6B2000A2FB10000006D5686 /* ReadingSessionRowContent.swift in Sources */,
+				C6B2000C2FB10000006D5686 /* BookExcerptCardContent.swift in Sources */,
+				C6B2000E2FB10000006D5686 /* ExcerptWallCardContent.swift in Sources */,
 				E00000010000000000000002 /* PageStatsHeader.swift in Sources */,
 				A11111111111111111111112 /* ReadingSemiCircleArc.swift in Sources */,
 				A22222222222222222222222 /* ReadingTimerGauge.swift in Sources */,
 				C6A103062FA80000006D5686 /* EmptyStateView.swift in Sources */,
+				C6B200022FB00000006D5686 /* AppSlidingSegmentedControl.swift in Sources */,
+				C7B300012FC00000007D6789 /* AppCard.swift in Sources */,
 				C6A105042FA80000006D5686 /* ReadingProgressInputView.swift in Sources */,
 				C5FD828C2F90C4BB0003A500 /* SharedDatabase.swift in Sources */,
 				C54819CC2FA3A3BF006D5686 /* MobileExcerptEditorSheet.swift in Sources */,
@@ -1286,12 +1313,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		C54819212F9E0B3B006D5686 /* XCLocalSwiftPackageReference "SwiftSoup-master" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "SwiftSoup-master";
-		};
-/* End XCLocalSwiftPackageReference section */
 	};
 	rootObject = C5FD82032F90C3530003A500 /* Project object */;
 }

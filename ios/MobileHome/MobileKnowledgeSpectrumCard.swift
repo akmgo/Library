@@ -4,12 +4,19 @@ import SwiftUI
 // MARK: - 🧠 知识基因图谱 (纯粹渲染版)
 
 struct MobileKnowledgeSpectrumCard: View {
-    // ✨ 彻底干掉 @State 和 process()，直接接收统一的 SpectrumDataPoint 数组
     let dataPoints: [SpectrumDataPoint]
-    
+
     var body: some View {
-        GroupBox {
+        AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.m) {
+                HStack {
+                    Text("知识基因")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chart.pie.fill")
+                        .foregroundColor(.purple)
+                }
                 if dataPoints.isEmpty {
                     VStack(spacing: AppSpacing.xs) {
                         Image(systemName: "chart.pie")
@@ -21,13 +28,11 @@ struct MobileKnowledgeSpectrumCard: View {
                     }
                     .frame(maxWidth: .infinity, minHeight: 80)
                 } else {
-                    // 🌈 光谱彩带渲染区
                     VStack(spacing: AppSpacing.xl) {
                         GeometryReader { geo in
                             let spacing: CGFloat = 4
                             let gapsCount = CGFloat(max(0, dataPoints.count - 1))
                             let availableWidth = max(0, geo.size.width - (spacing * gapsCount))
-                            
                             HStack(spacing: spacing) {
                                 ForEach(dataPoints, id: \.tagName) { point in
                                     Rectangle()
@@ -38,8 +43,6 @@ struct MobileKnowledgeSpectrumCard: View {
                             .clipShape(Capsule())
                         }
                         .frame(height: 16)
-                        
-                        // 底部图例标签区
                         HStack(alignment: .top, spacing: 0) {
                             ForEach(dataPoints, id: \.tagName) { point in
                                 VStack(spacing: 6) {
@@ -63,15 +66,6 @@ struct MobileKnowledgeSpectrumCard: View {
                 }
             }
             .padding(.top, AppSpacing.xs)
-        } label: {
-            HStack {
-                Text("知识基因")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                Spacer()
-                Image(systemName: "chart.pie.fill")
-                    .foregroundColor(.purple)
-            }
         }
     }
 }
@@ -87,7 +81,7 @@ struct MobileKnowledgeSpectrumCard: View {
     ]
     return MobileKnowledgeSpectrumCard(dataPoints: points)
         .padding()
-        .background(Color(UIColor.systemGroupedBackground))
+        .background(AppColors.primaryBackground(for: .light))
 }
 #endif
 

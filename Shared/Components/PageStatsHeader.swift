@@ -36,9 +36,18 @@ struct PageStatsHeader: View {
     let items: [PageStatItemData]
     var showsBackground: Bool = true
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
+        if showsBackground {
+            AppCard {
+                statItems
+            }
+        } else {
+            statItems
+                .padding(.vertical, 12)
+        }
+    }
+
+    private var statItems: some View {
         HStack(spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 if index > 0 {
@@ -49,26 +58,6 @@ struct PageStatsHeader: View {
                 PageStatItem(item: item)
             }
         }
-        .padding(.vertical, 12)
-        #if os(iOS)
-        .glassCardSurface()
-        .shadow(
-            color: showsBackground ? Color.black.opacity(0.05) : Color.clear,
-            radius: showsBackground ? 8 : 0,
-            y: showsBackground ? 4 : 0
-        )
-        #else
-        .background(
-            showsBackground
-            ? AnyView(AppColors.innerSurface(for: colorScheme))
-            : AnyView(Color.clear)
-        )
-        .clipShape(
-            showsBackground
-            ? AnyShape(RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous))
-            : AnyShape(Rectangle())
-        )
-        #endif
     }
 }
 

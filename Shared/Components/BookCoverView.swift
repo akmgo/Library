@@ -20,7 +20,12 @@ struct BookCoverView: View {
 
     private var cacheKey: String {
         guard let coverData else { return "cover_img_\(coverID)_empty" }
-        return "cover_img_\(coverID)_\(coverData.count)_\(coverData.hashValue)"
+        return "cover_img_\(coverID)_\(coverData.count)"
+    }
+
+    private var coverVersion: String {
+        guard let coverData else { return "\(coverID)_empty" }
+        return "\(coverID)_\(coverData.count)"
     }
     
     var body: some View {
@@ -56,7 +61,7 @@ struct BookCoverView: View {
             await loadCoverImage()
         }
         // ✨ 补上这三行：专门监听封面数据的真实变化
-        .onChange(of: coverData) { _, _ in
+        .onChange(of: coverVersion) { _, _ in
             Task { await loadCoverImage() }
         }
     }

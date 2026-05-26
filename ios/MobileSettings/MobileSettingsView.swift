@@ -24,26 +24,30 @@ struct MobileSettingsView: View {
                     Form {
                         // ================= 1. 外观主题 (平铺展开) =================
                         Section(header: Text("外观主题")) {
-                            Picker("外观主题", selection: $appTheme) {
-                                Text("跟随系统").tag("system")
-                                Text("浅色模式").tag("light")
-                                Text("深色模式").tag("dark")
-                            }
-                            .pickerStyle(.segmented)
+                            AppSlidingSegmentedControl(
+                                selection: $appTheme,
+                                options: [
+                                    AppSlidingSegmentedOption(value: "system", title: "系统", systemImage: "circle.lefthalf.filled"),
+                                    AppSlidingSegmentedOption(value: "light", title: "浅色", systemImage: "sun.max.fill"),
+                                    AppSlidingSegmentedOption(value: "dark", title: "深色", systemImage: "moon.fill"),
+                                ],
+                                height: 34,
+                                cornerRadius: AppRadius.m
+                            )
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         }
                         
                         // ================= 2. 阅读目标 (平铺展开，左右布局) =================
                         Section(header: Text("阅读目标")) {
-                            MobileGoalRow(icon: "timer", iconColor: .orange, title: "每日阅读目标", subtitle: "每天期望达成的沉浸阅读时长（分钟）") {
+                            SettingsRow(icon: "timer", iconColor: .orange, title: "每日阅读目标", subtitle: "每天期望达成的沉浸阅读时长（分钟）", titleSize: 15, subtitleSize: 11, subtitleLineLimit: 2) {
                                 MobileFluidCapsuleStepper(value: Binding(get: { config.dailyMinutesGoal }, set: { config.dailyMinutesGoal = $0 }), step: 5, range: 5...120, action: saveConfig)
                             }
                             
-                            MobileGoalRow(icon: "target", iconColor: .pink, title: "年度阅读目标", subtitle: "今年计划通关的书籍数量（本）") {
+                            SettingsRow(icon: "target", iconColor: .pink, title: "年度阅读目标", subtitle: "今年计划通关的书籍数量（本）", titleSize: 15, subtitleSize: 11, subtitleLineLimit: 2) {
                                 MobileFluidCapsuleStepper(value: Binding(get: { config.yearlyBooksGoal }, set: { config.yearlyBooksGoal = $0 }), step: 1, range: 1...500, action: saveConfig)
                             }
                             
-                            MobileGoalRow(icon: "archivebox.fill", iconColor: .teal, title: "总馆藏目标", subtitle: "期望打造的个人书库规模（本）") {
+                            SettingsRow(icon: "archivebox.fill", iconColor: .teal, title: "总馆藏目标", subtitle: "期望打造的个人书库规模（本）", titleSize: 15, subtitleSize: 11, subtitleLineLimit: 2) {
                                 MobileFluidCapsuleStepper(value: Binding(get: { config.libraryBooksGoal }, set: { config.libraryBooksGoal = $0 }), step: 10, range: 10...999_999, action: saveConfig)
                             }
                         }
@@ -53,13 +57,13 @@ struct MobileSettingsView: View {
                             NavigationLink {
                                 MobileDataSettingsView(systemMessage: $systemMessage)
                             } label: {
-                                SettingsHeaderRow(icon: "externaldrive.fill", iconColor: .blue, title: "数据与安全", subtitle: "iCloud 同步、本地快照与缓存")
+                                SettingsRow(icon: "externaldrive.fill", iconColor: .blue, title: "数据与安全", subtitle: "iCloud 同步、本地快照与缓存", iconSize: 30, titleSize: 16, subtitleSize: 12, subtitleLineLimit: 2)
                             }
                             
                             NavigationLink {
                                 MobileAboutSettingsView()
                             } label: {
-                                SettingsHeaderRow(icon: "info.circle.fill", iconColor: .indigo, title: "关于 MyLibrary", subtitle: "版本信息与开发者联系方式")
+                                SettingsRow(icon: "info.circle.fill", iconColor: .indigo, title: "关于 MyLibrary", subtitle: "版本信息与开发者联系方式", iconSize: 30, titleSize: 16, subtitleSize: 12, subtitleLineLimit: 2)
                             }
                         }
                     }
@@ -89,10 +93,7 @@ struct MobileSettingsView: View {
                         .foregroundColor(.primary)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
-                        .background(AppColors.secondaryBackground(for: colorScheme).opacity(0.9))
-                        .background(.ultraThinMaterial)
-                        .clipShape(Capsule())
-                        .shadow(color: Color.black.opacity(0.15), radius: 10, y: 5)
+                        .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.15, strokeOpacity: 0.10)
                         .padding(.top, AppSpacing.m)
                         .transition(.move(edge: .top).combined(with: .scale(scale: 0.9)).combined(with: .opacity))
                         .zIndex(100)
@@ -131,61 +132,9 @@ struct MobileSettingsView: View {
     }
 }
 
-// MARK: - UI 原子组件 (✨ 顶级对齐优化版)
-
-/// 主页子路由导航行
-struct SettingsHeaderRow: View {
-    let icon: String; let iconColor: Color; let title: String; let subtitle: String
-    var body: some View {
-        // ✨ 强制顶部对齐
-        HStack(alignment: .top, spacing: AppSpacing.m) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(iconColor).frame(width: 30, height: 30)
-                Image(systemName: icon).font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
-            }
-            .padding(.top, 2)
-            
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 16, weight: .bold)).foregroundColor(.primary)
-                Text(subtitle).font(.system(size: 12)).foregroundColor(.secondary).lineLimit(2)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-/// 专为阅读目标设计的左右弹性布局行
-struct MobileGoalRow<Content: View>: View {
-    let icon: String; let iconColor: Color; let title: String; let subtitle: String; @ViewBuilder let control: Content
-    var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            // 左侧：图标与文字采用顶部对齐的内嵌 HStack
-            HStack(alignment: .top, spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous).fill(iconColor).frame(width: 28, height: 28)
-                    Image(systemName: icon).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
-                }
-                .padding(.top, 2) // ✨ 视觉微调
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.system(size: 15, weight: .bold)).foregroundColor(.primary)
-                    Text(subtitle).font(.system(size: 11)).foregroundColor(.secondary).lineLimit(2) // 支持两行
-                }
-            }
-            
-            Spacer(minLength: 8)
-            
-            // 右侧：保留传入的控制组件，并整体保持居中对齐
-            control
-        }
-        .padding(.vertical, 6)
-    }
-}
-
 /// 调整了按钮体积以适应右侧布局的流体增减器 (保持原样不变)
 private struct MobileFluidCapsuleStepper: View {
     @Binding var value: Int; let step: Int; let range: ClosedRange<Int>; let action: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: 0) {
@@ -205,32 +154,7 @@ private struct MobileFluidCapsuleStepper: View {
             }) { Image(systemName: "plus").font(.system(size: 14, weight: .bold)).frame(width: 36, height: 30).contentShape(Rectangle()) }
             .buttonStyle(.plain).disabled(value >= range.upperBound).opacity(value >= range.upperBound ? 0.3 : 1.0)
         }
-        .background(AppColors.tertiaryBackground(for: colorScheme)).clipShape(Capsule()).overlay(Capsule().stroke(Color.secondary.opacity(0.1), lineWidth: 1))
-    }
-}
-
-struct MobileSettingsControlRow<Content: View>: View {
-    let icon: String; let iconColor: Color; let title: String; let subtitle: String; @ViewBuilder let control: Content
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.s) {
-            // ✨ 强制顶部对齐
-            HStack(alignment: .top, spacing: AppSpacing.s) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous).fill(iconColor).frame(width: 28, height: 28)
-                    Image(systemName: icon).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
-                }
-                .padding(.top, 2) // ✨ 视觉微调
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.system(size: 15, weight: .bold)).foregroundColor(.primary)
-                    Text(subtitle).font(.system(size: 12)).foregroundColor(.secondary).lineLimit(2)
-                }
-                
-                Spacer(minLength: 16)
-            }
-            HStack { Spacer(); control }
-        }
-        .padding(.vertical, 6)
+        .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.12, strokeOpacity: 0.10)
     }
 }
 
@@ -257,14 +181,14 @@ struct MobileAboutSettingsView: View {
             VStack(spacing: AppSpacing.l) {
                 Button(action: { if let url = URL(string: "https://akram.top") { UIApplication.shared.open(url) } }) {
                     HStack { Image(systemName: "globe"); Text("访问开发者主页") }
-                    .font(.system(size: 16, weight: .bold)).foregroundColor(.white).frame(width: 240, height: 50).background(Color.blue).clipShape(Capsule())
+                    .font(.system(size: 16, weight: .bold)).foregroundColor(.blue).frame(width: 240, height: 50).appCapsuleStyle(tint: .blue)
                 }
                 Button(action: {
                     let subject = "MyLibrary 反馈与建议".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
                     if let url = URL(string: "mailto:akmgo2024@outlook.com?subject=\(subject)") { UIApplication.shared.open(url) }
                 }) {
                     HStack { Image(systemName: "envelope.fill"); Text("通过邮件反馈") }
-                    .font(.system(size: 16, weight: .bold)).foregroundColor(.blue).frame(width: 240, height: 50).background(Color.blue.opacity(0.1)).clipShape(Capsule())
+                    .font(.system(size: 16, weight: .bold)).foregroundColor(.blue).frame(width: 240, height: 50).appCapsuleStyle(tint: .blue)
                 }
             }
             Spacer()

@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 
 struct AboutSettingsView: View {
+    @Environment(\.colorScheme) private var colorScheme
     
     // ✨ 动态获取 Xcode 中配置的真实版本号和 Build 号
     private var appVersion: String {
@@ -90,7 +91,7 @@ struct AboutSettingsView: View {
             .padding(.bottom, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.secondary.opacity(0.03))
+        .background(AppColors.primaryBackground(for: colorScheme))
     }
 }
 #endif

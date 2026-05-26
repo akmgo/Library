@@ -79,6 +79,21 @@ struct ExcerptListItem: Identifiable, Hashable {
 }
 
 enum ReadingStatsCalculator {
+    struct DataHealthSnapshot {
+        let configCount: Int
+        let bookCount: Int
+        let sessionCount: Int
+        let excerptCount: Int
+
+        var statusText: String {
+            configCount == 1 ? "状态正常" : "需要整理"
+        }
+
+        var detailText: String {
+            "配置 \(configCount) · 书籍 \(bookCount) · 记录 \(sessionCount) · 摘录 \(excerptCount)"
+        }
+    }
+
     struct BookGallerySnapshot {
         let books: [Book]
         let totalInventoryCount: Int
@@ -88,6 +103,20 @@ enum ReadingStatsCalculator {
             books: [],
             totalInventoryCount: 0,
             inventoryPoints: []
+        )
+    }
+
+    static func dataHealthSnapshot(
+        configs: [UserConfig],
+        books: [Book],
+        sessions: [ReadingSession],
+        excerpts: [Excerpt]
+    ) -> DataHealthSnapshot {
+        DataHealthSnapshot(
+            configCount: configs.count,
+            bookCount: books.count,
+            sessionCount: sessions.count,
+            excerptCount: excerpts.count
         )
     }
 
@@ -185,6 +214,180 @@ enum ReadingStatsCalculator {
         let durationByDay: [Date: TimeInterval]
         let sections: [ReadingMonthSection]
         let currentMonthID: String
+
+        static let empty = MonthlyArchiveSnapshot(
+            durationByDay: [:],
+            sections: [],
+            currentMonthID: ""
+        )
+    }
+
+    struct ReadingSessionRowSnapshot: Identifiable, Equatable {
+        let id: String
+        let startedAt: Date
+        let dateText: String
+        let timeRangeText: String
+        let durationText: String
+        let deltaText: String?
+        let inputModeText: String
+        let inputModeSystemImage: String
+
+        @MainActor init(session: ReadingSession) {
+            id = session.id
+            startedAt = session.startedAt
+            dateText = AppFormatters.chineseFullDateFormatter.string(from: session.startedAt)
+            timeRangeText = session.displayTimeRange
+            durationText = session.displayDuration
+            deltaText = session.deltaAmount > 0 ? session.displayDelta : nil
+            inputModeText = session.inputMode == .timer ? "计时" : "手动"
+            inputModeSystemImage = session.inputMode == .timer ? "timer" : "hand.raised"
+        }
+    }
+
+    struct ReadingSessionListSnapshot: Equatable {
+        let totalCount: Int
+        let rows: [ReadingSessionRowSnapshot]
+
+        var isEmpty: Bool { totalCount == 0 }
+
+        @MainActor init(sessions: [ReadingSession], isExpanded: Bool, maxCollapsed: Int) {
+            let sorted = sessions.sorted { $0.startedAt > $1.startedAt }
+            totalCount = sorted.count
+            rows = (isExpanded ? sorted : Array(sorted.prefix(maxCollapsed))).map(ReadingSessionRowSnapshot.init)
+        }
+    }
+
+    struct BookExcerptItemSnapshot: Identifiable, Equatable {
+        let id: String
+        let content: String
+        let createdAt: Date
+        let dateText: String
+        let isNote: Bool
+        let type: ExcerptCategory
+
+        @MainActor init(excerpt: Excerpt) {
+            id = excerpt.id
+            content = excerpt.content
+            createdAt = excerpt.createdAt
+            dateText = excerpt.createdAt.formatted(date: .numeric, time: .shortened)
+            isNote = excerpt.isNote
+            type = excerpt.type
+        }
+    }
+
+    struct BookExcerptListSnapshot: Equatable {
+        let all: [BookExcerptItemSnapshot]
+        let filtered: [BookExcerptItemSnapshot]
+        let allCount: Int
+        let excerptCount: Int
+        let noteCount: Int
+
+        var isEmpty: Bool { allCount == 0 }
+
+        @MainActor init(excerpts: [Excerpt], filter: BookExcerptFilter) {
+            let sorted = excerpts
+                .sorted { $0.createdAt > $1.createdAt }
+                .map(BookExcerptItemSnapshot.init)
+            all = sorted
+            allCount = sorted.count
+            excerptCount = sorted.filter { $0.type == .excerpt }.count
+            noteCount = sorted.filter { $0.type == .note }.count
+
+            switch filter {
+            case .all:
+                filtered = sorted
+            case .excerpts:
+                filtered = sorted.filter { $0.type == .excerpt }
+            case .notes:
+                filtered = sorted.filter { $0.type == .note }
+            }
+        }
+
+        func count(for filter: BookExcerptFilter) -> Int {
+            switch filter {
+            case .all: return allCount
+            case .excerpts: return excerptCount
+            case .notes: return noteCount
+            }
+        }
+    }
+
+    struct ReadingDayBookSummarySnapshot: Identifiable, Equatable {
+        let id: String
+        let title: String
+        let detail: String
+    }
+
+    struct ReadingDaySnapshot: Identifiable, Equatable {
+        let id: Date
+        let date: Date
+        let dayNumberText: String
+        let dayLabel: String
+        let isToday: Bool
+        let hasRead: Bool
+        let totalMinutes: Int
+        let dailyMinutes: Int
+        let bookSummaries: [ReadingDayBookSummarySnapshot]
+
+        @MainActor init(
+            date: Date,
+            duration: TimeInterval?,
+            sessions: [ReadingSession],
+            booksByID: [String: Book],
+            calendar: Calendar = .current
+        ) {
+            let startOfDay = calendar.startOfDay(for: date)
+            let day = calendar.component(.day, from: date)
+            let weekday = calendar.component(.weekday, from: date)
+            let weekdayNames = ["日", "一", "二", "三", "四", "五", "六"]
+            let totalSeconds = Int(duration ?? sessions.reduce(0) { $0 + max($1.duration, 0) })
+
+            id = startOfDay
+            self.date = date
+            dayNumberText = "\(day)"
+            dayLabel = "\(day)日 周\(weekdayNames[max(0, min(weekday - 1, weekdayNames.count - 1))])"
+            isToday = calendar.isDateInToday(date)
+            hasRead = duration != nil || totalSeconds > 0
+            totalMinutes = totalSeconds / 60
+            dailyMinutes = totalSeconds > 0 ? max(1, totalSeconds / 60) : 0
+            bookSummaries = Self.makeBookSummaries(from: sessions, booksByID: booksByID)
+        }
+
+        @MainActor private static func makeBookSummaries(
+            from sessions: [ReadingSession],
+            booksByID: [String: Book]
+        ) -> [ReadingDayBookSummarySnapshot] {
+            var merged: [String: (totalDelta: Double, unit: ProgressUnit, totalDuration: TimeInterval)] = [:]
+
+            for session in sessions {
+                guard let bookID = session.book?.id, booksByID[bookID] != nil else { continue }
+                var entry = merged[bookID] ?? (0, session.progressUnit, 0)
+                entry.totalDelta += session.deltaAmount
+                entry.totalDuration += max(session.duration, 0)
+                merged[bookID] = entry
+            }
+
+            return merged.compactMap { bookID, data in
+                guard let book = booksByID[bookID] else { return nil }
+                let minutes = Int(data.totalDuration / 60)
+                var parts: [String] = []
+                if minutes > 0 { parts.append("\(minutes)分钟") }
+                if data.totalDelta > 0 {
+                    switch data.unit {
+                    case .page: parts.append("\(Int(data.totalDelta))页")
+                    case .percent: parts.append("\(Int(data.totalDelta))%")
+                    case .chapter: parts.append("\(Int(data.totalDelta))章")
+                    }
+                }
+
+                return ReadingDayBookSummarySnapshot(
+                    id: bookID,
+                    title: book.title,
+                    detail: parts.joined(separator: " · ")
+                )
+            }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        }
     }
 
     static func totalDuration(from sessions: [ReadingSession]) -> TimeInterval {
@@ -237,9 +440,7 @@ enum ReadingStatsCalculator {
         var displayBooks = books.filter { book in
             guard filterStatus == nil || book.status == filterStatus else { return false }
             guard !query.isEmpty else { return true }
-            return book.title.lowercased().contains(query)
-                || book.author.lowercased().contains(query)
-                || book.tags.contains { $0.lowercased().contains(query) }
+            return SearchMatcher.matchesBook(book, query: query)
         }
 
         displayBooks.sort { lhs, rhs in
@@ -297,11 +498,7 @@ enum ReadingStatsCalculator {
         var displayExcerpts = excerpts.filter { excerpt in
             guard category == nil || excerpt.category == category else { return false }
             guard !query.isEmpty else { return true }
-            return (excerpt.title ?? "").lowercased().contains(query)
-                || excerpt.author.lowercased().contains(query)
-                || excerpt.dynasty.lowercased().contains(query)
-                || excerpt.content.lowercased().contains(query)
-                || excerpt.annotation.lowercased().contains(query)
+            return SearchMatcher.matchesExcerpt(excerpt, query: query)
         }
 
         switch sortKey {
@@ -330,14 +527,7 @@ enum ReadingStatsCalculator {
             let bookTitle = excerpt.book?.title ?? ""
             let bookAuthor = excerpt.book?.author ?? ""
             if !query.isEmpty {
-                let matches = excerpt.content.lowercased().contains(query)
-                    || bookTitle.lowercased().contains(query)
-                    || bookAuthor.lowercased().contains(query)
-                    || excerpt.category.displayName.lowercased().contains(query)
-                    || (excerpt.title ?? "").lowercased().contains(query)
-                    || (excerpt.sourceAuthor ?? "").lowercased().contains(query)
-                    || (excerpt.source ?? "").lowercased().contains(query)
-                guard matches else { return nil }
+                guard SearchMatcher.matchesExcerpt(excerpt, query: query) else { return nil }
             }
 
             return ExcerptListItem(

@@ -8,6 +8,11 @@ import WidgetKit
 struct DataSettingsView: View {
     @Binding var systemMessage: AttributedString?
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
+    @Query(sort: \UserConfig.updatedAt, order: .reverse) private var configs: [UserConfig]
+    @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
+    @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
+    @Query(sort: \Excerpt.createdAt, order: .reverse) private var excerpts: [Excerpt]
     
     // ================= 状态与存储 =================
     @State private var isICloudAvailable: Bool = false
@@ -31,9 +36,18 @@ struct DataSettingsView: View {
     
     var body: some View {
         Form {
+            Section {
+                SettingsRow(icon: "checkmark.seal.fill", iconColor: AppColors.success, title: "数据健康", subtitle: healthSnapshot.detailText) {
+                    AppCapsuleLabel(
+                        text: healthSnapshot.statusText,
+                        tint: healthSnapshot.configCount == 1 ? AppColors.success : AppColors.warning
+                    )
+                }
+            } header: { Text("状态概览").font(.system(size: 13, weight: .bold)) }
+
             // ================= 1. 云端同步 =================
             Section {
-                SettingsControlRow(icon: "icloud.fill", iconColor: .blue, title: "iCloud 同步", subtitle: "利用 CloudKit 在所有 Apple 设备间无缝流转数据") {
+                SettingsRow(icon: "icloud.fill", iconColor: .blue, title: "iCloud 同步", subtitle: "利用 CloudKit 在所有 Apple 设备间无缝流转数据") {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(isICloudAvailable ? Color.green : Color.red)
@@ -48,7 +62,7 @@ struct DataSettingsView: View {
             
             // ================= 2. 本地时间机器 =================
             Section {
-                SettingsControlRow(icon: "clock.arrow.circlepath", iconColor: .teal, title: "时光机备份", subtitle: "手动生成高压缩快照，文件将自动保存在 iCloud 云盘中") {
+                SettingsRow(icon: "clock.arrow.circlepath", iconColor: .teal, title: "时光机备份", subtitle: "手动生成高压缩快照，文件将自动保存在 iCloud 云盘中") {
                     Toggle("", isOn: $enableAutoBackup)
                         .toggleStyle(.switch)
                         .onChange(of: enableAutoBackup) { _, newValue in
@@ -70,7 +84,8 @@ struct DataSettingsView: View {
                             }
                             .buttonStyle(.plain)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+                            .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1))
 
                             Spacer()
 
@@ -79,21 +94,24 @@ struct DataSettingsView: View {
                             }
                             .buttonStyle(.plain)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+                            .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1))
 
                             Button(action: triggerManualBackup) {
                                 Text("立即快照").font(.system(size: 12, weight: .medium))
                             }
                             .buttonStyle(.plain)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+                            .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1))
 
                             Button(action: clearAllBackups) {
                                 Text("清空历史").font(.system(size: 12, weight: .medium))
                             }
                             .buttonStyle(.plain)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+                            .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1))
                         }
                     }
                     .padding(.leading, 40)
@@ -103,7 +121,7 @@ struct DataSettingsView: View {
             
             // ================= 3. 存储管理 =================
             Section {
-                SettingsControlRow(icon: "trash.fill", iconColor: .gray, title: "清理网络与图片缓存", subtitle: "释放网络图片与接口在内存与磁盘中的临时文件") {
+                SettingsRow(icon: "trash.fill", iconColor: .gray, title: "清理网络与图片缓存", subtitle: "释放网络图片与接口在内存与磁盘中的临时文件") {
                     HStack(spacing: 12) {
                         Text(String(format: "%.1f MB", currentCacheSizeMB)).font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundColor(.secondary).frame(width: 60, alignment: .trailing)
                         Button(action: performRealCacheClear) {
@@ -111,7 +129,8 @@ struct DataSettingsView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(.horizontal, 10).padding(.vertical, 5)
-                        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 6))
+                        .background(AppColors.innerBlock(for: colorScheme), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1))
                         .disabled(currentCacheSizeMB <= 0.1)
                         .opacity(currentCacheSizeMB <= 0.1 ? 0.4 : 1.0)
                     }
@@ -119,12 +138,23 @@ struct DataSettingsView: View {
             } header: { Text("存储管理").font(.system(size: 13, weight: .bold)) }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .background(AppColors.primaryBackground(for: colorScheme))
         .onAppear {
             checkICloudStatus()
             calculateCacheSize()
             if enableAutoBackup { ensureBackupDirectoryExists() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .NSUbiquityIdentityDidChange)) { _ in checkICloudStatus() }
+    }
+
+    private var healthSnapshot: ReadingStatsCalculator.DataHealthSnapshot {
+        ReadingStatsCalculator.dataHealthSnapshot(
+            configs: configs,
+            books: books,
+            sessions: sessions,
+            excerpts: excerpts
+        )
     }
     
     // MARK: - iCloud 探针 & 存储逻辑

@@ -18,8 +18,16 @@ struct MobileReadingHeroCard: View {
     }
 
     var body: some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: AppSpacing.s) {
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
+                HStack {
+                    Text("在读焦点")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "book.closed.fill")
+                        .foregroundColor(AppColors.readingAmber)
+                }
                 // 上半部分：封面 + 元数据
                 HStack(alignment: .center, spacing: 18) {
                     Button(action: onTapDetail) {
@@ -60,8 +68,7 @@ struct MobileReadingHeroCard: View {
                                     .contentTransition(.numericText())
                             }
 
-                            ProgressBarView(progress: book.progressRatio, tint: AppColors.readingAmber)
-                                .frame(height: 6)
+                            ProgressBarView(progress: book.progressRatio, tint: AppColors.readingAmber, height: 6)
                         }
                     }
                     .frame(height: coverHeight, alignment: .center)
@@ -74,15 +81,6 @@ struct MobileReadingHeroCard: View {
 
                     secondaryStrip
                 }
-            }
-        } label: {
-            HStack {
-                Text("在读焦点")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                Spacer()
-                Image(systemName: "book.closed.fill")
-                    .foregroundColor(AppColors.readingAmber)
             }
         }
     }
@@ -141,8 +139,8 @@ struct MobileReadingHeroCard: View {
                                     
                                     Spacer()
 
-                                    ProgressBarView(progress: candidate.progressRatio, tint: AppColors.readingAmber)
-                                        .frame(width: 60, height: 5)
+                                    ProgressBarView(progress: candidate.progressRatio, tint: AppColors.readingAmber, height: 5, animated: false)
+                                        .frame(width: 60)
                                 }
                                 .frame(height: 40)
                             }
@@ -162,40 +160,38 @@ struct MobileReadingHeroCard: View {
 
 struct MobileEmptyReadingCard: View {
     var body: some View {
-        GroupBox {
-            HStack(alignment: .center, spacing: 18) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous)
-                        .stroke(Color.secondary.opacity(0.2), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                        .background(Color.secondary.opacity(0.02))
-
-                    Image(systemName: "book.closed")
-                        .font(.system(size: 24))
-                        .foregroundColor(.secondary.opacity(0.3))
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
+                HStack {
+                    Text("在读焦点")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "book.closed.fill")
+                        .foregroundColor(AppColors.readingAmber)
                 }
-                .frame(width: 90, height: 135)
-
-                VStack(alignment: .leading, spacing: 0) {
-                    VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                        Text("虚位以待")
-                            .font(.system(size: 22, weight: .heavy, design: .serif))
-                            .foregroundColor(.primary.opacity(0.5))
-
-                        Text("寻找下一段旅程")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary.opacity(0.6))
+                HStack(alignment: .center, spacing: 18) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous)
+                            .stroke(Color.secondary.opacity(0.2), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                            .background(Color.secondary.opacity(0.02))
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 24))
+                            .foregroundColor(.secondary.opacity(0.3))
+                    }
+                    .frame(width: 90, height: 135)
+                    VStack(alignment: .leading, spacing: 0) {
+                        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                            Text("虚位以待")
+                                .font(.system(size: 22, weight: .heavy, design: .serif))
+                                .foregroundColor(.primary.opacity(0.5))
+                            Text("寻找下一段旅程")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary.opacity(0.6))
+                        }
                     }
                 }
-            }
-            .padding(.vertical, 2)
-        } label: {
-            HStack {
-                Text("在读焦点")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                Spacer()
-                Image(systemName: "book.closed.fill")
-                    .foregroundColor(AppColors.readingAmber)
+                .padding(.vertical, 2)
             }
         }
     }
@@ -216,7 +212,7 @@ private struct PreviewHeroCard: View {
                 onSelectSecondaryBook: { _ in }
             )
             .padding()
-            .background(Color(UIColor.systemGroupedBackground))
+            .background(AppColors.primaryBackground(for: .light))
         }
     }
 }
@@ -229,7 +225,7 @@ private struct PreviewHeroCard: View {
 #Preview("在读焦点卡 - 空状态") {
     MobileEmptyReadingCard()
         .padding()
-        .background(Color(UIColor.systemGroupedBackground))
+        .background(AppColors.primaryBackground(for: .light))
 }
 #endif
 

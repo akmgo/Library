@@ -8,6 +8,7 @@ struct GoalSettingsView: View {
     @Bindable var config: UserConfig
     @Binding var systemMessage: AttributedString?
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     
     /// 用来保存当前正在倒计时的任务 (防抖引擎)
     @State private var saveTask: Task<Void, Never>? = nil
@@ -17,7 +18,7 @@ struct GoalSettingsView: View {
             Section {
                 // 1. 每日阅读目标 (5~120，步长5)
                 // ✨ 优化：单位转移至 subtitle，右侧仅保留纯净的控制舱
-                SettingsControlRow(icon: "timer", iconColor: .orange, title: "每日阅读目标", subtitle: "每天期望达成的沉浸阅读时长（分钟）") {
+                SettingsRow(icon: "timer", iconColor: .orange, title: "每日阅读目标", subtitle: "每天期望达成的沉浸阅读时长（分钟）") {
                     FluidCapsuleStepper(
                         value: Binding(get: { config.dailyMinutesGoal }, set: { config.dailyMinutesGoal = $0 }),
                         step: 5,
@@ -27,7 +28,7 @@ struct GoalSettingsView: View {
                 }
                 
                 // 2. 年度阅读目标 (1~500，步长1)
-                SettingsControlRow(icon: "target", iconColor: .pink, title: "年度阅读目标", subtitle: "今年计划通关的书籍数量（本）") {
+                SettingsRow(icon: "target", iconColor: .pink, title: "年度阅读目标", subtitle: "今年计划通关的书籍数量（本）") {
                     FluidCapsuleStepper(
                         value: Binding(get: { config.yearlyBooksGoal }, set: { config.yearlyBooksGoal = $0 }),
                         step: 1,
@@ -37,7 +38,7 @@ struct GoalSettingsView: View {
                 }
                 
                 // 3. 总馆藏目标 (10~无限制，步长10)
-                SettingsControlRow(icon: "archivebox.fill", iconColor: .teal, title: "总馆藏目标", subtitle: "期望打造的个人书库规模（本）") {
+                SettingsRow(icon: "archivebox.fill", iconColor: .teal, title: "总馆藏目标", subtitle: "期望打造的个人书库规模（本）") {
                     FluidCapsuleStepper(
                         value: Binding(get: { config.libraryBooksGoal }, set: { config.libraryBooksGoal = $0 }),
                         step: 10,
@@ -48,6 +49,8 @@ struct GoalSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .background(AppColors.primaryBackground(for: colorScheme))
     }
     
     // MARK: - 💾 防抖保存引擎
@@ -119,7 +122,7 @@ private struct FluidCapsuleStepper: View {
             .opacity(value >= range.upperBound ? 0.3 : 1.0)
         }
         // 整体宽度被绝对固定为：28 + 56 + 28 = 112
-        .glassEffect(in: Capsule(style: .continuous))
+        .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.12, strokeOpacity: 0.10)
     }
 }
 

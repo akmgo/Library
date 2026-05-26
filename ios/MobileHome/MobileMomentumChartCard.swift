@@ -5,79 +5,74 @@ import Charts
 // MARK: - 📈 动能折线组件 (纯粹渲染版)
 
 struct MobileMomentumChartCard: View {
-    // ✨ 接收主页传来的数据点和总时长
     let dataPoints: [MomentumDataPoint]
     let totalMinutes: Int
-    
-    // ✨ 基于传入的 14 个小数据点，极速衍生出 UI 所需的副指标
+
     var totalDays: Int {
         dataPoints.filter { $0.minutes > 0 }.count
     }
-    
+
     var maxMinutes: Int {
         Int(dataPoints.map { $0.minutes }.max() ?? 0)
     }
-    
+
     var avgMinutes: Int {
         totalDays > 0 ? (totalMinutes / totalDays) : 0
     }
-    
+
     var body: some View {
-        GroupBox {
-            VStack(spacing: 0) {
-                // 上部：四大指标
-                HStack(alignment: .center, spacing: 0) {
-                    MomentumAppStat(title: "阅读天数", value: "\(totalDays)", unit: "天")
-                    Spacer(minLength: AppSpacing.xxs + 1)
-                    MomentumAppStat(title: "总计时间", value: "\(totalMinutes)", unit: "分")
-                    Spacer(minLength: AppSpacing.xxs + 1)
-                    MomentumAppStat(title: "单日最高", value: "\(maxMinutes)", unit: "分")
-                    Spacer(minLength: AppSpacing.xxs + 1)
-                    MomentumAppStat(title: "日均阅读", value: "\(avgMinutes)", unit: "分")
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
+                HStack {
+                    Text("双周动能")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "waveform.path.ecg")
+                        .foregroundColor(.blue)
                 }
-                .padding(.bottom, 16)
-                
-                // 下部：折线面积图
-                if dataPoints.isEmpty {
-                    HStack(alignment: .bottom, spacing: 6) {
-                        ForEach(0..<14, id: \.self) { index in
-                            Capsule()
-                                .fill(Color.secondary.opacity(0.10))
-                                .frame(height: CGFloat((index % 5) + 1) * 8)
+                VStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 0) {
+                        MomentumAppStat(title: "阅读天数", value: "\(totalDays)", unit: "天")
+                        Spacer(minLength: AppSpacing.xxs + 1)
+                        MomentumAppStat(title: "总计时间", value: "\(totalMinutes)", unit: "分")
+                        Spacer(minLength: AppSpacing.xxs + 1)
+                        MomentumAppStat(title: "单日最高", value: "\(maxMinutes)", unit: "分")
+                        Spacer(minLength: AppSpacing.xxs + 1)
+                        MomentumAppStat(title: "日均阅读", value: "\(avgMinutes)", unit: "分")
+                    }
+                    .padding(.bottom, 16)
+                    if dataPoints.isEmpty {
+                        HStack(alignment: .bottom, spacing: 6) {
+                            ForEach(0..<14, id: \.self) { index in
+                                Capsule()
+                                    .fill(Color.secondary.opacity(0.10))
+                                    .frame(height: CGFloat((index % 5) + 1) * 8)
+                            }
                         }
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 70, alignment: .bottom)
-                } else {
-                    Chart(dataPoints, id: \.date) { item in
-                        AreaMark(x: .value("Day", item.date), y: .value("Minutes", item.minutes))
-                            .interpolationMethod(.catmullRom)
-                            .foregroundStyle(LinearGradient(colors: [Color.blue.opacity(0.4), .clear], startPoint: .top, endPoint: .bottom))
-                        
-                        LineMark(x: .value("Day", item.date), y: .value("Minutes", item.minutes))
-                            .interpolationMethod(.catmullRom)
-                            .foregroundStyle(Color.blue)
-                            .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                    }
-                    .chartYAxis(.hidden)
-                    .chartXAxis {
-                        AxisMarks(values: .stride(by: .day, count: 2)) { _ in
-                            AxisValueLabel(format: .dateTime.day())
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Color.secondary)
+                        .frame(maxWidth: .infinity, minHeight: 70, alignment: .bottom)
+                    } else {
+                        Chart(dataPoints, id: \.date) { item in
+                            AreaMark(x: .value("Day", item.date), y: .value("Minutes", item.minutes))
+                                .interpolationMethod(.catmullRom)
+                                .foregroundStyle(LinearGradient(colors: [Color.blue.opacity(0.4), .clear], startPoint: .top, endPoint: .bottom))
+                            LineMark(x: .value("Day", item.date), y: .value("Minutes", item.minutes))
+                                .interpolationMethod(.catmullRom)
+                                .foregroundStyle(Color.blue)
+                                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
                         }
+                        .chartYAxis(.hidden)
+                        .chartXAxis {
+                            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
+                                AxisValueLabel(format: .dateTime.day())
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Color.secondary)
+                            }
+                        }
+                        .frame(height: 70)
                     }
-                    .frame(height: 70)
                 }
-            }
-            .padding(.top, 4)
-        } label: {
-            HStack {
-                Text("双周动能")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                Spacer()
-                Image(systemName: "waveform.path.ecg")
-                    .foregroundColor(.blue)
+                .padding(.top, 4)
             }
         }
     }
@@ -110,7 +105,7 @@ private struct PreviewMomentumCard: View {
         }
         MobileMomentumChartCard(dataPoints: points, totalMinutes: Int(points.reduce(0) { $0 + $1.minutes }))
             .padding()
-            .background(Color(UIColor.systemGroupedBackground))
+            .background(AppColors.primaryBackground(for: .light))
     }
 }
 

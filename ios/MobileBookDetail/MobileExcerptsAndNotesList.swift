@@ -20,48 +20,45 @@ struct MobileExcerptsAndNotesList: View {
     @State private var filter: BookExcerptFilter = .all
     @Environment(\.colorScheme) private var colorScheme
 
-    private var sortedAnnotations: [Excerpt] {
-        (book.excerpts ?? []).sorted { $0.createdAt > $1.createdAt }
+    private var snapshot: ReadingStatsCalculator.BookExcerptListSnapshot {
+        ReadingStatsCalculator.BookExcerptListSnapshot(
+            excerpts: book.excerpts ?? [],
+            filter: filter
+        )
     }
 
-    private var filteredAnnotations: [Excerpt] {
-        sortedAnnotations.filter(filter.includes)
+    private var recordsByID: [String: Excerpt] {
+        Dictionary(uniqueKeysWithValues: (book.excerpts ?? []).map { ($0.id, $0) })
     }
 
     var body: some View {
-        if sortedAnnotations.isEmpty {
+        if snapshot.isEmpty {
             EmptyView()
         } else {
-            HStack(spacing: AppSpacing.xxs) {
-                ForEach(BookExcerptFilter.allCases, id: \.self) { f in
-                    let count = f.count(in: sortedAnnotations)
-                    Button(action: { withAnimation { filter = f } }) {
-                        Text("\(f.displayName) (\(count))")
-                            .font(.system(size: 12, weight: filter == f ? .bold : .medium, design: .rounded))
-                            .foregroundColor(filter == f ? .white : .primary)
-                            .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(filter == f ? AppColors.selection : AppColors.innerBlock(for: colorScheme))
-                            .overlay(
-                                Capsule()
-                                    .stroke(filter == f ? Color.clear : AppColors.innerStroke(for: colorScheme), lineWidth: 1)
-                            )
-                            .clipShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                }
-                Spacer()
-            }
-            .padding(4)
-            .appInnerCapsuleStyle()
+            AppSlidingSegmentedControl(
+                selection: $filter,
+                options: BookExcerptFilter.allCases.map {
+                    AppSlidingSegmentedOption(value: $0, title: "\($0.displayName) (\(snapshot.count(for: $0)))")
+                },
+                tint: AppColors.selection,
+                height: 32,
+                cornerRadius: AppRadius.m,
+                showsIcons: false
+            )
+            .frame(maxWidth: 280)
+            .frame(maxWidth: .infinity)
             .padding(.bottom, 8)
 
-            LazyVStack(spacing: AppSpacing.m) {
-                ForEach(filteredAnnotations) { annotation in
-                    MobileAnnotationCardWrapper(annotation: annotation, isDeleteMode: isDeleteMode) {
-                        onDelete(annotation)
+            MobileAnnotationList(
+                annotations: snapshot.filtered,
+                isDeleteMode: isDeleteMode,
+                onDelete: { annotation in
+                    if let record = recordsByID[annotation.id] {
+                        onDelete(record)
                     }
                 }
-            }
+            )
+            .equatable()
         }
     }
 }
@@ -69,8 +66,28 @@ struct MobileExcerptsAndNotesList: View {
 // MARK: - 📱 卡片包装器与子渲染节点
 
 /// 将原生的笔记/摘录卡片与编辑状态下的“删除热区”复合。
+private struct MobileAnnotationList: View, Equatable {
+    let annotations: [ReadingStatsCalculator.BookExcerptItemSnapshot]
+    let isDeleteMode: Bool
+    let onDelete: (ReadingStatsCalculator.BookExcerptItemSnapshot) -> Void
+
+    static func == (lhs: MobileAnnotationList, rhs: MobileAnnotationList) -> Bool {
+        lhs.annotations == rhs.annotations && lhs.isDeleteMode == rhs.isDeleteMode
+    }
+
+    var body: some View {
+        LazyVStack(spacing: AppSpacing.m) {
+            ForEach(annotations) { annotation in
+                MobileAnnotationCardWrapper(annotation: annotation, isDeleteMode: isDeleteMode) {
+                    onDelete(annotation)
+                }
+            }
+        }
+    }
+}
+
 private struct MobileAnnotationCardWrapper: View {
-    let annotation: Excerpt
+    let annotation: ReadingStatsCalculator.BookExcerptItemSnapshot
     let isDeleteMode: Bool
     let onDelete: () -> Void
     
@@ -94,7 +111,6 @@ private struct MobileAnnotationCardWrapper: View {
                         .frame(width: 28, height: 28)
                         .background(Color.red)
                         .clipShape(Circle())
-                        .shadow(color: AppColors.danger.opacity(0.4), radius: 6, y: 3)
                 }
                 .offset(x: 8, y: -8)
                 .transition(.scale.combined(with: .opacity))
@@ -106,52 +122,23 @@ private struct MobileAnnotationCardWrapper: View {
 
 /// 基于衬线体 (`.serif`) 的优雅原书划线展示模块。
 private struct MobileReadingExcerptCard: View {
-    let annotation: Excerpt
-    @Environment(\.colorScheme) private var colorScheme
+    let annotation: ReadingStatsCalculator.BookExcerptItemSnapshot
     
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.s) {
-            // ✨ 修复：模型里的 content 已经是必填项，干掉了冗余的 ?? ""
-            Text(verbatim: annotation.content)
-                .font(.system(size: 15, weight: .regular, design: .serif))
-                .lineSpacing(6)
-                .foregroundColor(.primary)
-            
-            HStack {
-                Spacer()
-                // ✨ 修复：同理干掉 ?? Date()
-                Text(annotation.createdAt, format: .dateTime.year().month().day())
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(Color.gray.opacity(0.5))
-            }
+        AppCard {
+            BookExcerptCardContent(item: annotation, contentFontSize: 15)
         }
-        .padding(AppSpacing.m)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 }
 
 /// 以纯文本呈现的独立思考笔记视图卡片。
 private struct MobileNoteCard: View {
-    let annotation: Excerpt
+    let annotation: ReadingStatsCalculator.BookExcerptItemSnapshot
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.s) {
-            Text(verbatim: annotation.content)
-                .font(.system(size: 14))
-                .lineSpacing(4)
-                .foregroundColor(.primary)
-
-            HStack {
-                Spacer()
-                Text(annotation.createdAt, format: .dateTime.year().month().day())
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(Color.gray.opacity(0.5))
-            }
+        AppCard {
+            BookExcerptCardContent(item: annotation, contentFontSize: 14)
         }
-        .padding(AppSpacing.m)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 }
 

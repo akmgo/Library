@@ -9,6 +9,7 @@ struct MobileBookEditorSheet: View {
     @Query var allBooks: [Book]
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     var bookToEdit: Book? = nil
 
@@ -45,6 +46,8 @@ struct MobileBookEditorSheet: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppColors.primaryBackground(for: colorScheme))
             .navigationTitle(isEdit ? "编辑档案" : "添加图书")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -88,7 +91,7 @@ struct MobileBookEditorSheet: View {
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(uiColor: .secondarySystemBackground))
+                        .fill(AppColors.secondaryBackground(for: colorScheme))
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1.5, dash: [6, 6]))
 

@@ -32,6 +32,10 @@ struct MobileMonthlyRecordView: View {
         return grouped.map { ($0.key, $0.value) }.sorted { $0.date > $1.date }
     }
 
+    private var booksByID: [String: Book] {
+        Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
+    }
+
     private var totalMinutes: Int {
         Int(monthSessions.reduce(0) { $0 + $1.duration } / 60)
     }
@@ -70,7 +74,7 @@ struct MobileMonthlyRecordView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: AppSpacing.l) {
+                LazyVStack(spacing: AppSpacing.l) {
                     MobilePageStatsHeader(items: monthStats)
 
                     monthNavigator
@@ -79,14 +83,22 @@ struct MobileMonthlyRecordView: View {
                         emptyMonthView
                             .padding(.top, 40)
                     } else {
-                        VStack(spacing: AppSpacing.s) {
+                        LazyVStack(spacing: AppSpacing.s) {
                             ForEach(sessionsByDay, id: \.date) { item in
+                                let snapshot = ReadingStatsCalculator.ReadingDaySnapshot(
+                                    date: item.date,
+                                    duration: nil,
+                                    sessions: item.sessions,
+                                    booksByID: booksByID,
+                                    calendar: calendar
+                                )
                                 Button(action: {
                                     if isEditing {
                                         toggleDate(item.date)
                                     }
                                 }) {
-                                    DayReadingCard(date: item.date, sessions: item.sessions, books: books)
+                                    DayReadingCard(snapshot: snapshot)
+                                        .equatable()
                                         .overlay(
                                             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
                                                 .stroke(isEditing && selectedDates.contains(item.date) ? Color.blue : Color.clear, lineWidth: 3)
@@ -220,79 +232,40 @@ struct MobileMonthlyRecordView: View {
 
 // MARK: - 每日阅读卡片
 
-private struct DayReadingCard: View {
-    let date: Date
-    let sessions: [ReadingSession]
-    let books: [Book]
-    private let calendar = Calendar.current
-
-    private var totalDayMinutes: Int {
-        Int(sessions.reduce(0) { $0 + $1.duration } / 60)
-    }
-
-    private var dayLabel: String {
-        let day = calendar.component(.day, from: date)
-        let weekday = calendar.component(.weekday, from: date)
-        let names = ["日", "一", "二", "三", "四", "五", "六"]
-        return "\(day)日 周\(names[weekday - 1])"
-    }
-
-    private var bookSummaries: [(title: String, delta: String)] {
-        var merged: [String: (totalDelta: Double, unit: ProgressUnit, totalDuration: TimeInterval)] = [:]
-        for session in sessions {
-            guard let bookID = session.book?.id, books.contains(where: { $0.id == bookID }) else { continue }
-            var entry = merged[bookID] ?? (0, session.progressUnit, 0)
-            entry.totalDelta += session.deltaAmount
-            entry.totalDuration += session.duration
-            merged[bookID] = entry
-        }
-        return merged.compactMap { bookID, data in
-            guard let book = books.first(where: { $0.id == bookID }) else { return nil }
-            let mins = Int(data.totalDuration / 60)
-            var parts: [String] = []
-            if mins > 0 { parts.append("\(mins)分钟") }
-            if data.totalDelta > 0 {
-                switch data.unit {
-                case .page: parts.append("+\(Int(data.totalDelta))页")
-                case .percent: parts.append("+\(Int(data.totalDelta))%")
-                case .chapter: parts.append("+\(Int(data.totalDelta))章")
-                }
-            }
-            return (book.title, parts.joined(separator: " · "))
-        }
-    }
+private struct DayReadingCard: View, Equatable {
+    let snapshot: ReadingStatsCalculator.ReadingDaySnapshot
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(dayLabel)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                Spacer()
-                Text("\(totalDayMinutes) 分钟")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundColor(AppColors.readingAmber)
-            }
+        AppCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(snapshot.dayLabel)
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Text("\(snapshot.totalMinutes) 分钟")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(AppColors.readingAmber)
+                }
 
-            if !bookSummaries.isEmpty {
-                ForEach(Array(bookSummaries.enumerated()), id: \.offset) { _, summary in
-                    HStack {
-                        Text("《\(summary.title)》")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.primary.opacity(0.8))
-                            .lineLimit(1)
-                        Spacer()
-                        if !summary.delta.isEmpty {
-                            Text(summary.delta)
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
-                                .foregroundColor(.teal)
+                if !snapshot.bookSummaries.isEmpty {
+                    ForEach(snapshot.bookSummaries) { summary in
+                        HStack {
+                            Text("《\(summary.title)》")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.primary.opacity(0.8))
+                                .lineLimit(1)
+                            Spacer()
+                            if !summary.detail.isEmpty {
+                                Text(summary.detail)
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.teal)
+                            }
                         }
                     }
                 }
             }
         }
-        .padding(AppSpacing.l)
-        .glassCardSurface()
     }
 }
 

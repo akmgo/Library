@@ -14,9 +14,6 @@ struct MobileHomeView: View {
     @Query(sort: \Excerpt.createdAt, order: .reverse) private var excerpts: [Excerpt]
     
     // MARK: - 🎮 UI 交互状态
-    // ✨ 全局沉浸式底部搜索状态
-    @State private var showGlobalSearch = false
-    
     @State private var activeBookDetail: Book? = nil
     @State private var focusedReadingBookID: String?
 
@@ -34,12 +31,12 @@ struct MobileHomeView: View {
             
             // ================= 📚 核心滑动大盘 =================
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: AppSpacing.xl) {
+                LazyVStack(spacing: AppSpacing.xl) {
                     
                     // 📊 2. 数据大盘
                     MobilePageStatsHeader(items: homeStats)
 
-                    VStack(spacing: AppSpacing.xl) {
+                    LazyVStack(spacing: AppSpacing.xl) {
                     
                         // 🌟 1. 视觉锚点 (在读焦点)
                         if let heroBook = focusedReadingBook {
@@ -86,15 +83,8 @@ struct MobileHomeView: View {
             }
             .coordinateSpace(name: "homeScroll")
             
-            // ================= 🔍 独立底部搜索覆盖层 =================
-            if showGlobalSearch {
-                MobileBottomSearchView(isPresented: $showGlobalSearch)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    .zIndex(100)
-            }
         }
-        .groupBoxStyle(NativeWidgetGroupBoxStyle())
-        .navigationDestination(item: $activeBookDetail) { book in
+.navigationDestination(item: $activeBookDetail) { book in
             MobileBookDetailView(book: book)
         }
     }
@@ -102,11 +92,9 @@ struct MobileHomeView: View {
     private var pullToSearchDetector: some View {
         GeometryReader { geo in
             Color.clear.onChange(of: geo.frame(in: .named("homeScroll")).minY) { _, y in
-                if y > 75 && !showGlobalSearch {
+                if y > 75 {
                     UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showGlobalSearch = true
-                    }
+                    NotificationCenter.default.post(name: .showGlobalSearch, object: nil)
                 }
             }
         }
@@ -158,15 +146,11 @@ private extension MobileHomeView {
 
 // MARK: - 🔍 独立全局搜索页
 
-struct MobileAnnotationSearchResult: Identifiable {
-    let id = UUID()
-    let book: Book
-    let annotation: Excerpt
-}
-
-struct MobileBottomSearchView: View {
+struct MobileGlobalSearchView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var isPresented: Bool
+    @Binding var selectedTab: Int
+    @Binding var highlightedExcerptID: String?
     
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
@@ -176,17 +160,12 @@ struct MobileBottomSearchView: View {
     @State private var isSearching = false
     
     @State private var resultBooks: [Book] = []
-    @State private var resultAnnotations: [MobileAnnotationSearchResult] = []
     @State private var resultExcerpts: [Excerpt] = []
     
-    // ✨ 核心重构：统一使用一个通用阅读载荷来接管所有的全屏阅读
-    @State private var readingPayload: MobileFullscreenPayload? = nil
-    
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack(alignment: .top) {
             // ================= 1. 全屏统一背景层 =================
-            Color.black.opacity(colorScheme == .dark ? 0.35 : 0.15)
-                .background(.ultraThinMaterial)
+            AppColors.primaryBackground(for: colorScheme)
                 .ignoresSafeArea()
                 .onTapGesture { closeSearch() }
             
@@ -202,7 +181,7 @@ struct MobileBottomSearchView: View {
                         Text("全局智能探索")
                             .font(.system(size: 18, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
-                        Text("检索书籍、书中摘录与日常碎片...")
+                        Text("检索书籍、摘录与笔记...")
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                         Spacer()
@@ -220,7 +199,7 @@ struct MobileBottomSearchView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
-                } else if resultBooks.isEmpty && resultAnnotations.isEmpty && resultExcerpts.isEmpty {
+                } else if resultBooks.isEmpty && resultExcerpts.isEmpty {
                     VStack(spacing: AppSpacing.m) {
                         Spacer()
                         Image(systemName: "doc.text.magnifyingglass")
@@ -238,7 +217,7 @@ struct MobileBottomSearchView: View {
                 } else {
                     // ================= 核心结果列表 =================
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: AppSpacing.xxl) {
+                        LazyVStack(spacing: AppSpacing.xxl) {
                             
                             // 📚 1. 书籍档案卡片
                             if !resultBooks.isEmpty {
@@ -253,36 +232,15 @@ struct MobileBottomSearchView: View {
                                 }
                             }
                             
-                            // 🔖 2. 书中摘录卡片
-                            if !resultAnnotations.isEmpty {
-                                searchResultSection(title: "书中摘录", count: resultAnnotations.count) {
-                                    ForEach(resultAnnotations) { item in
-                                        Button(action: {
-                                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                            isSearchFocused = false
-                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                                // 转化为通用 payload
-                                                readingPayload = createPayload(book: item.book, annotation: item.annotation)
-                                            }
-                                        }) {
-                                            globalSearchAnnotationCard(book: item.book, annotation: item.annotation)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                            
-                            // 🖋️ 3. 日常摘录卡片
                             if !resultExcerpts.isEmpty {
-                                searchResultSection(title: "日常摘录", count: resultExcerpts.count) {
+                                searchResultSection(title: "摘录笔记", count: resultExcerpts.count) {
                                     ForEach(resultExcerpts) { excerpt in
                                         Button(action: {
                                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                             isSearchFocused = false
-                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                                // 转化为通用 payload
-                                                readingPayload = createPayload(from: excerpt)
-                                            }
+                                            selectedTab = 2
+                                            highlightedExcerptID = excerpt.id
+                                            closeSearch()
                                         }) {
                                             globalSearchExcerptCard(excerpt: excerpt)
                                         }
@@ -299,15 +257,16 @@ struct MobileBottomSearchView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, AppSpacing.emptyState)
+            .padding(.top, 104)
+            .padding(.bottom, AppSpacing.xl)
             
-            // ================= 🌟 独立悬浮液态玻璃搜索框 =================
+            // ================= 🌟 全局悬浮搜索框 =================
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.blue.opacity(0.7))
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(AppColors.readingAmber)
                 
-                TextField("", text: $searchText, prompt: Text("探索书籍、笔记与碎片...").foregroundColor(.secondary.opacity(0.6)))
+                TextField("", text: $searchText, prompt: Text("搜索书籍和摘录...").foregroundColor(.secondary.opacity(0.6)))
                     .focused($isSearchFocused)
                     .submitLabel(.search)
                     .font(.system(size: 16, weight: .medium, design: .rounded))
@@ -328,74 +287,29 @@ struct MobileBottomSearchView: View {
                     .transition(.opacity.combined(with: .scale))
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(colorScheme == .dark ? Color(red: 0.05, green: 0.06, blue: 0.08).opacity(0.6) : Color.white.opacity(0.7))
-                        .background(.thinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.black.opacity(colorScheme == .dark ? 0.2 : 0.03), lineWidth: 3).blur(radius: 2).offset(y: 1).mask(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(LinearGradient(colors: [colorScheme == .dark ? .white.opacity(0.15) : .black.opacity(0.05), .clear, colorScheme == .dark ? .white.opacity(0.03) : .black.opacity(0.01)], startPoint: .top, endPoint: .bottom), lineWidth: 0.5)
-                }
-                .shadow(color: .black.opacity(colorScheme == .dark ? 0.4 : 0.1), radius: 12, y: 6)
-            }
             .padding(.horizontal, AppSpacing.m)
-            .padding(.bottom, 16)
-            
-            // ================= 🌟 4. 统一全屏阅读器层 =================
-            if let payload = readingPayload {
-                MobileUnifiedFullscreenReadingView(payload: payload) {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        readingPayload = nil
-                    }
-                }
-                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                .zIndex(200)
-            }
+            .frame(height: 58)
+            .background(
+                AppColors.secondaryBackground(for: colorScheme),
+                in: RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppRadius.l, style: .continuous)
+                    .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.22 : 0.08), radius: 18, y: 8)
+            .padding(.horizontal, AppSpacing.l)
+            .padding(.top, AppSpacing.l)
         }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 isSearchFocused = true
             }
         }
-    }
-    
-    // MARK: - 🗂️ 数据适配器 (Mapper)
-    
-    private func createPayload(book: Book, annotation: Excerpt) -> MobileFullscreenPayload {
-        let validAuthor = book.author.trimmingCharacters(in: .whitespaces).isEmpty || book.author == "佚名" ? nil : book.author
-        return MobileFullscreenPayload(
-            title: book.title,
-            author: validAuthor,
-            content: annotation.content,
-            alignment: .leading,
-            isIndented: true,
-            footer: "—— \(annotation.isNote ? "笔记" : "摘录")于《\(book.title)》",
-            annotation: nil
-        )
-    }
-    
-    private func createPayload(from excerpt: Excerpt) -> MobileFullscreenPayload {
-        let showHeader = [.poetry, .lyric, .prose].contains(excerpt.category)
-        let authorText = "\(excerpt.author)\(excerpt.dynasty.isEmpty ? "" : " (\(excerpt.dynasty))")"
-        let validAuthor = (showHeader && !authorText.trimmingCharacters(in: .whitespaces).isEmpty && excerpt.author != "佚名") ? authorText : nil
-        
-        let footerText: String? = {
-            if excerpt.category == .quote { return "—— \(excerpt.author)" }
-            if excerpt.category == .movie { return "—— \(excerpt.author)（\(excerpt.title ?? "")）" }
-            return nil
-        }()
-        
-        return MobileFullscreenPayload(
-            title: showHeader ? excerpt.title : nil,
-            author: validAuthor,
-            content: excerpt.content,
-            alignment: excerpt.category == .poetry ? .center : .leading,
-            isIndented: [.lyric, .prose].contains(excerpt.category),
-            footer: footerText,
-            annotation: excerpt.annotation.isEmpty ? nil : excerpt.annotation
+        .background(
+            Button("") { closeSearch() }
+                .keyboardShortcut(.cancelAction)
+                .opacity(0)
         )
     }
     
@@ -415,76 +329,56 @@ struct MobileBottomSearchView: View {
     }
     
     private func globalSearchBookCard(book: Book) -> some View {
-        HStack(spacing: AppSpacing.m) {
-            BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
-                .frame(width: 40, height: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .shadow(color: .black.opacity(0.1), radius: 3, y: 2)
-            
-            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                Text(book.title).font(.system(size: 16, weight: .bold)).foregroundColor(.primary)
-                HStack {
-                    Text(book.author).font(.system(size: 13)).foregroundColor(.secondary)
-                    Text("·")
-                    Text(book.status.displayName).font(.system(size: 12, weight: .medium)).foregroundColor(.blue)
+        AppCard {
+            HStack(spacing: AppSpacing.m) {
+                BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+                    .frame(width: 40, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                    Text(book.title).font(.system(size: 16, weight: .bold)).foregroundColor(.primary)
+                    HStack {
+                        Text(book.author).font(.system(size: 13)).foregroundColor(.secondary)
+                        Text("·")
+                        Text(book.status.displayName).font(.system(size: 12, weight: .medium)).foregroundColor(.blue)
+                    }
                 }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).foregroundColor(.secondary.opacity(0.5))
             }
-            Spacer()
-            Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).foregroundColor(.secondary.opacity(0.5))
         }
-        .padding(14)
-        .glassCardSurface()
-        .shadow(color: Color.black.opacity(0.03), radius: 8, y: 4)
-        .contentShape(Rectangle())
-    }
-    
-    private func globalSearchAnnotationCard(book: Book, annotation: Excerpt) -> some View {
-        HStack(alignment: .top, spacing: AppSpacing.m) {
-            ZStack {
-                Circle().fill(AppColors.readingAmber.opacity(0.15)).frame(width: 32, height: 32)
-                Image(systemName: annotation.isNote ? "square.and.pencil" : "highlighter")
-                    .font(.system(size: 13))
-                    .foregroundColor(AppColors.readingAmber)
-            }
-            
-            VStack(alignment: .leading, spacing: 6) {
-                Text(book.title).font(.system(size: 15, weight: .bold, design: .serif)).foregroundColor(.primary)
-                Text(annotation.content)
-                    .font(.system(size: 14, design: .serif))
-                    .foregroundColor(.secondary.opacity(0.8))
-                    .lineLimit(3)
-                    .lineSpacing(4)
-            }
-            .padding(.top, 2)
-            Spacer(minLength: 0)
-        }
-        .padding(AppSpacing.m)
-        .glassCardSurface()
-        .shadow(color: Color.black.opacity(0.03), radius: 8, y: 4)
         .contentShape(Rectangle())
     }
     
     private func globalSearchExcerptCard(excerpt: Excerpt) -> some View {
-        HStack(alignment: .top, spacing: AppSpacing.m) {
-            ZStack {
-                Circle().fill(excerpt.category.themeColor.opacity(0.15)).frame(width: 32, height: 32)
-                Image(systemName: "quote.bubble.fill").font(.system(size: 13)).foregroundColor(excerpt.category.themeColor)
+        let secondaryText = excerpt.book == nil ? excerpt.displayAuthor : excerpt.category.displayName
+
+        return AppCard {
+            HStack(alignment: .top, spacing: AppSpacing.m) {
+                ZStack {
+                    Circle().fill(excerpt.category.themeColor.opacity(0.15)).frame(width: 32, height: 32)
+                    Image(systemName: excerpt.isNote ? "note.text" : "quote.bubble.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(excerpt.category.themeColor)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(excerpt.book == nil ? excerpt.displayTitle : "《\(excerpt.book?.title ?? "未知书籍")》")
+                        .font(.system(size: 15, weight: .bold, design: .serif))
+                        .foregroundColor(.primary)
+                    Text(excerpt.content)
+                        .font(.system(size: 14, design: .serif))
+                        .foregroundColor(.secondary.opacity(0.8))
+                        .lineLimit(3)
+                        .lineSpacing(4)
+                    Text(secondaryText)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(excerpt.category.themeColor.opacity(0.8))
+                }
+                .padding(.top, 2)
+                Spacer(minLength: 0)
             }
-            
-            VStack(alignment: .leading, spacing: 6) {
-                Text(excerpt.title ?? "").font(.system(size: 15, weight: .bold, design: .serif)).foregroundColor(.primary)
-                Text(excerpt.content)
-                    .font(.system(size: 14, design: .serif))
-                    .foregroundColor(.secondary.opacity(0.8))
-                    .lineLimit(3)
-                    .lineSpacing(4)
-            }
-            .padding(.top, 2)
-            Spacer(minLength: 0)
         }
-        .padding(AppSpacing.m)
-        .glassCardSurface()
-        .shadow(color: Color.black.opacity(0.03), radius: 8, y: 4)
         .contentShape(Rectangle())
     }
     
@@ -495,7 +389,6 @@ struct MobileBottomSearchView: View {
         guard !trimmedQuery.isEmpty else {
             isSearching = false
             resultBooks = []
-            resultAnnotations = []
             resultExcerpts = []
             return
         }
@@ -515,147 +408,26 @@ struct MobileBottomSearchView: View {
         let allExcerpts = (try? modelContext.fetch(FetchDescriptor<Excerpt>())) ?? []
         
         let matchedBooks = allBooks.filter { book in
-            book.title.localizedStandardContains(query) ||
-            book.author.localizedStandardContains(query)
+            SearchMatcher.matchesBook(book, query: query)
         }
-        
-        var matchedAnnotations: [MobileAnnotationSearchResult] = []
-        for book in allBooks {
-            if let bookExcerpts = book.excerpts {
-                for excerpt in bookExcerpts {
-                    if excerpt.content.localizedStandardContains(query) {
-                        matchedAnnotations.append(MobileAnnotationSearchResult(book: book, annotation: excerpt))
-                    }
-                }
-            }
-        }
-        
+
         let matchedExcerpts = allExcerpts.filter { excerpt in
-            (excerpt.title ?? "").localizedStandardContains(query) ||
-            excerpt.author.localizedStandardContains(query) ||
-            excerpt.content.localizedStandardContains(query) ||
-            excerpt.annotation.localizedStandardContains(query)
+            SearchMatcher.matchesExcerpt(excerpt, query: query)
         }
         
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            self.resultBooks = matchedBooks
-            self.resultAnnotations = matchedAnnotations
-            self.resultExcerpts = matchedExcerpts
+        withAnimation(.easeOut(duration: 0.18)) {
+            self.resultBooks = Array(matchedBooks.prefix(10))
+            self.resultExcerpts = Array(matchedExcerpts.prefix(20))
             self.isSearching = false
         }
     }
     
     private func closeSearch() {
+        searchTask?.cancel()
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         isSearchFocused = false
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+        withAnimation(.easeOut(duration: 0.18)) {
             isPresented = false
-        }
-    }
-}
-
-// MARK: - 📖 统一通用层：沉浸式全屏阅读视图
-
-// 💡 这是一个完全解耦的数据模型，任何符合该格式的文字块都可以被此视图渲染
-struct MobileFullscreenPayload {
-    var title: String?
-    var author: String?
-    var content: String
-    var alignment: TextAlignment = .leading
-    var isIndented: Bool = true
-    var footer: String? = nil
-    var annotation: String? = nil
-}
-
-struct MobileUnifiedFullscreenReadingView: View {
-    let payload: MobileFullscreenPayload
-    var onClose: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
-    
-    private var displayContent: String {
-        payload.isIndented
-            ? payload.content.components(separatedBy: .newlines).map { "\u{3000}\u{3000}" + $0 }.joined(separator: "\n")
-            : payload.content
-    }
-    
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
-            
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: AppSpacing.xxl) {
-                    
-                    // 1. 头部 (按需显示)
-                    if payload.title != nil || payload.author != nil {
-                        VStack(spacing: AppSpacing.s) {
-                            if let title = payload.title {
-                                Text(title)
-                                    .font(.system(size: 28, weight: .heavy, design: .serif))
-                                    .foregroundColor(.primary)
-                                    .multilineTextAlignment(.center)
-                            }
-                            if let author = payload.author {
-                                Text(author)
-                                    .font(.system(size: 14, weight: .medium, design: .serif))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.top, 80)
-                    } else {
-                        Spacer().frame(height: 60)
-                    }
-                    
-                    // 2. 核心正文
-                    Text(displayContent)
-                        .font(.system(size: 18, weight: .regular, design: .serif))
-                        .lineSpacing(14)
-                        .foregroundColor(.primary.opacity(0.9))
-                        .multilineTextAlignment(payload.alignment)
-                        .frame(maxWidth: .infinity, alignment: payload.alignment == .center ? .center : .leading)
-                    
-                    // 3. 尾部落款
-                    if let footer = payload.footer {
-                        HStack {
-                            Spacer()
-                            Text(footer)
-                                .font(.system(size: 14, weight: .medium, design: .serif))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.top, AppSpacing.m)
-                    }
-                    
-                    // 4. 专属注解
-                    if let annotation = payload.annotation {
-                        VStack(alignment: .leading, spacing: AppSpacing.s) {
-                            Divider()
-                            Text("注解 / 释义").font(.system(size: 13, weight: .bold)).foregroundColor(.secondary)
-                            Text(annotation)
-                                .font(.system(size: 14, design: .serif))
-                                .lineSpacing(8)
-                                .foregroundColor(.secondary.opacity(0.8))
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 40)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, AppSpacing.emptyState)
-                .frame(maxWidth: .infinity)
-            }
-            
-            Button(action: {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                onClose()
-            }) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.secondary)
-                    .frame(width: 36, height: 36)
-                    .background(Color(uiColor: .tertiarySystemFill))
-                    .clipShape(Circle())
-            }
-            .padding(.trailing, 20)
-            .padding(.top, 20)
         }
     }
 }

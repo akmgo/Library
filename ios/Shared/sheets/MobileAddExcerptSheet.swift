@@ -20,7 +20,6 @@ struct MobileAddExcerptSheet: View {
     @State private var selectedMode: BookContentEntryMode = .excerpt
     @State private var content: String = ""
     @FocusState private var isFocused: Bool
-    @Namespace private var modeNamespace
 
     private var trimmedContent: String {
         content.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -29,7 +28,7 @@ struct MobileAddExcerptSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: AppSpacing.l) {
+                LazyVStack(alignment: .leading, spacing: AppSpacing.l) {
                     modeSlider
                     contentEditor
                 }
@@ -62,39 +61,15 @@ struct MobileAddExcerptSheet: View {
     }
 
     private var modeSlider: some View {
-        HStack(spacing: 0) {
-            ForEach(BookContentEntryMode.allCases, id: \.self) { mode in
-                let isSelected = selectedMode == mode
-
-                Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    withAnimation(.easeInOut(duration: 0.18)) {
-                        selectedMode = mode
-                    }
-                } label: {
-                    ZStack {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: AppRadius.s, style: .continuous)
-                                .fill(mode.tint)
-                                .matchedGeometryEffect(id: "mobile-content-mode", in: modeNamespace)
-                        }
-
-                        HStack(spacing: AppSpacing.xs) {
-                            Image(systemName: mode.iconName)
-                                .font(.system(size: 12, weight: .semibold))
-                            Text(mode.displayName)
-                                .font(.system(size: 14, weight: isSelected ? .bold : .medium, design: .rounded))
-                        }
-                        .foregroundStyle(isSelected ? .white : Color.primary.opacity(0.72))
-                        .frame(maxWidth: .infinity, minHeight: 38)
-                    }
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(4)
-        .background(Color.primary.opacity(0.045))
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
+        AppSlidingSegmentedControl(
+            selection: $selectedMode,
+            options: BookContentEntryMode.allCases.map {
+                AppSlidingSegmentedOption(value: $0, title: $0.displayName, systemImage: $0.iconName)
+            },
+            tint: AppColors.selection,
+            height: 32,
+            cornerRadius: AppRadius.m
+        )
     }
 
     private var contentEditor: some View {
@@ -122,9 +97,7 @@ struct MobileAddExcerptSheet: View {
             }
             .frame(minHeight: 260, alignment: .top)
             .background(
-                AppColors.secondaryBackground(for: colorScheme)
-                    .opacity(0.78)
-                    .background(AppMaterials.card)
+                AppColors.innerBlock(for: colorScheme)
             )
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.m, style: .continuous))
             .overlay(

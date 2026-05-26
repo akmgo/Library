@@ -12,8 +12,8 @@ struct KnowledgeSpectrum: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        // ✨ 核心重构：抛弃 GroupBox，换上原生的液态玻璃舱
-        VStack(alignment: .leading, spacing: AppSpacing.m) {
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
             // 头部 Label
             HStack {
                 Text("知识基因")
@@ -84,7 +84,7 @@ struct KnowledgeSpectrum: View {
                 .frame(maxHeight: .infinity, alignment: .center)
             }
         }
-        .glassCard(cornerRadius: AppRadius.panel)
+        }
     }
 }
 

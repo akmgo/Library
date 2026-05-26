@@ -13,10 +13,6 @@ struct MobileYearlyTimelineView: View {
     
     @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
 
-    // ✨ 动画与生命周期引擎
-    @State private var isEntranceAnimated: Bool = false
-    @State private var hasAppeared: Bool = false // 核心修复：防止从详情页退回时重复触发入场动画
-
     private var yearlySnapshot: ReadingStatsCalculator.YearlyArchiveSnapshot {
         ReadingStatsCalculator.yearlyArchiveSnapshot(
             books: books,
@@ -30,7 +26,7 @@ struct MobileYearlyTimelineView: View {
             AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
                 
                 ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
+                    LazyVStack(spacing: 0) {
                         MobilePageStatsHeader(items: [
                             PageStatItemData(title: "完结作品", value: "\(yearlySnapshot.books.count)", color: .indigo),
                             PageStatItemData(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", color: AppColors.readingAmber),
@@ -52,9 +48,6 @@ struct MobileYearlyTimelineView: View {
                         }
                     }
                     .padding(.bottom, AppSpacing.emptyState)
-                    .opacity(isEntranceAnimated ? 1.0 : 0.0)
-                    .offset(y: isEntranceAnimated ? 0 : 40)
-                    .animation(.spring(response: 0.5, dampingFraction: 0.8), value: isEntranceAnimated)
                 }
             }
             .toolbar {
@@ -71,18 +64,6 @@ struct MobileYearlyTimelineView: View {
                     } label: {
                         Text(String(selectedYear))
                             .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-            }
-            .onAppear {
-                // ✨ 核心修复：锁定生命周期，只在首次进入时触发下拉动画
-                if !hasAppeared {
-                    hasAppeared = true
-                    isEntranceAnimated = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-                        withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                            isEntranceAnimated = true
-                        }
                     }
                 }
             }
@@ -119,7 +100,7 @@ struct MobileTimelineRowView: View {
                 }.frame(height: 28)
                 
                 Rectangle()
-                    .fill(isLast ? LinearGradient(colors: [Color.blue.opacity(0.3), .clear], startPoint: .top, endPoint: .bottom) : LinearGradient(colors: [Color.blue.opacity(0.3)], startPoint: .top, endPoint: .bottom))
+                    .fill(isLast ? LinearGradient(colors: [Color.secondary.opacity(0.14), .clear], startPoint: .top, endPoint: .bottom) : LinearGradient(colors: [Color.secondary.opacity(0.14)], startPoint: .top, endPoint: .bottom))
                     .frame(width: 2)
             }
             .padding(.leading, 20)
@@ -160,9 +141,9 @@ private struct MobileTimelineDateBadgeView: View {
                     Text(data.text).font(.system(size: 11, weight: .bold))
                 }
                 .foregroundColor(data.color)
-                .padding(.horizontal, 10).padding(.vertical, 4)
-                .background(data.color.opacity(0.15))
-                .clipShape(Capsule())
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .appCapsuleStyle(tint: data.color)
             }
         }
     }
@@ -177,108 +158,13 @@ struct MobileTimelineCardView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        ZStack(alignment: .leading) {
-            // 背景水印
-            GeometryReader { geo in
-                ZStack {
-                    Image(systemName: "quote.opening")
-                        .font(.system(size: 80, weight: .bold))
-                        .foregroundColor(Color.blue.opacity(0.03))
-                        .position(x: geo.size.width - 20, y: 20)
-                }
-            }.clipShape(RoundedRectangle(cornerRadius: AppRadius.card))
-            
-            HStack(alignment: .top, spacing: AppSpacing.m) {
-                BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
-                    .frame(width: 80, height: 120).clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover))
-                    .overlay(RoundedRectangle(cornerRadius: AppRadius.bookCover).stroke(Color.primary.opacity(0.1), lineWidth: 0.5))
-                    .shadow(color: Color.black.opacity(0.1), radius: 6, y: 3)
-                
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(alignment: .firstTextBaseline, spacing: 0) {
-                        Text(book.title).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundColor(.primary).lineLimit(1).layoutPriority(1)
-                        Spacer(minLength: 12)
-                        Text(book.author).font(.system(size: 12, weight: .medium)).foregroundColor(.secondary).lineLimit(1).fixedSize(horizontal: true, vertical: false).layoutPriority(0)
-                    }.frame(maxWidth: .infinity)
-                    
-                    Spacer()
-                    
-                    if book.rating > 0 {
-                        HStack(spacing: 2) {
-                            ForEach(1 ... 7, id: \.self) { i in
-                                Image(systemName: "star.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(i <= book.rating ? .yellow : Color.secondary.opacity(0.2))
-                            }
-                            if book.rating < AppConstants.ratingPoeticTexts.count {
-                                Text(AppConstants.ratingPoeticTexts[book.rating])
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(AppColors.readingAmber)
-                                    .padding(.leading, 4)
-                            }
-                        }
-                    } else { Color.clear.frame(height: 12) }
-                    
-                    Spacer()
-                    
-                    if !book.tags.isEmpty {
-                        HStack(spacing: 6) {
-                            ForEach(Array(book.tags.prefix(3)), id: \.self) { tag in
-                                Text(tag).font(.system(size: 9, weight: .bold)).foregroundColor(.indigo)
-                                    .padding(.horizontal, 6).padding(.vertical, 3)
-                                    .background(Color.indigo.opacity(0.1)).clipShape(RoundedRectangle(cornerRadius: AppRadius.xs))
-                            }
-                        }
-                    } else { Color.clear.frame(height: 15) }
-                    
-                    Spacer()
-                    MobileJourneyTicket(book: book)
-                }
-                .frame(height: 120)
-            }
-            .padding(AppSpacing.m)
+        AppCard {
+            YearlyTimelineBookCardContent(
+                book: book,
+                coverWidth: 80,
+                coverHeight: 132
+            )
         }
-        .frame(maxWidth: .infinity)
-        .glassCardSurface()
-        .shadow(color: Color.black.opacity(0.05), radius: 8, y: 4)
-    }
-}
-
-struct MobileJourneyTicket: View {
-    let book: Book
-    var body: some View {
-        let days = calculateDays(start: book.startDate, end: book.finishDate)
-        
-        HStack(spacing: 0) {
-            Text(formatShortDate(book.startDate)).font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary)
-            HStack(spacing: AppSpacing.xxs) {
-                Circle().fill(AppColors.success).frame(width: 4, height: 4)
-                Rectangle().fill(AppColors.success.opacity(0.5)).frame(height: 1)
-                
-                Text("\(days)天").font(.system(size: 9, weight: .bold)).foregroundColor(AppColors.success).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                    .padding(.horizontal, 6).padding(.vertical, 2).background(AppColors.success.opacity(0.15)).clipShape(Capsule())
-                
-                Rectangle().fill(AppColors.success.opacity(0.5)).frame(height: 1)
-                Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold)).foregroundColor(AppColors.success)
-            }.padding(.horizontal, 8)
-            Text(formatShortDate(book.finishDate)).font(.system(size: 11, weight: .bold, design: .rounded)).foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 10).padding(.vertical, AppSpacing.xs)
-        .background(Color.primary.opacity(0.03))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-    
-    private func formatShortDate(_ date: Date?) -> String {
-        guard let d = date else { return "未知" }; let formatter = DateFormatter(); formatter.dateFormat = "M.d"; return formatter.string(from: d)
-    }
-
-    private func calculateDays(start: Date?, end: Date?) -> Int {
-        guard let s = start, let e = end else { return 1 }
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: s)
-        let endOfDay = calendar.startOfDay(for: e)
-        let diff = calendar.dateComponents([.day], from: startOfDay, to: endOfDay).day ?? 0
-        return max(1, diff + 1)
     }
 }
 

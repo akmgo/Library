@@ -33,24 +33,24 @@ struct MobileReadingTimerCard: View {
     private var dailyTarget: Int { 30 }
 
     var body: some View {
-        GroupBox {
-            VStack(spacing: AppSpacing.s) {
-                if let book {
-                    gaugeSection(for: book)
-
-                    buttonSection(for: book)
-                } else {
-                    emptyState
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
+                HStack {
+                    Text("阅读计时")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "timer")
+                        .foregroundColor(AppColors.readingAmber)
                 }
-            }
-        } label: {
-            HStack {
-                Text("阅读计时")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                Spacer()
-                Image(systemName: "timer")
-                    .foregroundColor(AppColors.readingAmber)
+                VStack(spacing: AppSpacing.s) {
+                    if let book {
+                        gaugeSection(for: book)
+                        buttonSection(for: book)
+                    } else {
+                        emptyState
+                    }
+                }
             }
         }
         .onReceive(timer) { now in
@@ -111,7 +111,7 @@ struct MobileReadingTimerCard: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white)
-                .background(AppColors.danger, in: Capsule())
+                .appCapsuleStyle(tint: AppColors.danger, fillOpacity: 1)
             } else {
                 HStack(spacing: 10) {
                     Button {
@@ -124,7 +124,7 @@ struct MobileReadingTimerCard: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.white)
-                    .background(AppColors.readingAmber, in: Capsule())
+                    .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
 
                     Button {
                         timedDurationMinutes = 30
@@ -137,7 +137,7 @@ struct MobileReadingTimerCard: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.white)
-                    .background(AppColors.readingAmber, in: Capsule())
+                    .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
                 }
             }
 
@@ -153,7 +153,7 @@ struct MobileReadingTimerCard: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.white)
-            .background(AppColors.success, in: Capsule())
+            .appCapsuleStyle(tint: AppColors.success, fillOpacity: 1)
         }
     }
 
@@ -195,11 +195,9 @@ struct MobileReadingTimerCard: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(timedDurationMinutes == minutes ? Color.white : AppColors.readingAmber)
-                        .background(
-                            timedDurationMinutes == minutes
-                                ? AppColors.readingAmber
-                                : AppColors.readingAmber.opacity(0.1),
-                            in: Capsule()
+                        .appCapsuleStyle(
+                            tint: AppColors.readingAmber,
+                            fillOpacity: timedDurationMinutes == minutes ? 1 : 0.10
                         )
                     }
                 }
@@ -248,7 +246,7 @@ struct MobileReadingTimerCard: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white)
-                .background(AppColors.readingAmber, in: Capsule())
+                .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
             }
             .padding(20)
             .navigationTitle("定时阅读")
@@ -304,7 +302,7 @@ struct MobileReadingTimerCard: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white)
-                .background(AppColors.readingAmber, in: Capsule())
+                .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
             }
             .padding(20)
             .navigationTitle("记录进度")
@@ -381,7 +379,7 @@ struct MobileReadingTimerCard: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.white)
-                .background(AppColors.readingAmber, in: Capsule())
+                .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 1)
             }
             .padding(20)
             .navigationTitle("手动录入")
@@ -470,7 +468,7 @@ private struct PreviewTimerCard: View {
         PreviewWithBook(title: "三体", author: "刘慈欣", currentAmount: 156) { book in
             MobileReadingTimerCard(book: book, todayTotalSeconds: 1200)
                 .padding()
-                .background(Color(UIColor.systemGroupedBackground))
+                .background(AppColors.primaryBackground(for: .light))
         }
     }
 }
@@ -483,7 +481,7 @@ private struct PreviewTimerCard: View {
 #Preview("阅读计时卡 - 空状态") {
     MobileReadingTimerCard(book: nil, todayTotalSeconds: 0)
         .padding()
-        .background(Color(UIColor.systemGroupedBackground))
+        .background(AppColors.primaryBackground(for: .light))
 }
 #endif
 

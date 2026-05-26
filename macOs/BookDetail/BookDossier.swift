@@ -9,7 +9,6 @@ struct BookDossier: View {
     @Bindable var book: Book
     @Binding var isDeleteMode: Bool
     var onDeleteExcerpt: (Excerpt) -> Void
-    @Namespace private var animationNamespace
 
     var body: some View {
         let safeTitle = book.title
@@ -51,7 +50,7 @@ struct BookDossier: View {
 
                     // 底部：三大核心信息卡片
                     VStack(alignment: .leading, spacing: 28) {
-                        BookStatusPicker(book: book, animationNamespace: animationNamespace)
+                        BookStatusPicker(book: book)
                         BookDatePickers(book: book)
                         BookRatingView(book: book)
                     }
@@ -80,31 +79,19 @@ struct InteractiveCoverView: View {
     let coverData: Data?
     let fallbackTitle: String
     
-    @State private var hoverLocation: CGPoint? = nil
-    @State private var isHovering: Bool = false
-    
     var body: some View {
         GeometryReader { geo in
             let size = geo.size
-            let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            
-            let hoverX = hoverLocation?.x ?? center.x
-            let hoverY = hoverLocation?.y ?? center.y
-            let normalizedX = (hoverX - center.x) / (size.width / 2)
-            let normalizedY = (hoverY - center.y) / (size.height / 2)
-            
-            let pitch = isHovering ? -normalizedY * 8 : 0
-            let yaw = isHovering ? normalizedX * 8 : 0
             
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.black.opacity(0.8))
                     .frame(width: size.width, height: size.height)
                     .shadow(
-                        color: Color.black.opacity(isHovering ? 0.25 : 0.15),
-                        radius: isHovering ? 30 : 20,
-                        x: isHovering ? -normalizedX * 15 : 0,
-                        y: isHovering ? -normalizedY * 15 + 20 : 15
+                        color: Color.black.opacity(0.15),
+                        radius: 20,
+                        x: 0,
+                        y: 15
                     )
                 
                 BookCoverView(coverID: coverID, coverData: coverData, fallbackTitle: fallbackTitle)
@@ -112,25 +99,10 @@ struct InteractiveCoverView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.primary.opacity(isHovering ? 0.15 : 0.05), lineWidth: 0.5)
+                            .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
                     )
             }
             .frame(width: size.width, height: size.height)
-            .rotation3DEffect(
-                .degrees(isHovering ? 1.0 : 0.0),
-                axis: (x: pitch, y: yaw, z: 0)
-            )
-            .scaleEffect(isHovering ? 1.02 : 1.0)
-            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovering)
-            .animation(.interactiveSpring(response: 0.15, dampingFraction: 0.8), value: hoverLocation)
-            .onContinuousHover { phase in
-                switch phase {
-                case .active(let location):
-                    isHovering = true; hoverLocation = location
-                case .ended:
-                    isHovering = false; hoverLocation = nil
-                }
-            }
         }
     }
 }
@@ -150,14 +122,9 @@ struct BookRatingView: View {
         let safeRating = book.rating
         let validRating = min(max(safeRating, 0), 7)
         
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .center) {
-                Label("阅读沉淀", systemImage: "sparkles")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.yellow)
-                
-                Spacer()
-                
+        AppCard {
+            VStack(alignment: .leading, spacing: 16) {
+            DetailSectionHeader(title: "阅读沉淀", systemImage: "sparkles", tint: .yellow) {
                 Text(AppConstants.ratingPoeticTexts[validRating])
                     .font(.system(size: 15, weight: .bold, design: .serif))
                     .foregroundStyle(validRating > 0 ? AnyShapeStyle(activeGradient) : AnyShapeStyle(Color.secondary.opacity(0.4)))
@@ -170,23 +137,20 @@ struct BookRatingView: View {
                     Image(systemName: index <= validRating ? "star.fill" : "star")
                         .font(.system(size: 20))
                         .foregroundStyle(index <= validRating ? AnyShapeStyle(activeGradient) : AnyShapeStyle(Color.secondary.opacity(0.15)))
-                        .shadow(color: index <= validRating ? Color.orange.opacity(0.18) : .clear, radius: 2)
-                        .scaleEffect(index <= validRating ? 1.02 : 1.0)
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
                         .onTapGesture {
                             handleRatingTap(tappedIndex: index, currentRating: validRating)
                         }
-                        .onHover { h in if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
                 }
             }
             .padding(.top, 4)
         }
-        .glassCard()
+        }
     }
 
     private func handleRatingTap(tappedIndex: Int, currentRating: Int) {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+        withAnimation(.appControlFeedback) {
             if currentRating == tappedIndex {
                 book.rating = 0
             } else {
@@ -200,56 +164,60 @@ struct BookRatingView: View {
 
 struct BookStatusPicker: View {
     @Bindable var book: Book
-    var animationNamespace: Namespace.ID
     @Environment(\.modelContext) private var modelContext
+    @State private var selectedStatus: BookStatus?
+
+    private var displayedStatus: BookStatus {
+        selectedStatus ?? book.status
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label("当前状态", systemImage: "book.fill")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(AppColors.selection)
+        AppCard {
+            VStack(alignment: .leading, spacing: 14) {
+            DetailSectionHeader(title: "当前状态", systemImage: "book.fill", tint: AppColors.selection)
             
-            HStack(spacing: 0) {
-                ForEach(AppConstants.statusOptions, id: \.0) { opt in
-                    let isSelected = (book.status) == opt.0
-                    Button(action: { handleStatusChange(to: opt.0) }) {
-                        ZStack {
-                            if isSelected {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.clear)
-                                    .glassEffect(.regular.tint(AppColors.selection), in: .rect(cornerRadius: 10)) // ✨ 着色玻璃水滴
-                                    .matchedGeometryEffect(id: "status-bg", in: animationNamespace)
-                            }
-                            Text(opt.1)
-                                .font(.system(size: 14, weight: isSelected ? .bold : .medium))
-                                .foregroundColor(isSelected ? .white : .primary)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        }.frame(height: 36)
-                    }
-                    .buttonStyle(.plain)
-                    .onHover { h in if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
-                }
-            }
-            .padding(4)
-            .appInnerBlockStyle(cornerRadius: 12)
+            AppSlidingSegmentedControl(
+                selection: Binding(
+                    get: { displayedStatus },
+                    set: { handleStatusChange(to: $0) }
+                ),
+                options: AppConstants.statusOptions.map {
+                    AppSlidingSegmentedOption(value: $0.0, title: $0.1)
+                },
+                tint: AppColors.selection,
+                height: 36,
+                cornerRadius: 12,
+                showsIcons: false
+            )
         }
-        .glassCard()
+        }
+        .onAppear {
+            selectedStatus = book.status
+        }
+        .onChange(of: book.status) { _, newValue in
+            if selectedStatus != newValue {
+                selectedStatus = newValue
+            }
+        }
     }
 
     private func handleStatusChange(to newStatus: BookStatus) {
-        let oldStatus = book.status
-        let wasFinished = (oldStatus == .finished)
-        let willFinish = (newStatus == .finished)
-        
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            try? ReadingDataService.shared.updateStatus(book, to: newStatus, context: modelContext)
+        guard newStatus != displayedStatus else { return }
+
+        withAnimation(.appControlFeedback) {
+            selectedStatus = newStatus
         }
-        
-        if willFinish && !wasFinished {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                NotificationCenter.default.post(name: Notification.Name.triggerConfetti, object: nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            guard book.status != newStatus else { return }
+            book.status = newStatus
+            do {
+                try modelContext.save()
+            } catch {
+                print("状态保存失败: \(error.localizedDescription)")
             }
         }
+
     }
 }
 
@@ -257,56 +225,52 @@ struct BookStatusPicker: View {
 
 struct BookDatePickers: View {
     @Bindable var book: Book
-    
+
+    private var totalDays: Int? {
+        guard let start = book.startDate else { return nil }
+        let calendar = Calendar.current
+        let end = book.finishDate ?? Date()
+        let diff = calendar.dateComponents([.day], from: calendar.startOfDay(for: start), to: calendar.startOfDay(for: end)).day ?? 0
+        return max(1, diff + 1)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label("阅读旅程", systemImage: "calendar")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.mint)
-            
-            HStack(spacing: 16) {
-                if book.status == .unread || book.status == .planned {
-                    Text("等待翻开第一页...")
-                        .font(.system(size: 14, weight: .medium, design: .serif)).italic()
-                        .foregroundColor(.secondary)
-                        .frame(height: 56)
-                    Spacer()
-                } else {
-                    AdvancedDatePickerButton(icon: "calendar.badge.plus", title: "开始", date: $book.startDate)
-                    AdvancedDatePickerButton(icon: "calendar.badge.checkmark", title: "结束", date: $book.finishDate, isDisabled: book.status != .finished)
-                    
-                    if book.status == .finished, let start = book.startDate, let end = book.finishDate {
-                        let diff = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: start), to: Calendar.current.startOfDay(for: end)).day ?? 0
-                        let days = max(1, diff + 1)
-                        
-                        HStack {
-                            Text("历时").font(.system(size: 14, weight: .bold)).foregroundColor(.secondary)
-                            Spacer()
-                            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                                Text("\(days)").font(.system(size: 18, weight: .black, design: .rounded)).foregroundColor(.mint)
-                                Text("天").font(.system(size: 12, weight: .bold)).foregroundColor(.mint)
-                            }
-                        }
-                        .frame(width: 90).padding(.horizontal, 16).padding(.vertical, 14)
-                        .glassEffect(in: .rect(cornerRadius: 12.0)) // ✨ 历时小卡片玻璃化
-                        .transition(.scale.combined(with: .opacity))
-                    }
-                    Spacer(minLength: 0)
+        AppCard {
+            VStack(alignment: .leading, spacing: 14) {
+            DetailSectionHeader(title: "阅读旅程", systemImage: "calendar", tint: .mint) {
+                if let days = totalDays {
+                    AppCapsuleLabel(text: "\(days) 天", tint: .mint)
                 }
             }
+
+            HStack(spacing: 14) {
+                AdvancedDatePickerButton(
+                    icon: "calendar.badge.plus",
+                    title: "开始",
+                    date: $book.startDate,
+                    isDisabled: book.status != .reading && book.status != .finished,
+                    disabledText: "在读或已读后可设置"
+                )
+                AdvancedDatePickerButton(
+                    icon: "calendar.badge.checkmark",
+                    title: "结束",
+                    date: $book.finishDate,
+                    isDisabled: book.status != .finished,
+                    disabledText: "已读后可设置"
+                )
+            }
         }
-        .glassCard()
+        }
     }
 }
 
 struct AdvancedDatePickerButton: View {
-    let icon: String; let title: String; @Binding var date: Date?; var isDisabled: Bool = false
+    let icon: String; let title: String; @Binding var date: Date?; var isDisabled: Bool = false; var disabledText = "不可设置"
     @State private var isShowingPopover = false
-    @State private var isHovered = false
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { isShowingPopover.toggle() } }) {
+        Button(action: { withAnimation(.appControlFeedback) { isShowingPopover.toggle() } }) {
             HStack(spacing: 12) {
                 ZStack {
                     Circle().fill(date != nil ? Color.blue.opacity(0.15) : Color.secondary.opacity(0.1)).frame(width: 36, height: 36)
@@ -317,9 +281,9 @@ struct AdvancedDatePickerButton: View {
                     if let d = date {
                         Text(AppFormatters.chineseFullDateFormatter.string(from: d))
                             .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
+                            .foregroundColor(isDisabled ? .secondary.opacity(0.45) : .primary)
                     } else {
-                        Text("尚未设置")
+                        Text(isDisabled ? disabledText : "尚未设置")
                             .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundColor(.secondary.opacity(0.6))
                     }
@@ -332,16 +296,15 @@ struct AdvancedDatePickerButton: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
             )
-            .glassEffect(isHovered ? .regular.interactive() : .clear, in: .rect(cornerRadius: 12.0))
         }
         .buttonStyle(.plain).disabled(isDisabled).opacity(isDisabled ? 0.4 : 1.0)
-        .onHover { h in withAnimation(.easeInOut(duration: 0.2)) { isHovered = h }; if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
         .popover(isPresented: $isShowingPopover, arrowEdge: Edge.bottom) { ScreenshotStyleDatePicker(selectedDate: $date) }
     }
 }
 
 struct ScreenshotStyleDatePicker: View {
     @Binding var selectedDate: Date?
+    @Environment(\.colorScheme) private var colorScheme
     var customCalendar: Calendar { var cal = Calendar.current; cal.firstWeekday = 2; return cal }
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -358,14 +321,14 @@ struct ScreenshotStyleDatePicker: View {
                 .environment(\.calendar, customCalendar).environment(\.locale, Locale(identifier: "zh_CN"))
                 .scaleEffect(1.5).frame(width: 250, height: 260).padding(.horizontal, 24).padding(.bottom, 20)
         }
-        .frame(width: 280).background(Color(nsColor: .windowBackgroundColor))
+        .frame(width: 280)
+        .background(AppColors.primaryBackground(for: colorScheme))
     }
     private func isToday(_ date: Date?) -> Bool { guard let date = date else { return false }; return Calendar.current.isDateInToday(date) }
 }
 
 struct QuickOptionRow: View {
     let icon: String; let iconColor: Color; let title: String; let isSelected: Bool; let action: () -> Void
-    @State private var isHovered = false
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
@@ -375,10 +338,10 @@ struct QuickOptionRow: View {
                 if isSelected { Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundColor(.blue) }
             }
             .padding(.horizontal, 16).padding(.vertical, 10)
-            .background(isHovered ? Color.secondary.opacity(0.1) : Color.clear)
+            .background(Color.clear)
             .cornerRadius(8).padding(.horizontal, 8)
         }
-        .buttonStyle(.plain).onHover { h in isHovered = h; if h { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
+        .buttonStyle(.plain)
     }
 }
 
@@ -389,19 +352,11 @@ struct BookTagsView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        let safeTags: [String] = book.tags
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Label("知识标签", systemImage: "tag.fill")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.purple)
-                Spacer()
-                Text("\(safeTags.count) / 3")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .appInnerCapsuleStyle()
+        AppCard {
+            let safeTags: [String] = book.tags
+            VStack(alignment: .leading, spacing: 20) {
+            DetailSectionHeader(title: "知识标签", systemImage: "tag.fill", tint: .purple) {
+                AppCapsuleLabel(text: "\(safeTags.count) / 3", tint: .purple)
             }
             let columns = [GridItem(.adaptive(minimum: 80, maximum: 120), spacing: 12)]
             LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
@@ -410,7 +365,7 @@ struct BookTagsView: View {
                     let isMaxed = safeTags.count >= 3 && !isSelected
                     
                     Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        withAnimation(.appControlFeedback) {
                             var currentTags = book.tags
                             if isSelected { currentTags.removeAll(where: { $0 == tag }) }
                             else if currentTags.count < 3 { currentTags.append(tag) }
@@ -422,25 +377,19 @@ struct BookTagsView: View {
                             .foregroundColor(isSelected ? .white : (isMaxed ? .secondary.opacity(0.6) : .primary))
                             .frame(height: 36).frame(maxWidth: .infinity)
                             .background {
-                                if !isSelected {
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(AppColors.innerBlock(for: colorScheme))
-                                }
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(isSelected ? Color.purple : AppColors.innerBlock(for: colorScheme))
                             }
                             .overlay {
-                                if !isSelected {
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
-                                }
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(isSelected ? Color.clear : AppColors.innerStroke(for: colorScheme), lineWidth: 1)
                             }
-                            .glassEffect(isSelected ? .regular.tint(.purple).interactive() : .clear, in: .rect(cornerRadius: 12.0))
-                            .scaleEffect(isSelected ? 1.02 : 1.0)
                     }
-                    .buttonStyle(.plain).disabled(isMaxed).onHover { h in if h && !isMaxed { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
+                    .buttonStyle(.plain).disabled(isMaxed)
                 }
             }
         }
-        .glassCard()
+        }
     }
 }
 
@@ -452,34 +401,24 @@ struct ReadingSessionCard: View {
     @State private var isExpanded = false
     private let maxCollapsed = 10
 
-    private var sessions: [ReadingSession] {
-        (book.sessions ?? []).sorted { $0.startedAt > $1.startedAt }
-    }
-
-    private var visibleSessions: [ReadingSession] {
-        isExpanded ? sessions : Array(sessions.prefix(maxCollapsed))
+    private var snapshot: ReadingStatsCalculator.ReadingSessionListSnapshot {
+        ReadingStatsCalculator.ReadingSessionListSnapshot(
+            sessions: book.sessions ?? [],
+            isExpanded: isExpanded,
+            maxCollapsed: maxCollapsed
+        )
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label("阅读记录", systemImage: "clock.fill")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(AppColors.readingAmber)
-
-                Spacer()
-
-                if !sessions.isEmpty {
-                    Text("\(sessions.count) 条")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .appInnerCapsuleStyle()
+        AppCard {
+            VStack(alignment: .leading, spacing: 16) {
+            DetailSectionHeader(title: "阅读记录", systemImage: "clock.fill", tint: AppColors.readingAmber) {
+                if !snapshot.isEmpty {
+                    AppCapsuleLabel(text: "\(snapshot.totalCount) 条", tint: AppColors.readingAmber)
                 }
             }
 
-            if sessions.isEmpty {
+            if snapshot.isEmpty {
                 VStack(spacing: 10) {
                     Image(systemName: "clock.badge.questionmark")
                         .font(.system(size: 24, weight: .light))
@@ -494,24 +433,18 @@ struct ReadingSessionCard: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(visibleSessions.enumerated()), id: \.element.id) { index, session in
-                        SessionRowView(session: session)
-                        if index < visibleSessions.count - 1 {
-                            Divider().opacity(0.25).padding(.leading, 12)
-                        }
-                    }
-                }
+                SessionRowsView(rows: snapshot.rows)
+                    .equatable()
                 .appInnerBlockStyle(cornerRadius: AppRadius.m)
 
-                if sessions.count > maxCollapsed {
+                if snapshot.totalCount > maxCollapsed {
                     Button {
                         withAnimation(.appContentFade) { isExpanded.toggle() }
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                                 .font(.system(size: 10, weight: .bold))
-                            Text(isExpanded ? "收起" : "查看全部 \(sessions.count) 条记录")
+                            Text(isExpanded ? "收起" : "查看全部 \(snapshot.totalCount) 条记录")
                                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                         }
                         .foregroundStyle(.secondary)
@@ -523,62 +456,32 @@ struct ReadingSessionCard: View {
                 }
             }
         }
-        .glassCard()
+        }
     }
 }
 
 // MARK: - ✨ 单行阅读记录
 
-private struct SessionRowView: View {
-    let session: ReadingSession
-
-    private let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy年M月d日"
-        return f
-    }()
+private struct SessionRowsView: View, Equatable {
+    let rows: [ReadingStatsCalculator.ReadingSessionRowSnapshot]
 
     var body: some View {
-        HStack(spacing: 20) {
-            Text(dateFormatter.string(from: session.startedAt))
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(.primary)
-                .frame(width: 124, alignment: .leading)
-
-            Text(session.displayTimeRange)
-                .font(.system(size: 13, weight: .medium, design: .rounded).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(width: 100, alignment: .leading)
-
-            Text(session.displayDuration)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(AppColors.readingAmber)
-                .frame(width: 80, alignment: .leading)
-
-            if session.deltaAmount > 0 {
-                Text(session.displayDelta)
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppColors.readingAmber)
-                    .frame(width: 64, alignment: .leading)
-            } else {
-                Spacer().frame(width: 64)
+        LazyVStack(spacing: 0) {
+            ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                SessionRowView(snapshot: row)
+                if index < rows.count - 1 {
+                    Divider().opacity(0.25).padding(.leading, 12)
+                }
             }
-
-            Spacer()
-
-            HStack(spacing: 3) {
-                Image(systemName: session.inputMode == .timer ? "timer" : "hand.raised")
-                    .font(.system(size: 9))
-                Text(session.inputMode == .timer ? "计时" : "手动")
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-            }
-            .foregroundStyle(.secondary.opacity(0.5))
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .appInnerCapsuleStyle()
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
+    }
+}
+
+private struct SessionRowView: View, Equatable {
+    let snapshot: ReadingStatsCalculator.ReadingSessionRowSnapshot
+
+    var body: some View {
+        ReadingSessionRowContent(snapshot: snapshot, layout: .regular)
     }
 }
 
@@ -590,30 +493,18 @@ struct ExcerptCard: View {
     var onDelete: (Excerpt) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label("摘录笔记", systemImage: "text.quote")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.teal)
-
-                Spacer()
-
+        AppCard {
+            VStack(alignment: .leading, spacing: 16) {
+            DetailSectionHeader(title: "摘录笔记", systemImage: "text.quote", tint: .teal) {
                 let total = book.excerpts?.count ?? 0
                 if total > 0 {
-                    Text("\(total) 条")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .appInnerCapsuleStyle()
+                    AppCapsuleLabel(text: "\(total) 条", tint: .teal)
                 }
             }
 
             BookExcerpts(book: book, isDeleteMode: isDeleteMode, onDelete: onDelete)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassCardSurface()
+        }
     }
 }
 

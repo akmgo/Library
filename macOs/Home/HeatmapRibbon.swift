@@ -9,7 +9,8 @@ struct HeatmapRibbon: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        AppCard {
+            VStack(alignment: .leading, spacing: 16) {
             // ================= 1. 头部标题与统计 =================
             HStack {
                 Text("年度热力图")
@@ -39,10 +40,9 @@ struct HeatmapRibbon: View {
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                
             }
         }
-        .glassCard(cornerRadius: AppRadius.panel)
+        }
     }
 }
 #endif

@@ -30,11 +30,7 @@ class TopToastManager {
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 14)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.7))
-            .background(Material.ultraThin)
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.12), radius: 12, y: 6)
-            .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 1))
+            .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.15, strokeOpacity: 0.10)
             .padding(.top, 40) // 距离屏幕顶部的安全距离
             
             // 3. 封装进原生的 HostingView

@@ -151,20 +151,6 @@ struct AppHeaderStatsView: View {
 private struct StatCapsule: View {
     let item: AppHeaderStatItem
 
-    @Environment(\.colorScheme) private var colorScheme
-
-    private var borderColor: Color {
-        colorScheme == .dark
-            ? Color.white.opacity(0.08)
-            : Color.black.opacity(0.05)
-    }
-
-    private var fillColor: Color {
-        colorScheme == .dark
-            ? Color.white.opacity(0.03)
-            : Color.white.opacity(0.22)
-    }
-
     var body: some View {
         VStack(spacing: 2) {
             Text(item.value)
@@ -179,12 +165,7 @@ private struct StatCapsule: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
-        .background(Capsule(style: .continuous).fill(fillColor))
-        .glassEffect(in: Capsule(style: .continuous))
-        .overlay(
-            Capsule(style: .continuous)
-                .stroke(borderColor, lineWidth: 1)
-        )
+        .appCapsuleStyle(tint: .secondary, fillOpacity: 0.10, strokeOpacity: 0.08)
     }
 }
 #endif

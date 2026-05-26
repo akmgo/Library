@@ -8,72 +8,6 @@ enum ExcerptWallDisplayMode: Equatable {
     case artistic
 }
 
-private struct ExcerptSpanMasonryLayout: Layout {
-    let columns: Int
-    let spacing: CGFloat
-    let spans: [Int]
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? 1200
-        let columnWidth = (width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
-        var heights = Array(repeating: CGFloat(0), count: columns)
-
-        for (index, subview) in subviews.enumerated() {
-            let span = spanForItem(at: index)
-            let placement = findPlacement(for: span, in: heights)
-            let proposalWidth = columnWidth * CGFloat(span) + spacing * CGFloat(span - 1)
-            let size = subview.sizeThatFits(ProposedViewSize(width: proposalWidth, height: nil))
-            let newY = placement.y + size.height + spacing
-
-            for column in placement.column..<(placement.column + span) {
-                heights[column] = newY
-            }
-        }
-
-        return CGSize(width: width, height: heights.max() ?? 0)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let columnWidth = (bounds.width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
-        var heights = Array(repeating: bounds.minY, count: columns)
-
-        for (index, subview) in subviews.enumerated() {
-            let span = spanForItem(at: index)
-            let placement = findPlacement(for: span, in: heights)
-            let x = bounds.minX + CGFloat(placement.column) * (columnWidth + spacing)
-            let y = placement.y
-            let proposalWidth = columnWidth * CGFloat(span) + spacing * CGFloat(span - 1)
-
-            subview.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: proposalWidth, height: nil))
-            let size = subview.sizeThatFits(ProposedViewSize(width: proposalWidth, height: nil))
-            let newY = y + size.height + spacing
-
-            for column in placement.column..<(placement.column + span) {
-                heights[column] = newY
-            }
-        }
-    }
-
-    private func spanForItem(at index: Int) -> Int {
-        min(max(1, spans.indices.contains(index) ? spans[index] : 1), columns)
-    }
-
-    private func findPlacement(for span: Int, in heights: [CGFloat]) -> (column: Int, y: CGFloat) {
-        var bestColumn = 0
-        var minY = CGFloat.infinity
-
-        for column in 0...(columns - span) {
-            let maxYInSpan = heights[column..<(column + span)].max() ?? 0
-            if maxYInSpan < minY {
-                minY = maxYInSpan
-                bestColumn = column
-            }
-        }
-
-        return (bestColumn, minY)
-    }
-}
-
 // MARK: - ✨ 灵感画廊 (核心视图)
 
 struct InspirationWallView: View {
@@ -83,6 +17,7 @@ struct InspirationWallView: View {
     let displayMode: ExcerptWallDisplayMode
     @Binding var isBatchDeletePresented: Bool
     @Binding var selectedExcerptIDs: Set<String>
+    @Binding var highlightedExcerptID: String?
     @Query private var allExcerpts: [Excerpt]
     
     @State private var shuffledExcerpts: [ExcerptListItem] = []
@@ -96,51 +31,60 @@ struct InspirationWallView: View {
             .joined(separator: ";")
             + "|\(filterCategory?.rawValue ?? "all")|\(sortKey)|\(displayMode)"
     }
+
+    private var shuffledFingerprint: String {
+        shuffledExcerpts.map(\.id).joined(separator: ";")
+    }
     
     var body: some View {
         let totalExcerptCharacters = shuffledExcerpts.reduce(0) { $0 + $1.content.count }
         let uniqueBooksCount = Set(shuffledExcerpts.map(\.bookID)).filter { !$0.isEmpty }.count
         
         GeometryReader { geo in
-            ScrollView(.vertical, showsIndicators: false) {
-                ZStack {
-                    wallContentView(containerSize: geo.size)
-                        .frame(maxWidth: .infinity, alignment: .center)
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    ZStack {
+                        wallContentView(containerSize: geo.size)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
-            }
-            .overlay(alignment: .top) {
-                AppPageHeader(
-                    contentID: "\(shuffledExcerpts.count)-\(totalExcerptCharacters)-\(uniqueBooksCount)-\(filterCategory?.rawValue ?? "all")-\(sortKey)-\(displayMode)"
-                ) {
-                    AppHeaderTitle("摘录长廊", subtitle: "书中摘录与日常片段汇集于此。")
-            } trailingContent: { PageStatsCompact(items: excerptHeaderStats) }
-            }
-            .overlay(alignment: .bottom) {
-                if isBatchDeletePresented {
-                    excerptBatchDeleteCapsule
-                        .padding(.bottom, 24)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                .overlay(alignment: .top) {
+                    AppPageHeader(
+                        contentID: "\(shuffledExcerpts.count)-\(totalExcerptCharacters)-\(uniqueBooksCount)-\(filterCategory?.rawValue ?? "all")-\(sortKey)-\(displayMode)"
+                    ) {
+                        AppHeaderTitle("摘录长廊", subtitle: "书中摘录与日常片段汇集于此。")
+                    } trailingContent: { PageStatsCompact(items: excerptHeaderStats) }
                 }
-            }
-            .sheet(item: $recordToEdit) { record in
-                ExcerptEditorSheet(
-                    isPresented: Binding(
-                        get: { recordToEdit != nil },
-                        set: { isPresented in
-                            if !isPresented {
-                                recordToEdit = nil
-                                refreshData(animate: false)
+                .overlay(alignment: .bottom) {
+                    if isBatchDeletePresented {
+                        excerptBatchDeleteCapsule
+                            .padding(.bottom, 24)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+                .sheet(item: $recordToEdit) { record in
+                    ExcerptEditorSheet(
+                        isPresented: Binding(
+                            get: { recordToEdit != nil },
+                            set: { isPresented in
+                                if !isPresented {
+                                    recordToEdit = nil
+                                    refreshData(animate: false)
+                                }
                             }
-                        }
-                    ),
-                    excerptToEdit: record
-                )
+                        ),
+                        excerptToEdit: record
+                    )
+                }
+                .onAppear {
+                    refreshData(animate: false)
+                    scrollToHighlightedExcerpt(highlightedExcerptID, proxy: proxy)
+                }
+                .onChange(of: annotationFingerprint) { _, _ in refreshData(animate: true) }
+                .onChange(of: highlightedExcerptID) { _, id in scrollToHighlightedExcerpt(id, proxy: proxy) }
+                .onChange(of: shuffledFingerprint) { _, _ in scrollToHighlightedExcerpt(highlightedExcerptID, proxy: proxy) }
             }
-            .onAppear {
-                refreshData(animate: false)
-            }
-            .onChange(of: annotationFingerprint) { _, _ in refreshData(animate: true) }
         }
     }
     
@@ -173,12 +117,6 @@ struct InspirationWallView: View {
                     ZStack(alignment: .center) {
                         selectableExcerptCard(excerpt)
                             .frame(width: min(800, max(320, containerSize.width - 120)))
-                            .scrollTransition(axis: .horizontal) { content, phase in
-                                content
-                                    .scaleEffect(phase.isIdentity ? 1.0 : 0.85)
-                                    .opacity(phase.isIdentity ? 1.0 : 0.3)
-                                    .offset(y: phase.isIdentity ? 0 : 30)
-                            }
                     }
                     .frame(width: containerSize.width)
                     .frame(minHeight: viewportHeight, alignment: .center)
@@ -205,17 +143,60 @@ struct InspirationWallView: View {
         let horizontalPadding: CGFloat = 80
         let availableWidth = max(minColumnWidth, containerWidth - horizontalPadding)
         let columnsCount = availableWidth >= 680 ? 2 : 1
-        let spans = shuffledExcerpts.map { columnSpan(for: $0, columnsCount: columnsCount) }
+        let rows = excerptRows(for: shuffledExcerpts, columnsCount: columnsCount)
 
-        ExcerptSpanMasonryLayout(columns: columnsCount, spacing: spacing, spans: spans) {
-            ForEach(shuffledExcerpts) { excerpt in
-                selectableExcerptCard(excerpt)
-                    .transition(.appCardGlide)
+        LazyVStack(spacing: spacing) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                if row.count == 1 && columnSpan(for: row[0], columnsCount: columnsCount) == columnsCount {
+                    selectableExcerptCard(row[0])
+                        .frame(maxWidth: .infinity)
+                } else {
+                    HStack(alignment: .top, spacing: spacing) {
+                        ForEach(row) { excerpt in
+                            selectableExcerptCard(excerpt)
+                                .frame(maxWidth: .infinity)
+                        }
+
+                        if row.count < columnsCount {
+                            Spacer(minLength: 0)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
             }
         }
         .frame(width: availableWidth)
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.horizontal, 40).padding(.top, AppPageHeaderMetrics.height + 32).padding(.bottom, 60)
+    }
+
+    private func excerptRows(for excerpts: [ExcerptListItem], columnsCount: Int) -> [[ExcerptListItem]] {
+        guard columnsCount > 1 else { return excerpts.map { [$0] } }
+
+        var rows: [[ExcerptListItem]] = []
+        var pending: [ExcerptListItem] = []
+
+        for excerpt in excerpts {
+            if columnSpan(for: excerpt, columnsCount: columnsCount) == columnsCount {
+                if !pending.isEmpty {
+                    rows.append(pending)
+                    pending.removeAll(keepingCapacity: true)
+                }
+                rows.append([excerpt])
+            } else {
+                pending.append(excerpt)
+                if pending.count == columnsCount {
+                    rows.append(pending)
+                    pending.removeAll(keepingCapacity: true)
+                }
+            }
+        }
+
+        if !pending.isEmpty {
+            rows.append(pending)
+        }
+
+        return rows
     }
 
     private func columnSpan(for excerpt: ExcerptListItem, columnsCount: Int) -> Int {
@@ -250,8 +231,9 @@ struct InspirationWallView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: AppRadius.card, style: .continuous)
-                .stroke(isBatchDeletePresented && selectedExcerptIDs.contains(excerpt.id) ? Color.blue : Color.clear, lineWidth: 3)
+                .stroke(shouldHighlight(excerpt) ? Color.blue : Color.clear, lineWidth: 3)
         )
+        .id(excerpt.id)
         .contentShape(Rectangle())
         .onTapGesture {
             if isBatchDeletePresented {
@@ -273,15 +255,11 @@ extension InspirationWallView {
         }
     }
 
-    private func refreshData(animate: Bool) {
+    private func refreshData(animate _: Bool) {
         Task { @MainActor in
             let newData = fetchAndProcessExcerpts()
             
-            if animate {
-                withAnimation(.appContentFade) { self.shuffledExcerpts = newData }
-            } else {
-                self.shuffledExcerpts = newData
-            }
+            self.shuffledExcerpts = newData
         }
     }
     
@@ -294,6 +272,25 @@ extension InspirationWallView {
             sortKey: sortKey,
             randomize: false
         ).excerpts
+    }
+
+    private func shouldHighlight(_ excerpt: ExcerptListItem) -> Bool {
+        (isBatchDeletePresented && selectedExcerptIDs.contains(excerpt.id)) || highlightedExcerptID == excerpt.id
+    }
+
+    private func scrollToHighlightedExcerpt(_ id: String?, proxy: ScrollViewProxy) {
+        guard let id, shuffledExcerpts.contains(where: { $0.id == id }) else { return }
+        DispatchQueue.main.async {
+            if displayMode == .artistic {
+                withAnimation(.easeOut(duration: 0.22)) {
+                    scrolledExcerptID = id
+                }
+            } else {
+                withAnimation(.easeOut(duration: 0.22)) {
+                    proxy.scrollTo(id, anchor: .center)
+                }
+            }
+        }
     }
     
     private func toggleSelection(for excerpt: ExcerptListItem) {
@@ -341,8 +338,7 @@ extension InspirationWallView {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1))
+        .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.12, strokeOpacity: 0.10)
     }
 
     private func deleteSelectedExcerpts() {

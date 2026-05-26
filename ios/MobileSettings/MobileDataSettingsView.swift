@@ -9,6 +9,11 @@ import WidgetKit
 struct MobileDataSettingsView: View {
     @Binding var systemMessage: AttributedString?
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
+    @Query(sort: \UserConfig.updatedAt, order: .reverse) private var configs: [UserConfig]
+    @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
+    @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
+    @Query(sort: \Excerpt.createdAt, order: .reverse) private var excerpts: [Excerpt]
     
     @State private var isICloudAvailable: Bool = false
     @State private var currentCacheSizeMB: Double = 0.0
@@ -31,9 +36,18 @@ struct MobileDataSettingsView: View {
     
     var body: some View {
         Form {
+            Section {
+                SettingsRow(icon: "checkmark.seal.fill", iconColor: AppColors.success, title: "数据健康", subtitle: healthSnapshot.detailText, titleSize: 15, subtitleSize: 11, subtitleLineLimit: 2) {
+                    AppCapsuleLabel(
+                        text: healthSnapshot.statusText,
+                        tint: healthSnapshot.configCount == 1 ? AppColors.success : AppColors.warning
+                    )
+                }
+            } header: { Text("状态概览") }
+
             // ================= 1. 云端同步 =================
             Section {
-                MobileDataInlineRow(icon: "icloud.fill", iconColor: .blue, title: "iCloud 同步", subtitle: "利用 CloudKit 在所有 Apple 设备间无缝流转数据") {
+                SettingsRow(icon: "icloud.fill", iconColor: .blue, title: "iCloud 同步", subtitle: "利用 CloudKit 在所有 Apple 设备间无缝流转数据", titleSize: 15, subtitleSize: 11, subtitleLineLimit: 2) {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(isICloudAvailable ? AppColors.success : Color.red)
@@ -47,7 +61,7 @@ struct MobileDataSettingsView: View {
             
             // ================= 2. 时间机器 =================
             Section {
-                MobileDataInlineRow(icon: "clock.arrow.circlepath", iconColor: .teal, title: "时光机备份", subtitle: "手动生成高压缩快照，文件将自动保存在 iCloud 云盘中") {
+                SettingsRow(icon: "clock.arrow.circlepath", iconColor: .teal, title: "时光机备份", subtitle: "手动生成高压缩快照，文件将自动保存在 iCloud 云盘中", titleSize: 15, subtitleSize: 11, subtitleLineLimit: 2) {
                     Toggle("", isOn: $enableAutoBackup).labelsHidden()
                 }
                 .onChange(of: enableAutoBackup) { _, newValue in
@@ -86,7 +100,7 @@ struct MobileDataSettingsView: View {
                                     .foregroundColor(.primary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
-                                    .background(Color(uiColor: .tertiarySystemGroupedBackground))
+                                    .background(AppColors.innerBlock(for: colorScheme))
                                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                                     .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.primary.opacity(0.1), lineWidth: 1))
                             }
@@ -114,7 +128,7 @@ struct MobileDataSettingsView: View {
             
             // ================= 3. 存储管理 =================
             Section {
-                MobileDataInlineRow(icon: "trash.fill", iconColor: .gray, title: "清理缓存", subtitle: "释放网络图片与接口在内存与磁盘中的临时文件") {
+                SettingsRow(icon: "trash.fill", iconColor: .gray, title: "清理缓存", subtitle: "释放网络图片与接口在内存与磁盘中的临时文件", titleSize: 15, subtitleSize: 11, subtitleLineLimit: 2) {
                     // ✨ 优化：垂直布局对齐，且按钮样式 1:1 统一“清空历史”按钮
                     VStack(alignment: .trailing, spacing: 10) {
                         Text(String(format: "%.1f MB", currentCacheSizeMB))
@@ -127,7 +141,7 @@ struct MobileDataSettingsView: View {
                                 .foregroundColor(currentCacheSizeMB <= 0.1 ? .secondary : .red)
                                 .padding(.horizontal, AppSpacing.m)
                                 .padding(.vertical, AppSpacing.xs)
-                                .background(currentCacheSizeMB <= 0.1 ? Color(uiColor: .tertiarySystemGroupedBackground) : AppColors.danger.opacity(0.1))
+                                .background(currentCacheSizeMB <= 0.1 ? AppColors.innerBlock(for: colorScheme) : AppColors.danger.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         }
                         .buttonStyle(.plain)
@@ -135,6 +149,8 @@ struct MobileDataSettingsView: View {
                 }
             } header: { Text("存储管理") }
         }
+        .scrollContentBackground(.hidden)
+        .background(AppColors.primaryBackground(for: colorScheme))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             checkICloudStatus()
@@ -157,6 +173,15 @@ struct MobileDataSettingsView: View {
                 showToast("❌ 文件选择失败: \(error.localizedDescription)")
             }
         }
+    }
+
+    private var healthSnapshot: ReadingStatsCalculator.DataHealthSnapshot {
+        ReadingStatsCalculator.dataHealthSnapshot(
+            configs: configs,
+            books: books,
+            sessions: sessions,
+            excerpts: excerpts
+        )
     }
     
     // MARK: - iCloud 探针 & 存储清理逻辑
@@ -278,46 +303,6 @@ struct MobileDataSettingsView: View {
                 }
             } catch { await MainActor.run { showToast("❌ 快照文件损坏或无法读取") } }
         }
-    }
-}
-
-// MARK: - 🎨 专属布局原子组件：支持文字自动换行、顶部对齐
-
-struct MobileDataInlineRow<Content: View>: View {
-    let icon: String
-    let iconColor: Color
-    let title: String
-    let subtitle: String
-    @ViewBuilder let control: Content
-    
-    var body: some View {
-        // ✨ 核心修复：强制设置为顶部对齐 (.top) 避免长文字换行导致的居中悬空
-        HStack(alignment: .top, spacing: AppSpacing.s) {
-            // 图标
-            ZStack {
-                RoundedRectangle(cornerRadius: 6, style: .continuous).fill(iconColor).frame(width: 28, height: 28)
-                Image(systemName: icon).font(.system(size: 14, weight: .medium)).foregroundColor(.white)
-            }
-            .padding(.top, 2) // ✨ 视觉微调
-            
-            // 文案 (支持自动换行)
-            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                Text(title)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.primary)
-                Text(subtitle)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                    .lineSpacing(2)
-                    .lineLimit(2)
-            }
-            
-            Spacer(minLength: 8)
-            
-            // 控件靠右
-            control
-        }
-        .padding(.vertical, 6)
     }
 }
 

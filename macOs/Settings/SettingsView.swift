@@ -7,6 +7,7 @@ import WidgetKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
     
     /// 全局浮窗通知绑定变量
@@ -14,6 +15,9 @@ struct SettingsView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
+            AppColors.primaryBackground(for: colorScheme)
+                .ignoresSafeArea()
+
             if let config = configs.first {
                 // ================= 路由导航区 =================
                 TabView {
@@ -52,10 +56,7 @@ struct SettingsView: View {
                     .foregroundColor(.primary)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
-                    .background(Color(nsColor: .windowBackgroundColor).opacity(0.8))
-                    .background(.regularMaterial)
-                    .clipShape(Capsule())
-                    .shadow(color: Color.black.opacity(0.15), radius: 10, y: 5)
+                    .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.15, strokeOpacity: 0.10)
                     .padding(.top, 20)
                     .transition(.move(edge: .top).combined(with: .scale(scale: 0.9)).combined(with: .opacity))
                     .zIndex(100)

@@ -34,8 +34,6 @@ struct BookCard: View {
     let isSelected: Bool
     let onToggleSelection: () -> Void
     
-    @State private var isHovered = false
-    
     var body: some View {
         VStack(spacing: 0) {
             BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
@@ -47,10 +45,7 @@ struct BookCard: View {
                     RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous)
                         .stroke(isBatchMode && isSelected ? Color.blue : Color.clear, lineWidth: 3)
                 )
-                .shadow(color: Color.black.opacity(isHovered ? 0.14 : 0.08), radius: isHovered ? 8 : 4, y: isHovered ? 3 : 2)
-                .scaleEffect(isHovered ? 1.012 : 1.0)
-                .offset(y: isHovered ? -2 : 0)
-                .animation(.appControlFeedback, value: isHovered)
+                .shadow(color: Color.black.opacity(0.08), radius: 4, y: 2)
                 .onTapGesture {
                     if isBatchMode {
                         onToggleSelection()
@@ -58,15 +53,9 @@ struct BookCard: View {
                         selectedBook = book
                     }
                 }
-                .onHover { h in
-                    if h { NSCursor.pointingHand.push() } else { NSCursor.pop() }
-                }
         }
         .frame(width: gridScale.width)
         .contentShape(Rectangle())
-        .onHover { h in
-            withAnimation(.appControlFeedback) { isHovered = h }
-        }
     }
 }
 #endif
