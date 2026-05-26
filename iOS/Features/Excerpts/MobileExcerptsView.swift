@@ -6,7 +6,7 @@ import SwiftUI
 // MARK: - 🌊 2. 灵感画廊 (核心视图)
 // ============================================================================
 
-struct MobileInspirationWallView: View {
+struct MobileExcerptsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
 
@@ -463,7 +463,7 @@ private struct MobileInkExcerptFullscreenView: View {
 #if DEBUG
 #Preview("灵感墙") {
     PreviewWithData {
-        MobileInspirationWallView()
+        MobileExcerptsView()
     }
 }
 #endif

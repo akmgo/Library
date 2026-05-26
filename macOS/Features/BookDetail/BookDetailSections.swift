@@ -5,7 +5,7 @@ import AppKit
 
 // MARK: - ✨ 书籍核心信息档案板 (主视图)
 
-struct BookDossier: View {
+struct BookDetailSections: View {
     @Bindable var book: Book
     @Binding var isDeleteMode: Bool
     var onDeleteExcerpt: (Excerpt) -> Void
@@ -509,12 +509,12 @@ struct ExcerptCard: View {
 }
 
 // MARK: - ✨ 预览装配
-struct BookDossierPreviewWrapper: View {
+struct BookDetailSectionsPreviewWrapper: View {
     @Query var books: [Book]
     @State private var isDeleteMode = false
     var body: some View {
         if let book = books.first {
-            BookDossier(book: book, isDeleteMode: $isDeleteMode, onDeleteExcerpt: { _ in })
+            BookDetailSections(book: book, isDeleteMode: $isDeleteMode, onDeleteExcerpt: { _ in })
                 .padding()
                 .frame(width: 900)
         }

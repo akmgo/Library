@@ -477,7 +477,7 @@ struct MobileBookExcerptsCard: View {
                 }
             }
         ) {
-            MobileExcerptsAndNotesList(book: book, isDeleteMode: isDeleteMode, onDelete: onDelete)
+            MobileBookExcerptsList(book: book, isDeleteMode: isDeleteMode, onDelete: onDelete)
         }
     }
 }

@@ -10,7 +10,7 @@ import SwiftUI
 /// 1. **主路由枢纽**：通过原生的 `TabView` 串联五大核心模块（含新增的全局探索模块）。
 /// 2. **全局环境注入**：使用 @AppStorage 接管本地主题，不再依赖数据库。
 /// 3. **全局弹窗拦截**：无感唤起添加书籍面板。
-struct MobileContentView: View {
+struct MobileRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     
@@ -48,11 +48,11 @@ struct MobileContentView: View {
                 .tabItem { Label("主页", systemImage: "house.fill") }.tag(0)
 
                 // ================= 2. 画廊 =================
-                MobileGalleryView()
+                MobileBookGalleryView()
                     .tabItem { Label("画廊", systemImage: "books.vertical.fill") }.tag(1)
 
                 // ================= 3. 摘录 =================
-                MobileInspirationWallView(highlightedExcerptID: $highlightedExcerptID)
+                MobileExcerptsView(highlightedExcerptID: $highlightedExcerptID)
                     .tabItem { Label("摘录", systemImage: "quote.bubble.fill") }.tag(2)
 
                 // ================= 4. 年度 =================
@@ -136,7 +136,7 @@ struct MobileContentView: View {
 #if DEBUG
 #Preview("App 主框架") {
     PreviewWithData {
-        MobileContentView()
+        MobileRootView()
     }
 }
 #endif

@@ -9,7 +9,7 @@ import SwiftUI
 /// **逻辑与交互：**
 /// 彻底废弃了曾经繁琐的 Excerpt 和 Note 双表异构拼装。
 /// 如今直接从 book 实体中提取统一的 `annotations` 进行倒序排列渲染。
-struct MobileExcerptsAndNotesList: View {
+struct MobileBookExcerptsList: View {
     let book: Book
     let isDeleteMode: Bool
     
@@ -146,7 +146,7 @@ private struct MobileNoteCard: View {
 private struct PreviewExcerptsList: View {
     var body: some View {
         PreviewWithBook(title: "三体", author: "刘慈欣", currentAmount: 156) { book in
-            MobileExcerptsAndNotesList(
+            MobileBookExcerptsList(
                 book: book,
                 isDeleteMode: false,
                 onDelete: { _ in }

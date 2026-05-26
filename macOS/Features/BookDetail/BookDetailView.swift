@@ -30,7 +30,7 @@ struct BookDetailView: View {
             // ================= 2. 全局无界内容区 =================
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 0) {
-                    BookDossier(
+                    BookDetailSections(
                         book: book,
                         isDeleteMode: $isDeleteMode,
                         onDeleteExcerpt: { deleteRecord($0) }

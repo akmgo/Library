@@ -30,7 +30,7 @@ enum NavigationModule: String, CaseIterable, Identifiable {
 
 // MARK: - ✨ 主视图入口
 
-struct ContentView: View {
+struct MacRootView: View {
     /// 获取刚才导入的书籍
     @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
 
@@ -57,7 +57,6 @@ struct ContentView: View {
     @State private var showBookMetadataSpotlight = false
     @State private var showGlobalSpotlight = false
 
-    @State private var showOPDSBrowser = false
     @State private var galleryFilterStatus: BookStatus?
     @State private var gallerySortKey: BookGallerySortKey = .newest
     @State private var galleryGridScale: GalleryGridScale = .large
@@ -218,7 +217,7 @@ struct ContentView: View {
         case .home:
             HomeView(selectedBook: $selectedBook)
         case .gallery:
-            GalleryView(
+            BookGalleryView(
                 selectedBook: $selectedBook,
                 filterStatus: galleryFilterStatus,
                 sortKey: gallerySortKey,
@@ -227,7 +226,7 @@ struct ContentView: View {
                 selectedBookIDs: $selectedGalleryBookIDs
             )
         case .excerpts:
-            InspirationWallView(
+            ExcerptsView(
                 filterCategory: excerptFilterCategory,
                 sortKey: excerptSortKey,
                 displayMode: excerptDisplayMode,

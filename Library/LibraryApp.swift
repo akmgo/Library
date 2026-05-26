@@ -12,14 +12,14 @@ struct LibraryApp: App {
         // 🖥️ 场景 1：Mac 端专属窗口配置
         // ==========================================
         Window("Library", id: "mainWindow") {
-            ContentView()
+            MacRootView()
                 // 1. 核心：卡死窗口的最小尺寸
                 .frame(minWidth: 1200, idealWidth: 1420, minHeight: 900, idealHeight: 1080)
         }
         .windowToolbarStyle(.unified(showsTitle: false))
         // 2. 核心：设定程序第一次全新打开时的默认尺寸
         .defaultSize(width: 1420, height: 1080)
-        // 3. 核心：告诉系统，窗口缩小的极限就是 ContentView 设定的 min 尺寸
+        // 3. 核心：告诉系统，窗口缩小的极限就是 MacRootView 设定的 min 尺寸
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
         .commands {
@@ -45,7 +45,7 @@ struct LibraryApp: App {
         // 📱 场景 2：iOS 端专属窗口配置
         // ==========================================
         WindowGroup {
-            MobileContentView()
+            MobileRootView()
         }
         .modelContainer(SharedDatabase.shared.container)
         #endif

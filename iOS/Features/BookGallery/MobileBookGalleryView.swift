@@ -4,7 +4,7 @@ import SwiftUI
 
 // MARK: - 📚 主画廊视图
 
-struct MobileGalleryView: View {
+struct MobileBookGalleryView: View {
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.modelContext) private var modelContext
@@ -250,7 +250,7 @@ struct MobileBookGridCell: View {
 #if DEBUG
 #Preview("画廊") {
     PreviewWithData {
-        MobileGalleryView()
+        MobileBookGalleryView()
     }
 }
 #endif

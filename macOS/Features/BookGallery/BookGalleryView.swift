@@ -43,7 +43,7 @@ enum GalleryGridScale: Double, CaseIterable {
 
 // MARK: - 🌟 核心全景画廊视图
 
-struct GalleryView: View {
+struct BookGalleryView: View {
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedBook: Book?
     let filterStatus: BookStatus?

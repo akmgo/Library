@@ -10,7 +10,7 @@ enum ExcerptWallDisplayMode: Equatable {
 
 // MARK: - ✨ 灵感画廊 (核心视图)
 
-struct InspirationWallView: View {
+struct ExcerptsView: View {
     @Environment(\.modelContext) private var modelContext
     let filterCategory: ExcerptCategory?
     let sortKey: AnnotationSortKey
@@ -245,7 +245,7 @@ struct InspirationWallView: View {
 
 // MARK: - ✨ 核心数据引擎调度与方法
 
-extension InspirationWallView {
+extension ExcerptsView {
     
     @MainActor
     private func triggerEdit(for excerpt: ExcerptListItem) {
