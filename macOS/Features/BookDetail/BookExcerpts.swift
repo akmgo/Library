@@ -118,7 +118,7 @@ struct AnnotationCardWrapper: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Group {
-                if item.type == .excerpt {
+                if item.type == .bookExcerpt {
                     ExcerptCardView(excerpt: item, onEdit: onEdit)
                 } else {
                     NoteCardView(note: item, onEdit: onEdit)
@@ -163,12 +163,6 @@ struct NoteCardView: View {
             BookExcerptCardContent(item: note, contentFontSize: 15)
         }
         .onTapGesture(count: 2, perform: onEdit)
-    }
-}
-
-struct BookExcerptsEmptyStateView: View {
-    var body: some View {
-        EmptyView()
     }
 }
 

@@ -369,6 +369,16 @@ struct BackupBookDTO: Codable {
     }
 }
 
+struct BackupSessionDTO: Codable {
+    let date: Date
+    let duration: TimeInterval
+    
+    init(from record: ReadingSession) {
+        self.date = record.date
+        self.duration = record.duration
+    }
+}
+
 struct BackupAnnotationDTO: Codable {
     let typeStr: String
     let content: String

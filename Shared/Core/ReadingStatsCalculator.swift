@@ -24,12 +24,6 @@ enum BookGallerySortKey: CaseIterable {
     }
 }
 
-enum ExcerptGallerySortKey {
-    case newest
-    case oldest
-    case titleAscending
-}
-
 enum AnnotationSortKey {
     case newest
     case oldest
@@ -118,35 +112,6 @@ enum ReadingStatsCalculator {
             sessionCount: sessions.count,
             excerptCount: excerpts.count
         )
-    }
-
-    struct ExcerptGalleryStats {
-        let total: Int
-        let poetry: Int
-        let lyric: Int
-        let prose: Int
-        let quote: Int
-        let movie: Int
-        let web: Int
-
-        var poetryAndLyric: Int { poetry + lyric }
-
-        static let empty = ExcerptGalleryStats(
-            total: 0,
-            poetry: 0,
-            lyric: 0,
-            prose: 0,
-            quote: 0,
-            movie: 0,
-            web: 0
-        )
-    }
-
-    struct ExcerptGallerySnapshot {
-        let excerpts: [Excerpt]
-        let stats: ExcerptGalleryStats
-
-        static let empty = ExcerptGallerySnapshot(excerpts: [], stats: .empty)
     }
 
     struct InspirationSnapshot {
@@ -290,14 +255,14 @@ enum ReadingStatsCalculator {
                 .map(BookExcerptItemSnapshot.init)
             all = sorted
             allCount = sorted.count
-            excerptCount = sorted.filter { $0.type == .excerpt }.count
+            excerptCount = sorted.filter { $0.type == .bookExcerpt }.count
             noteCount = sorted.filter { $0.type == .note }.count
 
             switch filter {
             case .all:
                 filtered = sorted
             case .excerpts:
-                filtered = sorted.filter { $0.type == .excerpt }
+                filtered = sorted.filter { $0.type == .bookExcerpt }
             case .notes:
                 filtered = sorted.filter { $0.type == .note }
             }
@@ -401,14 +366,6 @@ enum ReadingStatsCalculator {
         }
     }
 
-    static func activeReadingDays(from sessions: [ReadingSession], calendar: Calendar = .current) -> Int {
-        Set(sessions.map { calendar.startOfDay(for: $0.startedAt) }).count
-    }
-
-    static func finishedBookCount(from books: [Book]) -> Int {
-        books.filter { $0.status == .finished }.count
-    }
-
     static func bookGallerySnapshot(
         books: [Book],
         filterStatus: BookStatus?,
@@ -476,41 +433,6 @@ enum ReadingStatsCalculator {
             totalInventoryCount: totalCount,
             inventoryPoints: inventoryPoints
         )
-    }
-
-    static func excerptGallerySnapshot(
-        excerpts: [Excerpt],
-        category: ExcerptCategory?,
-        searchText: String,
-        sortKey: ExcerptGallerySortKey
-    ) -> ExcerptGallerySnapshot {
-        let stats = ExcerptGalleryStats(
-            total: excerpts.count,
-            poetry: excerpts.filter { $0.category == .poetry }.count,
-            lyric: excerpts.filter { $0.category == .lyric }.count,
-            prose: excerpts.filter { $0.category == .prose }.count,
-            quote: excerpts.filter { $0.category == .quote }.count,
-            movie: excerpts.filter { $0.category == .movie }.count,
-            web: excerpts.filter { $0.category == .web }.count
-        )
-
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        var displayExcerpts = excerpts.filter { excerpt in
-            guard category == nil || excerpt.category == category else { return false }
-            guard !query.isEmpty else { return true }
-            return SearchMatcher.matchesExcerpt(excerpt, query: query)
-        }
-
-        switch sortKey {
-        case .newest:
-            displayExcerpts.sort { $0.addedDate > $1.addedDate }
-        case .oldest:
-            displayExcerpts.sort { $0.addedDate < $1.addedDate }
-        case .titleAscending:
-            displayExcerpts.sort { ($0.title ?? "").localizedStandardCompare($1.title ?? "") == .orderedAscending }
-        }
-
-        return ExcerptGallerySnapshot(excerpts: displayExcerpts, stats: stats)
     }
 
     static func inspirationSnapshot(

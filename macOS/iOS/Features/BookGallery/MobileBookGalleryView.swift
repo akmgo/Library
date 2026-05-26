@@ -223,6 +223,13 @@ struct MobileBookGalleryView: View {
         exitEditMode()
     }
 
+    private func batchChangeStatus(to status: BookStatus) {
+        let targets = allBooks.filter { selectedIDs.contains($0.id) }
+        for book in targets {
+            try? ReadingDataService.shared.updateStatus(book, to: status, context: modelContext)
+        }
+        exitEditMode()
+    }
 }
 
 // MARK: - 📱 单本书籍网格卡片

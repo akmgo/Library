@@ -32,11 +32,9 @@ final class Excerpt {
     }
 
     var isNote: Bool { category == .note }
-    var relatedBook: Book? { book }
     var categoryDisplayName: String { category.displayName }
     var displayTitle: String { title?.isEmpty == false ? title! : book?.title ?? category.displayName }
     var displayAuthor: String { sourceAuthor?.isEmpty == false ? sourceAuthor! : book?.author ?? "佚名" }
-    var displaySource: String { source?.isEmpty == false ? source! : book?.title ?? category.displayName }
 
     var author: String {
         get { sourceAuthor ?? "佚名" }
@@ -60,7 +58,7 @@ final class Excerpt {
 
     var type: ExcerptCategory {
         get { category }
-        set { category = newValue == .excerpt ? .bookExcerpt : newValue }
+        set { category = newValue == .bookExcerpt ? .bookExcerpt : newValue }
     }
 
     convenience init(
@@ -69,7 +67,7 @@ final class Excerpt {
         createdAt: Date = Date(),
         book: Book? = nil
     ) {
-        self.init(content: content, category: type == .excerpt ? .bookExcerpt : type, createdAt: createdAt, book: book)
+        self.init(content: content, category: type == .bookExcerpt ? .bookExcerpt : type, createdAt: createdAt, book: book)
     }
 
     convenience init(

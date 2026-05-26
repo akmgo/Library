@@ -30,14 +30,6 @@ struct ResonanceDataPoint {
     let source: String
 }
 
-/// 专供“想读焦点”书架渲染使用的纯数据结构
-struct QueueBookDataPoint: Identifiable {
-    let id: String // 通常可以直接用原数据库的 UUID 字符串
-    let title: String
-    let author: String
-    let coverData: Data?
-}
-
 struct SpectrumDataPoint: Identifiable {
     // 直接用标签名作为唯一标识符
     var id: String { tagName }

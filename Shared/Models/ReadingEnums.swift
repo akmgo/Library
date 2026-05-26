@@ -60,9 +60,6 @@ enum ExcerptCategory: String, Codable, CaseIterable {
         case .movie: return "台词"
         }
     }
-
-    static var excerpt: ExcerptCategory { .bookExcerpt }
-
     var themeColor: Color {
         switch self {
         case .bookExcerpt: return Color(red: 0.78, green: 0.61, blue: 0.35)
@@ -94,7 +91,7 @@ enum BookExcerptFilter: String, CaseIterable {
         case .all:
             return true
         case .excerpts:
-            return excerpt.type == .excerpt
+            return excerpt.type == .bookExcerpt
         case .notes:
             return excerpt.type == .note
         }
