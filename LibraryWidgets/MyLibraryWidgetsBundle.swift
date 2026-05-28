@@ -7,20 +7,25 @@ import WidgetKit
 @main
 struct MyLibraryWidgetsBundle: WidgetBundle {
     var body: some Widget {
-        
+
         FocusHeroWidget()
-        
+
+        FocusHeroSmallWidget()
+
         StatsGridWidget()
-        
+
         MomentumChartWidget()
-        
+
         MomentumWidget()
-        
+
         YearlyHeatmapWidget()
-        
+
         ResonanceWaveWidget()
-        
+
         DesktopDashboardWidget()
-                
+
+        #if os(iOS)
+        ReadingTimerLiveActivity()
+        #endif
     }
 }

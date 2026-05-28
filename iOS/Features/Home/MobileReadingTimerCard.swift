@@ -67,6 +67,10 @@ struct MobileReadingTimerCard: View {
         .onAppear {
             elapsedSeconds = timerStore.elapsedSeconds(for: book?.id ?? "")
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            timerStore.syncFromDefaults()
+            elapsedSeconds = timerStore.elapsedSeconds(for: book?.id ?? "")
+        }
         .sheet(isPresented: $isTimedDurationPresented) {
             timedDurationSheet(for: book)
         }
@@ -238,6 +242,7 @@ struct MobileReadingTimerCard: View {
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     timerStore.startTimed(bookID: book.id, duration: TimeInterval(timedDurationMinutes * 60))
                     elapsedSeconds = 0
+                    requestLiveActivity(for: book)
                 } label: {
                     Text("开始计时")
                         .font(.system(size: 17, weight: .bold))
@@ -402,6 +407,7 @@ struct MobileReadingTimerCard: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         timerStore.start(bookID: book.id)
         elapsedSeconds = 0
+        requestLiveActivity(for: book)
     }
 
     private func stopTimer(for book: Book) {
@@ -427,11 +433,68 @@ struct MobileReadingTimerCard: View {
             context: modelContext
         )
 
+        endLiveActivity(for: book, endedAt: endAt)
         timerStore.cancel()
         pendingTimerEndAt = nil
         elapsedSeconds = 0
         isTimerCompletePresented = false
     }
+
+    // MARK: - Live Activity
+
+    #if os(iOS)
+    private func requestLiveActivity(for book: Book) {
+        guard let startedAt = timerStore.startedAt else { return }
+        let elapsedSeconds = Date().timeIntervalSince(startedAt)
+        let attrs = ReadingTimerAttributes(
+            bookTitle: book.title,
+            bookAuthor: book.author
+        )
+        let state = ReadingTimerAttributes.ContentState(
+            startedAt: startedAt,
+            targetSeconds: timerStore.targetDuration,
+            elapsedSeconds: elapsedSeconds,
+            dailyTargetMinutes: dailyTarget,
+            todayTotalSeconds: todayTotalSeconds,
+            progressAmount: book.currentAmount,
+            progressUnit: book.progressUnit.longDisplayName,
+            totalAmount: book.totalAmount,
+            coverData: coverThumbnail(from: book.coverData)
+        )
+        LiveActivityManager.shared.request(attributes: attrs, contentState: state)
+    }
+
+    private func endLiveActivity(for book: Book, endedAt: Date) {
+        let state = ReadingTimerAttributes.ContentState(
+            startedAt: timerStore.startedAt ?? Date(),
+            targetSeconds: timerStore.targetDuration,
+            elapsedSeconds: elapsedSeconds,
+            dailyTargetMinutes: dailyTarget,
+            todayTotalSeconds: todayTotalSeconds + elapsedSeconds,
+            progressAmount: book.currentAmount,
+            progressUnit: book.progressUnit.longDisplayName,
+            totalAmount: book.totalAmount,
+            coverData: coverThumbnail(from: book.coverData)
+        )
+        LiveActivityManager.shared.end(contentState: state)
+    }
+
+    private func coverThumbnail(from imageData: Data?) -> Data? {
+        guard let data = imageData, let image = UIImage(data: data) else { return nil }
+        let maxSize: CGFloat = 60
+        let size = image.size
+        let scale = min(maxSize / max(size.width, size.height), 1)
+        guard scale < 1 else { return data }
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        UIGraphicsBeginImageContextWithOptions(newSize, true, 1)
+        defer { UIGraphicsEndImageContext() }
+        image.draw(in: CGRect(origin: .zero, size: newSize))
+        return UIGraphicsGetImageFromCurrentImageContext()?.jpegData(compressionQuality: 0.4)
+    }
+    #else
+    private func requestLiveActivity(for book: Book) {}
+    private func endLiveActivity(for book: Book, endedAt: Date) {}
+    #endif
 
     private func insertManualSession(for book: Book) {
         let endedAt = Date()
