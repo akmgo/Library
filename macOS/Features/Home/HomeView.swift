@@ -143,7 +143,12 @@ extension HomeView {
     @MainActor
     private func startReadingFromQueue(book: Book) {
         if book.status == .planned {
-            try? ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
+            do {
+                try ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
+            } catch {
+                print("❌ 想读转在读失败: \(error.localizedDescription)")
+                return
+            }
         }
         focusedReadingBookID = book.id
         selectedBook = book

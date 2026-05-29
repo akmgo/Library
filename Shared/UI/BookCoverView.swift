@@ -70,9 +70,8 @@ struct BookCoverView: View {
     
     @MainActor
     private func loadCoverImage() async {
-        // 重置状态
         if !isLoading { isLoading = true }
-        
+
         guard let data = coverData, !coverID.isEmpty else {
             withAnimation {
                 loadedImage = nil
@@ -89,20 +88,24 @@ struct BookCoverView: View {
             }
             return
         }
-        
-        // 2. 强制剥离主线程处理重度 CPU 运算
-        let processedImage = await Task.detached(priority: .userInitiated) { () -> PlatformImage? in
+
+        // 2. 后台处理图片 (使用 Task 继承父级取消令牌，避免滚动时的资源泄漏)
+        let processedImage: PlatformImage? = await Task.detached(priority: .userInitiated) {
             let targetSize = CGSize(width: 300, height: 450)
-            guard let cgImage = await ImageCacheManager.shared.downsample(data: data, to: targetSize) else {
+            guard let cgImage = await ImageCacheManager.shared.downsample(data: data, to: targetSize),
+                  cgImage.width > 0, cgImage.height > 0 else {
                 return nil
             }
             #if os(macOS)
-            return NSImage(cgImage: cgImage, size: targetSize)
+            return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
             #else
-            return UIImage(cgImage: cgImage)
+            return UIImage(cgImage: cgImage, scale: 1.0, orientation: .up)
             #endif
         }.value
-        
+
+        // 检查任务是否已被取消 (视图已消失或 coverID 已变化)
+        if Task.isCancelled { return }
+
         guard let validImage = processedImage else {
             withAnimation {
                 loadedImage = nil
@@ -110,11 +113,14 @@ struct BookCoverView: View {
             }
             return
         }
-        
-        // 写入缓存 (后台完成，不阻碍 UI)
+
+        // 写入缓存
         ImageCacheManager.shared.setImage(validImage, forKey: cacheKey)
-        
-        // 3. 回到主线程，触发极简柔和的图片加载淡入动画
+
+        // 再次检查取消状态
+        if Task.isCancelled { return }
+
+        // 3. 回到主线程，触发图片加载淡入动画
         await MainActor.run {
             withAnimation(.easeOut(duration: 0.3)) {
                 self.loadedImage = validImage

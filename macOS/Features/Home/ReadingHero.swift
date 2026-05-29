@@ -515,18 +515,21 @@ struct ReadingTimerCard: View {
         var normalized = timerProgressDraft
         normalized.normalize()
 
-        try? ReadingDataService.shared.insertTimerReadingSession(
-            for: book,
-            startedAt: timerStartedAt,
-            endedAt: pendingTimerEndAt,
-            endAmount: normalized.currentAmount,
-            context: modelContext
-        )
-
-        timerStore.cancel()
-        self.pendingTimerEndAt = nil
-        elapsedSeconds = 0
-        isTimerProgressPopoverPresented = false
+        do {
+            try ReadingDataService.shared.insertTimerReadingSession(
+                for: book,
+                startedAt: timerStartedAt,
+                endedAt: pendingTimerEndAt,
+                endAmount: normalized.currentAmount,
+                context: modelContext
+            )
+            timerStore.cancel()
+            self.pendingTimerEndAt = nil
+            elapsedSeconds = 0
+            isTimerProgressPopoverPresented = false
+        } catch {
+            print("❌ 计时阅读记录保存失败: \(error.localizedDescription)")
+        }
     }
 
     private func insertManualSession() {
@@ -537,17 +540,20 @@ struct ReadingTimerCard: View {
         var normalized = manualProgressDraft
         normalized.normalize()
 
-        try? ReadingDataService.shared.insertManualReadingSession(
-            for: book,
-            startedAt: startedAt,
-            duration: duration,
-            progressUnit: book.progressUnit,
-            startAmount: book.currentAmount,
-            endAmount: normalized.currentAmount,
-            context: modelContext
-        )
-
-        isManualPopoverPresented = false
+        do {
+            try ReadingDataService.shared.insertManualReadingSession(
+                for: book,
+                startedAt: startedAt,
+                duration: duration,
+                progressUnit: book.progressUnit,
+                startAmount: book.currentAmount,
+                endAmount: normalized.currentAmount,
+                context: modelContext
+            )
+            isManualPopoverPresented = false
+        } catch {
+            print("❌ 手动录入记录保存失败: \(error.localizedDescription)")
+        }
     }
 
     private func formattedDuration(_ seconds: TimeInterval) -> String {

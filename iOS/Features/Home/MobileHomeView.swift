@@ -73,11 +73,7 @@ struct MobileHomeView: View {
 
                         // 📚 6. 想读画廊
                         SharedQueueBookshelf(displayBooks: dashboard.queueBooks) { tappedBook in
-                            if tappedBook.status == .planned {
-                                try? ReadingDataService.shared.markBookStartedFromQueue(tappedBook, context: modelContext)
-                            }
-                            focusedReadingBookID = tappedBook.id
-                            activeBookDetail = tappedBook
+                            startReadingFromQueue(tappedBook)
                         }
 
                         // 🧠 7. 深度复盘
@@ -131,6 +127,19 @@ private extension MobileHomeView {
     }
 
     private var todayTotalSeconds: TimeInterval { cachedTodaySeconds }
+
+    private func startReadingFromQueue(_ book: Book) {
+        if book.status == .planned {
+            do {
+                try ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
+            } catch {
+                print("❌ 想读转在读失败: \(error.localizedDescription)")
+                return
+            }
+        }
+        focusedReadingBookID = book.id
+        activeBookDetail = book
+    }
 }
 
 

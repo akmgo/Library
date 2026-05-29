@@ -54,35 +54,43 @@ struct MobileReadingTimerCard: View {
             }
         }
         .onReceive(timer) { now in
-            elapsedSeconds = timerStore.elapsedSeconds(for: book?.id ?? "", now: now)
+            guard let book else { return }
+            elapsedSeconds = timerStore.elapsedSeconds(for: book.id, now: now)
         }
         .onChange(of: book?.id) { _, _ in
             pendingTimerEndAt = nil
             if let book {
                 manualProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
                 timerProgressDraft = ReadingProgressDraft.sessionDefault(for: book)
+                elapsedSeconds = timerStore.elapsedSeconds(for: book.id)
             }
-            elapsedSeconds = timerStore.elapsedSeconds(for: book?.id ?? "")
         }
         .onAppear {
-            elapsedSeconds = timerStore.elapsedSeconds(for: book?.id ?? "")
+            guard let book else { return }
+            elapsedSeconds = timerStore.elapsedSeconds(for: book.id)
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             timerStore.syncFromDefaults()
-            elapsedSeconds = timerStore.elapsedSeconds(for: book?.id ?? "")
+            guard let book else { return }
+            elapsedSeconds = timerStore.elapsedSeconds(for: book.id)
         }
-        .sheet(isPresented: $isTimedDurationPresented) {
-            timedDurationSheet(for: book)
+        .sheet(isPresented: Binding(
+            get: { isTimedDurationPresented && book != nil },
+            set: { isTimedDurationPresented = $0 }
+        )) {
+            if let book { timedDurationSheet(for: book) }
         }
-        .sheet(isPresented: $isTimerCompletePresented) {
-            if let book {
-                timerCompleteSheet(for: book)
-            }
+        .sheet(isPresented: Binding(
+            get: { isTimerCompletePresented && book != nil },
+            set: { isTimerCompletePresented = $0 }
+        )) {
+            if let book { timerCompleteSheet(for: book) }
         }
-        .sheet(isPresented: $isManualEntryPresented) {
-            if let book {
-                manualEntrySheet(for: book)
-            }
+        .sheet(isPresented: Binding(
+            get: { isManualEntryPresented && book != nil },
+            set: { isManualEntryPresented = $0 }
+        )) {
+            if let book { manualEntrySheet(for: book) }
         }
     }
 
@@ -172,7 +180,7 @@ struct MobileReadingTimerCard: View {
 
     // MARK: - 定时阅读 Sheet
 
-    private func timedDurationSheet(for book: Book?) -> some View {
+    private func timedDurationSheet(for book: Book) -> some View {
         NavigationStack {
             VStack(spacing: 20) {
                 Text("设定阅读时长")
@@ -230,7 +238,6 @@ struct MobileReadingTimerCard: View {
 
                 Button {
                     isTimedDurationPresented = false
-                    guard let book else { return }
                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     timerStore.startTimed(bookID: book.id, duration: TimeInterval(timedDurationMinutes * 60))
                     elapsedSeconds = 0
@@ -417,19 +424,22 @@ struct MobileReadingTimerCard: View {
         var normalized = timerProgressDraft
         normalized.normalize()
 
-        try? ReadingDataService.shared.insertTimerReadingSession(
-            for: book,
-            startedAt: timerStartedAt,
-            endedAt: endAt,
-            endAmount: normalized.currentAmount,
-            context: modelContext
-        )
-
-        endLiveActivity(for: book, endedAt: endAt)
-        timerStore.cancel()
-        pendingTimerEndAt = nil
-        elapsedSeconds = 0
-        isTimerCompletePresented = false
+        do {
+            try ReadingDataService.shared.insertTimerReadingSession(
+                for: book,
+                startedAt: timerStartedAt,
+                endedAt: endAt,
+                endAmount: normalized.currentAmount,
+                context: modelContext
+            )
+            endLiveActivity(for: book, endedAt: endAt)
+            timerStore.cancel()
+            pendingTimerEndAt = nil
+            elapsedSeconds = 0
+            isTimerCompletePresented = false
+        } catch {
+            print("❌ 计时阅读记录保存失败: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Live Activity
@@ -496,17 +506,20 @@ struct MobileReadingTimerCard: View {
         var normalized = manualProgressDraft
         normalized.normalize()
 
-        try? ReadingDataService.shared.insertManualReadingSession(
-            for: book,
-            startedAt: startedAt,
-            duration: duration,
-            progressUnit: normalized.unit,
-            startAmount: book.currentAmount,
-            endAmount: normalized.currentAmount,
-            context: modelContext
-        )
-
-        isManualEntryPresented = false
+        do {
+            try ReadingDataService.shared.insertManualReadingSession(
+                for: book,
+                startedAt: startedAt,
+                duration: duration,
+                progressUnit: normalized.unit,
+                startAmount: book.currentAmount,
+                endAmount: normalized.currentAmount,
+                context: modelContext
+            )
+            isManualEntryPresented = false
+        } catch {
+            print("❌ 手动录入记录保存失败: \(error.localizedDescription)")
+        }
     }
 
     private func formattedDuration(_ seconds: TimeInterval) -> String {

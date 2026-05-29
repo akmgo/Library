@@ -39,7 +39,11 @@ public class SharedDatabase {
             print("👁️ [SharedDatabase] 检测到 Xcode 预览环境，强制拉闸，切断磁盘访问！")
             self.sharedDefaults = UserDefaults.standard // 降级到标准，不碰 group
             let previewConfig = ModelConfiguration(isStoredInMemoryOnly: true)
-            self.container = try! ModelContainer(for: schema, configurations: [previewConfig])
+            do {
+                self.container = try ModelContainer(for: schema, configurations: [previewConfig])
+            } catch {
+                fatalError("预览环境 ModelContainer 初始化失败: \(error.localizedDescription)")
+            }
             return // ⚠️ 直接 return，绝对不执行下面的物理磁盘代码！
         }
             
@@ -99,7 +103,11 @@ public class SharedDatabase {
                 print("🚨 物理磁盘挂载彻底失败: \(error)")
                 // 终极防线：内存数据库兜底
                 let fallbackConfig = ModelConfiguration(isStoredInMemoryOnly: true)
-                self.container = try! ModelContainer(for: schema, configurations: [fallbackConfig])
+                do {
+                    self.container = try ModelContainer(for: schema, configurations: [fallbackConfig])
+                } catch {
+                    fatalError("终极内存数据库兜底初始化也失败了，无法恢复: \(error.localizedDescription)")
+                }
                 print("⚠️ 已启用纯内存模式兜底。")
             }
         }
