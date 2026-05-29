@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C5BC2DF42FC9E7F6009900C0 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = C5BC2DF32FC9E7F6009900C0 /* AppIcon.icon */; };
 		C5FD82DD2F90CC1D0003A500 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */; };
 		C5FD82DF2F90CC1D0003A500 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */; };
 		C5FD82EA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -38,7 +37,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C5BC2DF32FC9E7F6009900C0 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		C5FD820B2F90C3530003A500 /* Library.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Library.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LibraryWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
@@ -146,7 +144,6 @@
 		C5FD82022F90C3530003A500 = {
 			isa = PBXGroup;
 			children = (
-				C5BC2DF32FC9E7F6009900C0 /* AppIcon.icon */,
 				C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */,
 				C5B452872FC5C095006DD0A9 /* iOS */,
 				C5B452422FC5C091006DD0A9 /* macOS */,
@@ -273,7 +270,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C5BC2DF42FC9E7F6009900C0 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
