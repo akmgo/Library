@@ -4,8 +4,47 @@ import SwiftUI
 import AppKit
 #endif
 
+#if os(macOS)
+// MARK: - Dock 图标深色模式跟随
+
+/// 监听系统主题变化，动态切换 Dock 栏中的应用图标。
+/// Xcode 26 的 asset catalog 编译器不再从 Contents.json 的 appearance
+/// 变体生成暗色 .icns，因此通过运行时 NSApp.applicationIconImage 绕行。
+@MainActor
+final class DockIconThemeObserver {
+    private let lightImage: NSImage?
+    private let darkImage: NSImage?
+
+    init() {
+        lightImage = NSImage(named: "AppIconLight")
+        darkImage = NSImage(named: "AppIconDark")
+        applyCurrentAppearance()
+        DistributedNotificationCenter.default.addObserver(
+            self,
+            selector: #selector(themeChanged),
+            name: NSNotification.Name("AppleInterfaceThemeChangedNotification"),
+            object: nil
+        )
+    }
+
+    @objc private func themeChanged(_ note: Notification) {
+        applyCurrentAppearance()
+    }
+
+    private func applyCurrentAppearance() {
+        let isDark = NSApp.effectiveAppearance.name == .darkAqua
+            || NSApp.effectiveAppearance.name == .vibrantDark
+        NSApp.applicationIconImage = isDark ? darkImage : lightImage
+    }
+}
+#endif
+
 @main
 struct LibraryApp: App {
+    #if os(macOS)
+    @State private var dockIconObserver: DockIconThemeObserver?
+    #endif
+
     var body: some Scene {
         #if os(macOS)
         // ==========================================
@@ -13,13 +52,15 @@ struct LibraryApp: App {
         // ==========================================
         Window("Library", id: "mainWindow") {
             MacRootView()
-                // 1. 核心：卡死窗口的最小尺寸
                 .frame(minWidth: 1200, idealWidth: 1420, minHeight: 900, idealHeight: 1080)
+                .onAppear {
+                    if dockIconObserver == nil {
+                        dockIconObserver = DockIconThemeObserver()
+                    }
+                }
         }
         .windowToolbarStyle(.unified(showsTitle: false))
-        // 2. 核心：设定程序第一次全新打开时的默认尺寸
         .defaultSize(width: 1420, height: 1080)
-        // 3. 核心：告诉系统，窗口缩小的极限就是 MacRootView 设定的 min 尺寸
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
         .commands {
