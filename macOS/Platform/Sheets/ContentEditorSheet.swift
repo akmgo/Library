@@ -116,7 +116,8 @@ struct ContentEditorSheet: View {
             .padding(16)
         }
         .frame(width: 540, height: 420)
-        .glassEffect(in: .rect(cornerRadius: 16.0))
+        .background(Color(nsColor: .windowBackgroundColor), in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.08), radius: 24, y: 12)
         .background(WindowTransparentEffect())
         .onAppear {
             selectedMode = itemToEdit?.isNote == true ? .note : mode

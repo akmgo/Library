@@ -60,7 +60,7 @@ struct MobileBookDetailCard<Content: View, Trailing: View>: View {
     }
 
     var body: some View {
-        AppCard(usesClearMaterial: useClearGlassSurface) {
+        AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.m) {
                 DetailSectionHeader(title: title, systemImage: systemImage, tint: tint) {
                     trailing()
@@ -488,20 +488,11 @@ private struct MobileEmptyDetailState: View {
     let subtitle: String
 
     var body: some View {
-        VStack(spacing: AppSpacing.xs) {
-            Image(systemName: systemImage)
-                .font(.system(size: 24, weight: .light))
-                .foregroundStyle(.secondary.opacity(0.4))
-            Text(title)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary.opacity(0.55))
-            Text(subtitle)
-                .font(.system(size: 11, weight: .regular, design: .rounded))
-                .foregroundStyle(.secondary.opacity(0.38))
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.l)
+        Text(title)
+            .font(AppTypography.body)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, AppSpacing.l)
     }
 }
 

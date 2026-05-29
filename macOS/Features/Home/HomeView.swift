@@ -17,21 +17,17 @@ struct HomeView: View {
     
     @Binding var selectedBook: Book? // 仅保留详情页绑定
     @State private var focusedReadingBookID: String?
-    
-    private var dashboard: ReadingStatsCalculator.DashboardSnapshot {
-        ReadingStatsCalculator.dashboardSnapshot(
-            books: books,
-            sessions: sessions,
-            excerpts: excerpts
-        )
+    @State private var dashboard: ReadingStatsCalculator.DashboardSnapshot = .empty
+    @State private var cachedOrderedReadingBooks: [Book] = []
+    @State private var cachedTodaySeconds: TimeInterval = 0
+
+    private var dataFingerprint: String {
+        let latestSession = sessions.last?.startedAt.timeIntervalSince1970 ?? 0
+        return "\(books.count)-\(sessions.count)-\(excerpts.count)-\(latestSession)"
     }
 
     private var orderedReadingBooks: [Book] {
-        books
-            .filter { $0.status == .reading }
-            .sorted { lhs, rhs in
-                readingPriorityDate(for: lhs) > readingPriorityDate(for: rhs)
-            }
+        cachedOrderedReadingBooks
     }
 
     private var focusedReadingBook: Book? {
@@ -86,24 +82,23 @@ struct HomeView: View {
                         
                     // 🌟 Row 2: 视觉数据双轨
                     VStack(spacing: 24) {
-                        MomentumChart(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
-                        HeatmapRibbon(columns: dashboard.heatmapColumns, activeDays: dashboard.heatmapActiveDays)
+                        SharedMomentumChart(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
                     }
-                        
+
                     // 🌟 Row 3: 思想碰撞与未来队列
                     HStack(spacing: 24) {
-                        ResonanceWave(excerpts: dashboard.resonancePoints)
+                        SharedResonanceCard(excerpts: dashboard.resonancePoints)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        
+
                         // ✨ 点击闭包：处理想读变在读，并发送阅读通知
-                        QueueBookshelf(displayBooks: dashboard.queueBooks) { tappedBook in
+                        SharedQueueBookshelf(displayBooks: dashboard.queueBooks) { tappedBook in
                             startReadingFromQueue(book: tappedBook)
                         }
                     }
                     .frame(height: 300)
 
                     // 🌟 Row 4: 底部基石
-                    KnowledgeSpectrum(dataPoints: dashboard.spectrumPoints)
+                    SharedKnowledgeSpectrum(dataPoints: dashboard.spectrumPoints)
                         .frame(maxWidth: .infinity)
                         .frame(height: 140)
                 }
@@ -119,13 +114,32 @@ struct HomeView: View {
                 AppHeaderTitle("阅读主页", subtitle: greeting)
             } trailingContent: { PageStatsCompact(items: homeHeaderStats) }
         }
+        .onAppear { refreshCachedData() }
+        .onChange(of: dataFingerprint) { _, _ in refreshCachedData() }
     }
 }
 
 // MARK: - ⚙️ 异步数据调度引擎
 
 extension HomeView {
-    
+
+    @MainActor
+    private func refreshCachedData() {
+        dashboard = ReadingStatsCalculator.dashboardSnapshot(
+            books: books, sessions: sessions, excerpts: excerpts
+        )
+        cachedOrderedReadingBooks = books
+            .filter { $0.status == .reading }
+            .sorted { lhs, rhs in
+                readingPriorityDate(for: lhs) > readingPriorityDate(for: rhs)
+            }
+        let calendar = Calendar.current
+        let today = Date()
+        cachedTodaySeconds = sessions.filter {
+            calendar.isDate($0.date, inSameDayAs: today)
+        }.reduce(0) { $0 + max($1.duration, 0) }
+    }
+
     @MainActor
     private func startReadingFromQueue(book: Book) {
         if book.status == .planned {
@@ -147,15 +161,7 @@ extension HomeView {
 extension HomeView {
     private var dailyTarget: Int { max(configs.first?.dailyMinutesGoal ?? 30, 1) }
 
-    private var todayTotalSeconds: TimeInterval {
-        let calendar = Calendar.current
-        let today = Date()
-        return sessions.filter {
-            calendar.isDate($0.date, inSameDayAs: today)
-        }.reduce(0) {
-            $0 + max($1.duration, 0)
-        }
-    }
+    private var todayTotalSeconds: TimeInterval { cachedTodaySeconds }
     private var yearTarget: Int { configs.first?.yearlyBooksGoal ?? 50 }
     private var homeHeaderStats: [PageStatItemData] {
         let libraryTarget = configs.first?.libraryBooksGoal ?? 100

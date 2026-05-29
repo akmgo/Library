@@ -5,10 +5,12 @@ struct YearlyTimelineBookCardContent: View {
     let book: Book
     var isMirrored: Bool = false
     var coverWidth: CGFloat = 100
-    var coverHeight: CGFloat = 150
+
+    /// 严格按 2:3 比例从宽度推导高度，保证封面比例始终正确。
+    private var coverHeight: CGFloat { coverWidth * 1.5 }
 
     var body: some View {
-        HStack(spacing: AppSpacing.l) {
+        HStack(alignment: .top, spacing: AppSpacing.l) {
             if isMirrored {
                 textSection
                 coverSection
@@ -40,7 +42,7 @@ struct YearlyTimelineBookCardContent: View {
             ratingView
             tagView
 
-            Spacer(minLength: 4)
+            Spacer(minLength: 0)
 
             YearlyTimelineJourneyTicket(book: book, isMirrored: isMirrored)
         }

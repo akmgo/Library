@@ -18,10 +18,10 @@ struct QueueBookshelf: View {
             }
             
             if displayBooks.isEmpty {
-                VStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "books.vertical").font(.system(size: 24)).foregroundColor(.secondary.opacity(0.4))
-                    Text("暂无想读计划").font(.system(size: 13, weight: .medium)).foregroundColor(.secondary)
-                }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                Text("暂无想读计划")
+                    .font(AppTypography.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
                 HStack(alignment: .top, spacing: AppSpacing.l) {
                     ForEach(displayBooks) { book in

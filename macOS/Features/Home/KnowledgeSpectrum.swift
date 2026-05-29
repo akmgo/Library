@@ -25,16 +25,10 @@ struct KnowledgeSpectrum: View {
             }
             
             if dataPoints.isEmpty {
-                // 空状态
-                VStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "chart.pie")
-                        .font(.system(size: 24))
-                        .foregroundColor(.secondary.opacity(0.4))
-                    Text("缺乏数据")
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Text("尚无数据")
+                    .font(AppTypography.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
                 // 数据展示状态
                 VStack(spacing: AppSpacing.xl) {

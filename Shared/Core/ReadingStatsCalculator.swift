@@ -136,8 +136,6 @@ enum ReadingStatsCalculator {
         let totalLibrary: Int
         let momentumPoints: [MomentumDataPoint]
         let momentumTotal: Int
-        let heatmapColumns: [[HeatmapDataPoint]]
-        let heatmapActiveDays: Int
         let resonancePoints: [ResonanceDataPoint]
         let queueBooks: [Book]
         let spectrumPoints: [SpectrumDataPoint]
@@ -152,8 +150,6 @@ enum ReadingStatsCalculator {
             totalLibrary: 0,
             momentumPoints: [],
             momentumTotal: 0,
-            heatmapColumns: [],
-            heatmapActiveDays: 0,
             resonancePoints: [],
             queueBooks: [],
             spectrumPoints: []
@@ -524,7 +520,6 @@ enum ReadingStatsCalculator {
         } / 60
 
         let momentum = momentumData(from: sessions, endingAt: today, calendar: calendar)
-        let heatmap = yearlyHeatmap(from: sessions, endingAt: today, calendar: calendar)
 
         return DashboardSnapshot(
             activeReadingBook: activeReadingBook(from: books),
@@ -536,8 +531,6 @@ enum ReadingStatsCalculator {
             totalLibrary: books.count,
             momentumPoints: momentum.points,
             momentumTotal: momentum.totalMinutes,
-            heatmapColumns: heatmap.columns,
-            heatmapActiveDays: heatmap.activeDays,
             resonancePoints: resonanceData(from: excerpts),
             queueBooks: queueBooks(from: books),
             spectrumPoints: spectrumData(from: books)
@@ -642,48 +635,6 @@ enum ReadingStatsCalculator {
 
         let totalMinutes = Int(durations.values.reduce(0, +) / 60)
         return (points, totalMinutes)
-    }
-
-    static func yearlyHeatmap(
-        from sessions: [ReadingSession],
-        endingAt endDate: Date = Date(),
-        weekCount: Int = 53,
-        calendar baseCalendar: Calendar = .current
-    ) -> (columns: [[HeatmapDataPoint]], activeDays: Int) {
-        var calendar = baseCalendar
-        calendar.firstWeekday = 2
-
-        let today = calendar.startOfDay(for: endDate)
-        let daysToSubtract = (calendar.component(.weekday, from: today) + 5) % 7
-        let currentWeekStart = calendar.date(byAdding: .day, value: -daysToSubtract, to: today) ?? today
-        let startDate = calendar.date(byAdding: .weekOfYear, value: -(weekCount - 1), to: currentWeekStart) ?? currentWeekStart
-        let durations = durationByDay(from: sessions, calendar: calendar)
-
-        var activeDays = 0
-        let columns = (0..<weekCount).map { weekIndex in
-            (0..<7).map { dayIndex in
-                let date = calendar.date(byAdding: .day, value: weekIndex * 7 + dayIndex, to: startDate) ?? startDate
-                let duration = durations[date] ?? 0
-                let minutes = Int(duration / 60)
-                let isFuture = date > today
-                let intensity = !isFuture && minutes > 0 ? VisualEngines.ReadingHeatmap.intensity(for: minutes) : 0
-                if !isFuture && minutes > 0 {
-                    activeDays += 1
-                }
-
-                let dateString = date.formatted(.dateTime.month().day())
-                let tooltip = isFuture ? "未到" : (minutes == 0 ? "\(dateString): 未打卡" : "\(dateString): 专注 \(minutes) 分钟")
-                return HeatmapDataPoint(
-                    date: date,
-                    minutes: minutes,
-                    intensity: intensity,
-                    isFuture: isFuture,
-                    tooltip: tooltip
-                )
-            }
-        }
-
-        return (columns, activeDays)
     }
 
     static func activeReadingBook(from books: [Book]) -> Book? {

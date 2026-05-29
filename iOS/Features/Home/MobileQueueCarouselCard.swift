@@ -20,12 +20,10 @@ struct MobileQueueCarouselCard: View {
                         .foregroundColor(AppColors.readingAmber)
                 }
                 if displayBooks.isEmpty {
-                    VStack {
-                        Text("暂无想读计划")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
+                    Text("暂无想读计划")
+                        .font(AppTypography.body)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 14) {

@@ -23,7 +23,7 @@ struct MobileReadingTimerCard: View {
     @State private var timerProgressDraft = ReadingProgressDraft()
     @State private var pendingTimerEndAt: Date?
 
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 1, on: .main, in: .default).autoconnect()
 
     private var isTiming: Bool {
         guard let book else { return false }
@@ -164,18 +164,10 @@ struct MobileReadingTimerCard: View {
     // MARK: - 空状态
 
     private var emptyState: some View {
-        VStack(spacing: AppSpacing.m) {
-            Text("00:00")
-                .font(.system(size: 48, weight: .heavy, design: .rounded))
-                .foregroundColor(.primary.opacity(0.2))
-                .monospacedDigit()
-
-            Text("选择一本在读书籍后开始计时")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
+        Text("暂无在读")
+            .font(AppTypography.body)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     // MARK: - 定时阅读 Sheet

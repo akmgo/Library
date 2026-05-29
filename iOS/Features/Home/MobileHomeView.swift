@@ -6,7 +6,8 @@ import SwiftUI
 
 struct MobileHomeView: View {
     @Environment(\.colorScheme) private var colorScheme
-    
+    @Environment(\.modelContext) private var modelContext
+
     // MARK: - 📥 全局配置
     @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
     @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
@@ -16,13 +17,13 @@ struct MobileHomeView: View {
     // MARK: - 🎮 UI 交互状态
     @State private var activeBookDetail: Book? = nil
     @State private var focusedReadingBookID: String?
+    @State private var dashboard: ReadingStatsCalculator.DashboardSnapshot = .empty
+    @State private var cachedOrderedReadingBooks: [Book] = []
+    @State private var cachedTodaySeconds: TimeInterval = 0
 
-    private var dashboard: ReadingStatsCalculator.DashboardSnapshot {
-        ReadingStatsCalculator.dashboardSnapshot(
-            books: books,
-            sessions: sessions,
-            excerpts: excerpts
-        )
+    private var homeFP: String {
+        let latestSession = sessions.last?.startedAt.timeIntervalSince1970 ?? 0
+        return "\(books.count)-\(sessions.count)-\(excerpts.count)-\(latestSession)"
     }
 
     var body: some View {
@@ -37,7 +38,7 @@ struct MobileHomeView: View {
                     MobilePageStatsHeader(items: homeStats)
 
                     LazyVStack(spacing: AppSpacing.xl) {
-                    
+
                         // 🌟 1. 视觉锚点 (在读焦点)
                         if let heroBook = focusedReadingBook {
                             MobileReadingHeroCard(
@@ -65,14 +66,22 @@ struct MobileHomeView: View {
                         )
 
                         // 🌊 4. 双周动能
-                        MobileMomentumChartCard(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
+                        SharedMomentumChart(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
 
-                        // 📚 5. 想读画廊
-                        MobileQueueCarouselCard(displayBooks: dashboard.queueBooks)
-                        
-                        // 🧠 6. 深度复盘
-                        MobileYearlyHeatmapCard(columns: dashboard.heatmapColumns, activeDays: dashboard.heatmapActiveDays)
-                        MobileKnowledgeSpectrumCard(dataPoints: dashboard.spectrumPoints)
+                        // 💭 5. 思想共鸣
+                        SharedResonanceCard(excerpts: dashboard.resonancePoints)
+
+                        // 📚 6. 想读画廊
+                        SharedQueueBookshelf(displayBooks: dashboard.queueBooks) { tappedBook in
+                            if tappedBook.status == .planned {
+                                try? ReadingDataService.shared.markBookStartedFromQueue(tappedBook, context: modelContext)
+                            }
+                            focusedReadingBookID = tappedBook.id
+                            activeBookDetail = tappedBook
+                        }
+
+                        // 🧠 7. 深度复盘
+                        SharedKnowledgeSpectrum(dataPoints: dashboard.spectrumPoints)
                     }
                     .padding(.horizontal, AppSpacing.l)
                 }
@@ -82,9 +91,10 @@ struct MobileHomeView: View {
                 }
             }
             .coordinateSpace(name: "homeScroll")
-            
         }
-.navigationDestination(item: $activeBookDetail) { book in
+        .onAppear { refreshHomeData() }
+        .onChange(of: homeFP) { _, _ in refreshHomeData() }
+        .navigationDestination(item: $activeBookDetail) { book in
             MobileBookDetailView(book: book)
         }
     }
@@ -105,13 +115,7 @@ struct MobileHomeView: View {
 private extension MobileHomeView {
     // MARK: - 在读焦点管理
 
-    private var orderedReadingBooks: [Book] {
-        books
-            .filter { $0.status == .reading }
-            .sorted { lhs, rhs in
-                readingPriorityDate(for: lhs) > readingPriorityDate(for: rhs)
-            }
-    }
+    private var orderedReadingBooks: [Book] { cachedOrderedReadingBooks }
 
     private var focusedReadingBook: Book? {
         if let focusedReadingBookID,
@@ -126,21 +130,7 @@ private extension MobileHomeView {
         return Array(orderedReadingBooks.filter { $0.id != focusedReadingBook.id }.prefix(3))
     }
 
-    private var todayTotalSeconds: TimeInterval {
-        let calendar = Calendar.current
-        let today = Date()
-        return sessions
-            .filter { calendar.isDate($0.date, inSameDayAs: today) }
-            .reduce(0) { $0 + max($1.duration, 0) }
-    }
-
-    private func readingPriorityDate(for book: Book) -> Date {
-        let latestSessionDate = sessions
-            .filter { $0.book?.id == book.id }
-            .map(\.startedAt)
-            .max()
-        return latestSessionDate ?? book.lastReadAt ?? book.startDate ?? book.createdAt
-    }
+    private var todayTotalSeconds: TimeInterval { cachedTodaySeconds }
 }
 
 
@@ -435,6 +425,28 @@ struct MobileGlobalSearchView: View {
 // MARK: - 🎨 辅助计算属性
 
 extension MobileHomeView {
+    @MainActor
+    private func refreshHomeData() {
+        dashboard = ReadingStatsCalculator.dashboardSnapshot(
+            books: books, sessions: sessions, excerpts: excerpts
+        )
+        let sessionMap = Dictionary(grouping: sessions, by: { $0.book?.id ?? "" })
+        cachedOrderedReadingBooks = books
+            .filter { $0.status == .reading }
+            .sorted { lhs, rhs in
+                let lDate = sessionMap[lhs.id]?.map(\.startedAt).max()
+                    ?? lhs.lastReadAt ?? lhs.startDate ?? lhs.createdAt
+                let rDate = sessionMap[rhs.id]?.map(\.startedAt).max()
+                    ?? rhs.lastReadAt ?? rhs.startDate ?? rhs.createdAt
+                return lDate > rDate
+            }
+        let calendar = Calendar.current
+        let today = Date()
+        cachedTodaySeconds = sessions
+            .filter { calendar.isDate($0.date, inSameDayAs: today) }
+            .reduce(0) { $0 + max($1.duration, 0) }
+    }
+
     private var dailyGoal: Int { configs.first?.dailyMinutesGoal ?? 30 }
     private var yearTarget: Int { configs.first?.yearlyBooksGoal ?? 50 }
     private var libraryTarget: Int { configs.first?.libraryBooksGoal ?? 100 }

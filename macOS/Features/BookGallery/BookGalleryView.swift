@@ -52,14 +52,11 @@ struct BookGalleryView: View {
     @Binding var isBatchDeletePresented: Bool
     @Binding var selectedBookIDs: Set<String>
     @Query private var allBooks: [Book]
-    
-    private var gallerySnapshot: ReadingStatsCalculator.BookGallerySnapshot {
-        ReadingStatsCalculator.bookGallerySnapshot(
-            books: allBooks,
-            filterStatus: filterStatus,
-            searchText: "",
-            sortKey: sortKey
-        )
+    @State private var gallerySnapshot: ReadingStatsCalculator.BookGallerySnapshot?
+    @State private var galleryHeaderStats: [PageStatItemData] = []
+
+    private var galleryFP: String {
+        "\(allBooks.count)-\(filterStatus?.rawValue ?? "")-\(sortKey)"
     }
     
     var body: some View {
@@ -70,10 +67,12 @@ struct BookGalleryView: View {
                     .padding(.top, AppPageHeaderMetrics.height + 12)
                     .padding(.bottom, 60)
             }
+            .onAppear { refreshGalleryData() }
+            .onChange(of: galleryFP) { _, _ in refreshGalleryData() }
             // 2. 顶部 Header (overlay 挂载)
             .overlay(alignment: .top) {
                 AppPageHeader(
-                    contentID: "\(gallerySnapshot.books.count)-\(gallerySnapshot.totalInventoryCount)-\(filterStatus?.rawValue ?? "all")-\(sortKey)"
+                    contentID: "\(gallerySnapshot?.books.count ?? 0)-\(gallerySnapshot?.totalInventoryCount ?? 0)-\(filterStatus?.rawValue ?? "all")-\(sortKey)"
                 ) {
                     AppHeaderTitle("全景画廊", subtitle: "你的阅读对象与状态总览。")
             } trailingContent: { PageStatsCompact(items: galleryHeaderStats) }
@@ -90,17 +89,10 @@ struct BookGalleryView: View {
     
     @ViewBuilder
     private func gridView(containerWidth: CGFloat) -> some View {
-        if gallerySnapshot.books.isEmpty {
-            EmptyStateView(
-                systemImage: "books.vertical.fill",
-                title: "没有找到相关书籍",
-                message: "暂时没有可展示的图书",
-                minHeight: 400
-            )
-        } else {
+        if let snapshot = gallerySnapshot, !snapshot.books.isEmpty {
             let columns = [GridItem(.adaptive(minimum: gridScale.width, maximum: gridScale.width), spacing: gridScale.hSpacing)]
             LazyVGrid(columns: columns, spacing: gridScale.vSpacing) {
-                ForEach(gallerySnapshot.books) { book in
+                ForEach(snapshot.books) { book in
                     AnimatedCardGlide(
                         book: book,
                         gridScale: gridScale,
@@ -111,23 +103,14 @@ struct BookGalleryView: View {
                     )
                 }
             }
+        } else if gallerySnapshot != nil {
+            EmptyStateView(
+                systemImage: "books.vertical.fill",
+                title: "没有找到相关书籍",
+                message: "暂时没有可展示的图书",
+                minHeight: 400
+            )
         }
-    }
-
-    private var galleryHeaderStats: [PageStatItemData] {
-        let total = allBooks.count
-        let readingCount = allBooks.filter { $0.status == .reading }.count
-        let finishedCount = allBooks.filter { $0.status == .finished }.count
-        let abandonedCount = allBooks.filter { $0.status == .abandoned }.count
-        let completionRate = (finishedCount + abandonedCount) > 0
-            ? Int(Double(finishedCount) / Double(finishedCount + abandonedCount) * 100)
-            : 0
-        return [
-            PageStatItemData(title: "全部馆藏", value: "\(total)", color: .indigo),
-            PageStatItemData(title: "在读", value: "\(readingCount)", color: AppColors.readingAmber),
-            PageStatItemData(title: "已读完", value: "\(finishedCount)", color: .teal),
-            PageStatItemData(title: "读完率", value: "\(completionRate)", color: .pink),
-        ]
     }
 
     private var selectedBooks: [Book] {
@@ -168,6 +151,24 @@ struct BookGalleryView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .appCapsuleStyle(tint: AppColors.readingAmber, fillOpacity: 0.12, strokeOpacity: 0.10)
+    }
+
+    private func refreshGalleryData() {
+        let snapshot = ReadingStatsCalculator.bookGallerySnapshot(
+            books: allBooks, filterStatus: filterStatus, searchText: "", sortKey: sortKey
+        )
+        gallerySnapshot = snapshot
+        let counts = Dictionary(grouping: allBooks, by: \.status).mapValues(\.count)
+        let finished = counts[.finished] ?? 0
+        let abandoned = counts[.abandoned] ?? 0
+        let rate = (finished + abandoned) > 0
+            ? Int(Double(finished) / Double(finished + abandoned) * 100) : 0
+        galleryHeaderStats = [
+            PageStatItemData(title: "全部馆藏", value: "\(allBooks.count)", color: .indigo),
+            PageStatItemData(title: "在读", value: "\(counts[.reading] ?? 0)", color: AppColors.readingAmber),
+            PageStatItemData(title: "已读完", value: "\(finished)", color: .teal),
+            PageStatItemData(title: "读完率", value: "\(rate)", color: .pink),
+        ]
     }
 
     private func toggleSelection(for book: Book) {

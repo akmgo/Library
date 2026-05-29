@@ -159,11 +159,7 @@ struct MobileTimelineCardView: View {
     
     var body: some View {
         AppCard {
-            YearlyTimelineBookCardContent(
-                book: book,
-                coverWidth: 80,
-                coverHeight: 132
-            )
+            YearlyTimelineBookCardContent(book: book, coverWidth: 100)
         }
     }
 }

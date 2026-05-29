@@ -3,15 +3,6 @@ import AppKit
 import SwiftData
 import SwiftUI
 
-// MARK: - 滚动监听器
-
-private struct ScrollBoundsKey: PreferenceKey {
-    static var defaultValue: [String: CGRect] = [:]
-    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
-        value.merge(nextValue(), uniquingKeysWith: { $1 })
-    }
-}
-
 // MARK: - 🗓️ 核心月度记录视图
 
 struct MonthlyRecordView: View {
@@ -28,19 +19,21 @@ struct MonthlyRecordView: View {
     @State private var sessionsByDay: [Date: [ReadingSession]] = [:]
 
     private var sessionsFingerprint: String {
-        let newestStart = sessions.map(\.startedAt).max()?.timeIntervalSinceReferenceDate ?? 0
-        let newestEnd = sessions.map(\.endedAt).max()?.timeIntervalSinceReferenceDate ?? 0
-        let totalDuration = sessions.reduce(0) { $0 + max($1.duration, 0) }
-        return "\(sessions.count)-\(newestStart)-\(newestEnd)-\(totalDuration)"
+        "\(sessions.count)-\(sessions.first?.startedAt.timeIntervalSince1970 ?? 0)"
     }
     
     var body: some View {
-        GeometryReader { mainGeo in
-            // ================= 1. 底层无缝连续滚动区 =================
-            ScrollViewReader { proxy in
-                ScrollView(.vertical, showsIndicators: false) {
-                    ZStack {
-                        LazyVStack(spacing: 30) {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                ZStack {
+                    LazyVStack(spacing: 30) {
+                        if monthlySnapshot.sections.isEmpty {
+                            Text("暂无阅读记录")
+                                .font(AppTypography.body)
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.top, 160)
+                        } else {
                             ForEach(monthlySnapshot.sections) { section in
                                 MonthGridSection(
                                     section: section,
@@ -51,49 +44,30 @@ struct MonthlyRecordView: View {
                                     books: books
                                 )
                                 .id(section.id)
-                                    .background(
-                                        GeometryReader { geo in
-                                            Color.clear.preference(key: ScrollBoundsKey.self, value: [section.id: geo.frame(in: .global)])
-                                        }
-                                    )
-                            }
-                        }
-                        .padding(.horizontal, 40)
-                        .padding(.top, 160)
-                        .padding(.bottom, mainGeo.size.height / 2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-                
-                // 滚动监听事件群
-                .onPreferenceChange(ScrollBoundsKey.self) { bounds in
-                    let screenCenter = mainGeo.frame(in: .global).midY
-                    if let best = bounds.min(by: { abs($0.value.midY - screenCenter) < abs($1.value.midY - screenCenter) }) {
-                        let parts = best.key.split(separator: "-")
-                        if parts.count == 2, let y = Int(parts[0]), let m = Int(parts[1]) {
-                            if self.visibleYear != y || self.visibleMonth != m {
-                                self.visibleYear = y; self.visibleMonth = m
                             }
                         }
                     }
+                    .padding(.horizontal, 40)
+                    .padding(.top, 160)
+                    .padding(.bottom, 160)
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .scrollToToday)) { _ in
-                    let calendar = Calendar.current
-                    let targetID = String(format: "%d-%02d", calendar.component(.year, from: Date()), calendar.component(.month, from: Date()))
-                    
-                    withAnimation(.appDataChange) { proxy.scrollTo(targetID, anchor: .center) }
-                }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            // ================= 2. 顶层悬浮玻璃 Header =================
-            .overlay(alignment: .top) {
-                AppPageHeader(
-                    contentID: "\(visibleYear)-\(visibleMonth)",
-                    titleContent: {
-                        AppHeaderTitle("\(visibleYear)年 \(visibleMonth)月", subtitle: "按月份查看每天的阅读痕迹。")
-                    },
-                    trailingContent: { PageStatsCompact(items: monthlyHeaderStats) }
-                )
+            .onReceive(NotificationCenter.default.publisher(for: .scrollToToday)) { _ in
+                let calendar = Calendar.current
+                let targetID = String(format: "%d-%02d", calendar.component(.year, from: Date()), calendar.component(.month, from: Date()))
+                withAnimation(.easeOut(duration: 0.3)) { proxy.scrollTo(targetID, anchor: .center) }
             }
+        }
+        // ================= 2. 顶层悬浮玻璃 Header =================
+        .overlay(alignment: .top) {
+            AppPageHeader(
+                contentID: "\(visibleYear)-\(visibleMonth)",
+                titleContent: {
+                    AppHeaderTitle("\(visibleYear)年 \(visibleMonth)月", subtitle: "按月份查看每天的阅读痕迹。")
+                },
+                trailingContent: { PageStatsCompact(items: monthlyHeaderStats) }
+            )
         }
         .overlay(alignment: .bottom) {
             if isBatchDeletePresented {
@@ -116,43 +90,30 @@ struct MonthlyRecordView: View {
     }
 
     private var monthlyHeaderStats: [PageStatItemData] {
-        let avgMinutes = visibleMonthReadingDays > 0 ? visibleMonthReadingMinutes / visibleMonthReadingDays : 0
-        return [
-            PageStatItemData(title: "本月阅读", value: "\(visibleMonthReadingMinutes)", color: .indigo),
-            PageStatItemData(title: "阅读天数", value: "\(visibleMonthReadingDays)", color: AppColors.readingAmber),
-            PageStatItemData(title: "最高连续", value: "\(visibleMonthLongestStreak)", color: .teal),
-            PageStatItemData(title: "日均阅读", value: "\(avgMinutes)", color: .pink),
-        ]
-    }
-
-    private var visibleMonthLongestStreak: Int {
         let calendar = Calendar.current
-        let daysWithReading = visibleMonthEntries
-            .filter { $0.1 > 0 }
-            .map { calendar.startOfDay(for: $0.0) }
-            .sorted()
-        return ReadingStatsCalculator.longestStreak(in: daysWithReading, calendar: calendar)
-    }
-
-    private var visibleMonthEntries: [(Date, TimeInterval)] {
-        let calendar = Calendar.current
-        return monthlySnapshot.durationByDay.filter { date, _ in
+        let entries = monthlySnapshot.durationByDay.filter { date, _ in
             calendar.component(.year, from: date) == visibleYear
                 && calendar.component(.month, from: date) == visibleMonth
         }
+        let days = entries.filter { $0.1 > 0 }.count
+        let minutes = Int(entries.reduce(0) { $0 + max($1.1, 0) } / 60)
+        let avg = days > 0 ? minutes / days : 0
+        let sortedDays = entries.filter { $0.1 > 0 }.map { $0.0 }.sorted()
+        var longest = 0, current = 0
+        for (i, day) in sortedDays.enumerated() {
+            if i == 0 || calendar.date(byAdding: .day, value: 1, to: sortedDays[i - 1]) == day {
+                current += 1
+            } else { current = 1 }
+            longest = max(longest, current)
+        }
+        return [
+            PageStatItemData(title: "本月阅读", value: "\(minutes)", color: .indigo),
+            PageStatItemData(title: "阅读天数", value: "\(days)", color: AppColors.readingAmber),
+            PageStatItemData(title: "最高连续", value: "\(longest)", color: .teal),
+            PageStatItemData(title: "日均阅读", value: "\(avg)", color: .pink),
+        ]
     }
 
-    private var visibleMonthReadingDays: Int {
-        visibleMonthEntries.filter { $0.1 > 0 }.count
-    }
-
-    private var visibleMonthDuration: TimeInterval {
-        visibleMonthEntries.reduce(0) { $0 + max($1.1, 0) }
-    }
-
-    private var visibleMonthReadingMinutes: Int {
-        Int(visibleMonthDuration / 60)
-    }
 
     private var monthlyBatchDeleteCapsule: some View {
         HStack(spacing: 14) {
@@ -201,13 +162,25 @@ private struct MonthGridSection: View {
     @Binding var selectedDates: Set<Date>
     let sessionsByDay: [Date: [ReadingSession]]
     let books: [Book]
+    let booksByID: [String: Book]
+    let monthTotalMinutes: Int
 
-    private var booksByID: [String: Book] {
-        Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
-    }
-    
-    private var monthTotalMinutes: Int {
-        section.days.compactMap { d -> Int? in
+    init(
+        section: ReadingStatsCalculator.ReadingMonthSection,
+        recordsDict: [Date: TimeInterval],
+        isBatchMode: Bool,
+        selectedDates: Binding<Set<Date>>,
+        sessionsByDay: [Date: [ReadingSession]],
+        books: [Book]
+    ) {
+        self.section = section
+        self.recordsDict = recordsDict
+        self.isBatchMode = isBatchMode
+        self._selectedDates = selectedDates
+        self.sessionsByDay = sessionsByDay
+        self.books = books
+        self.booksByID = Dictionary(uniqueKeysWithValues: books.map { ($0.id, $0) })
+        self.monthTotalMinutes = section.days.compactMap { d -> Int? in
             guard let date = d, let duration = recordsDict[Calendar.current.startOfDay(for: date)] else { return nil }
             return Int(duration / 60)
         }.reduce(0, +)
@@ -287,7 +260,7 @@ private struct DayCardView: View, Equatable {
 
         ZStack {
             Rectangle()
-                .fill(snapshot.hasRead ? Color(nsColor: .controlBackgroundColor) : Color.secondary.opacity(0.03))
+                .fill(snapshot.hasRead ? Color.primary.opacity(0.06) : Color.secondary.opacity(0.03))
 
             if snapshot.hasRead {
                 VStack(spacing: 0) {
@@ -295,7 +268,6 @@ private struct DayCardView: View, Equatable {
                     Rectangle()
                         .fill(VisualEngines.ReadingHeatmap.gradient(for: snapshot.dailyMinutes))
                         .frame(height: VisualEngines.ReadingHeatmap.height(for: snapshot.dailyMinutes))
-                        .shadow(color: VisualEngines.ReadingHeatmap.shadowColor(for: snapshot.dailyMinutes).opacity(0.5), radius: 4, y: -2)
                 }
             }
 
@@ -340,39 +312,36 @@ private struct DayCardView: View, Equatable {
             else if snapshot.hasRead { showPopover = true }
         }
         .popover(isPresented: $showPopover, arrowEdge: .bottom) {
-            AppCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text(snapshot.dayLabel)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
-                        Spacer()
-                        Text("\(snapshot.totalMinutes) 分钟")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                            .foregroundColor(AppColors.readingAmber)
-                    }
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(snapshot.dayLabel)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                    Spacer()
+                    Text("\(snapshot.totalMinutes) 分钟")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(AppColors.readingAmber)
+                }
 
-                    if !snapshot.bookSummaries.isEmpty {
-                        Divider()
-                        ForEach(snapshot.bookSummaries) { summary in
-                            HStack {
-                                Text("《\(summary.title)》")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.primary.opacity(0.8))
-                                    .lineLimit(1)
-                                Spacer()
-                                if !summary.detail.isEmpty {
-                                    Text(summary.detail)
-                                        .font(.system(size: 14, weight: .medium, design: .rounded))
-                                        .foregroundColor(.teal)
-                                }
+                if !snapshot.bookSummaries.isEmpty {
+                    Divider()
+                    ForEach(snapshot.bookSummaries) { summary in
+                        HStack {
+                            Text("《\(summary.title)》")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.primary.opacity(0.8))
+                                .lineLimit(1)
+                            Spacer()
+                            if !summary.detail.isEmpty {
+                                Text(summary.detail)
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.teal)
                             }
                         }
                     }
                 }
             }
-            .frame(width: 320)
-            .padding(10)
-            .background(AppColors.primaryBackground(for: colorScheme))
+            .frame(width: 280)
+            .padding(20)
         }
     }
 }

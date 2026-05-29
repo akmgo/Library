@@ -55,8 +55,10 @@
 		C5B450D62FC5BFB7006DD0A9 /* Exceptions for "Shared" folder in "LibraryWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Core/ReadingTimerAttributes.swift,
 				Data/ReadingDataPoints.swift,
 				Data/SharedDatabase.swift,
+				DesignSystem/AppColors.swift,
 				Models/Book.swift,
 				Models/Excerpt.swift,
 				Models/ReadingEnums.swift,

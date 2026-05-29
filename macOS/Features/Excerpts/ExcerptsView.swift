@@ -22,9 +22,11 @@ struct ExcerptsView: View {
     
     @State private var shuffledExcerpts: [ExcerptListItem] = []
     @State private var scrolledExcerptID: String?
-    
+
     @State private var recordToEdit: Excerpt? = nil
-    
+
+    @State private var cachedExcerptHeaderStats: [PageStatItemData] = []
+
     private var annotationFingerprint: String {
         allExcerpts
             .map { "\($0.id)|\($0.type.rawValue)|\($0.createdAt.timeIntervalSince1970)|\($0.content.hashValue)|\($0.book?.id ?? "")" }
@@ -35,7 +37,11 @@ struct ExcerptsView: View {
     private var shuffledFingerprint: String {
         shuffledExcerpts.map(\.id).joined(separator: ";")
     }
-    
+
+    private var excerptHeaderFingerprint: String {
+        "\(allExcerpts.count)-\(allExcerpts.map(\.createdAt).max()?.timeIntervalSince1970 ?? 0)"
+    }
+
     var body: some View {
         let totalExcerptCharacters = shuffledExcerpts.reduce(0) { $0 + $1.content.count }
         let uniqueBooksCount = Set(shuffledExcerpts.map(\.bookID)).filter { !$0.isEmpty }.count
@@ -54,7 +60,7 @@ struct ExcerptsView: View {
                         contentID: "\(shuffledExcerpts.count)-\(totalExcerptCharacters)-\(uniqueBooksCount)-\(filterCategory?.rawValue ?? "all")-\(sortKey)-\(displayMode)"
                     ) {
                         AppHeaderTitle("摘录长廊", subtitle: "书中摘录与日常片段汇集于此。")
-                    } trailingContent: { PageStatsCompact(items: excerptHeaderStats) }
+                    } trailingContent: { PageStatsCompact(items: cachedExcerptHeaderStats) }
                 }
                 .overlay(alignment: .bottom) {
                     if isBatchDeletePresented {
@@ -80,8 +86,10 @@ struct ExcerptsView: View {
                 .onAppear {
                     refreshData(animate: false)
                     scrollToHighlightedExcerpt(highlightedExcerptID, proxy: proxy)
+                    refreshExcerptHeaderStats()
                 }
                 .onChange(of: annotationFingerprint) { _, _ in refreshData(animate: true) }
+                .onChange(of: excerptHeaderFingerprint) { _, _ in refreshExcerptHeaderStats() }
                 .onChange(of: highlightedExcerptID) { _, id in scrollToHighlightedExcerpt(id, proxy: proxy) }
                 .onChange(of: shuffledFingerprint) { _, _ in scrollToHighlightedExcerpt(highlightedExcerptID, proxy: proxy) }
             }
@@ -209,20 +217,6 @@ struct ExcerptsView: View {
         }
     }
 
-    private var excerptHeaderStats: [PageStatItemData] {
-        let total = allExcerpts.count
-        let bookExcerptCount = allExcerpts.filter { $0.category == .bookExcerpt }.count
-        let uniqueBooks = Set(allExcerpts.compactMap { $0.book?.title }).count
-        let thisWeek = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
-        let newThisWeek = allExcerpts.filter { $0.createdAt >= thisWeek }.count
-        return [
-            PageStatItemData(title: "全部摘录", value: "\(total)", color: .indigo),
-            PageStatItemData(title: "书中摘录", value: "\(bookExcerptCount)", color: AppColors.readingAmber),
-            PageStatItemData(title: "知识源泉", value: "\(uniqueBooks)", color: .teal),
-            PageStatItemData(title: "本周新增", value: "\(newThisWeek)", color: .pink),
-        ]
-    }
-
     private func selectableExcerptCard(_ excerpt: ExcerptListItem) -> some View {
         ExcerptWallCardView(
             excerpt: excerpt,
@@ -258,11 +252,25 @@ extension ExcerptsView {
     private func refreshData(animate _: Bool) {
         Task { @MainActor in
             let newData = fetchAndProcessExcerpts()
-            
+
             self.shuffledExcerpts = newData
         }
     }
-    
+
+    private func refreshExcerptHeaderStats() {
+        let total = allExcerpts.count
+        let bookExcerptCount = allExcerpts.filter { $0.category == .bookExcerpt }.count
+        let uniqueBooks = Set(allExcerpts.compactMap { $0.book?.title }).count
+        let thisWeek = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        let newThisWeek = allExcerpts.filter { $0.createdAt >= thisWeek }.count
+        cachedExcerptHeaderStats = [
+            PageStatItemData(title: "全部摘录", value: "\(total)", color: .indigo),
+            PageStatItemData(title: "书中摘录", value: "\(bookExcerptCount)", color: AppColors.readingAmber),
+            PageStatItemData(title: "知识源泉", value: "\(uniqueBooks)", color: .teal),
+            PageStatItemData(title: "本周新增", value: "\(newThisWeek)", color: .pink),
+        ]
+    }
+
     @MainActor
     private func fetchAndProcessExcerpts() -> [ExcerptListItem] {
         ReadingStatsCalculator.inspirationSnapshot(

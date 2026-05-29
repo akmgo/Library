@@ -170,28 +170,11 @@ struct MobileEmptyReadingCard: View {
                     Image(systemName: "book.closed.fill")
                         .foregroundColor(AppColors.readingAmber)
                 }
-                HStack(alignment: .center, spacing: 18) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous)
-                            .stroke(Color.secondary.opacity(0.2), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                            .background(Color.secondary.opacity(0.02))
-                        Image(systemName: "book.closed")
-                            .font(.system(size: 24))
-                            .foregroundColor(.secondary.opacity(0.3))
-                    }
-                    .frame(width: 90, height: 135)
-                    VStack(alignment: .leading, spacing: 0) {
-                        VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                            Text("虚位以待")
-                                .font(.system(size: 22, weight: .heavy, design: .serif))
-                                .foregroundColor(.primary.opacity(0.5))
-                            Text("寻找下一段旅程")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.secondary.opacity(0.6))
-                        }
-                    }
-                }
-                .padding(.vertical, 2)
+
+                Text("暂无在读")
+                    .font(AppTypography.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
     }

@@ -10,20 +10,6 @@ struct MomentumDataPoint: Identifiable {
     let isToday: Bool
 }
 
-/// 专供“年度热力矩阵”渲染使用的单个单元格数据模型
-struct HeatmapDataPoint: Identifiable {
-    let id = UUID()
-    let date: Date
-    /// 当天阅读分钟数，供移动端和无 tooltip 场景直接渲染。
-    let minutes: Int
-    /// 颜色深浅的透明度值 (0.0 到 1.0)
-    let intensity: Double
-    /// 是否是未来的日期（用于隐藏圆点）
-    let isFuture: Bool
-    /// 鼠标悬停时的提示文字
-    let tooltip: String
-}
-
 /// 专供跑马灯使用的纯数据结构
 struct ResonanceDataPoint {
     let content: String

@@ -59,8 +59,7 @@ struct BookMetadataSpotlightSearchView: View {
                 }
             }
             .frame(width: panelWidth)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: AppRadius.panel))
-            .background(.regularMaterial, in: .rect(cornerRadius: AppRadius.panel))
+            .background(Color(nsColor: .windowBackgroundColor), in: .rect(cornerRadius: AppRadius.panel))
             .shadow(color: .black.opacity(colorScheme == .dark ? 0.30 : 0.16), radius: 38, y: 20)
             .overlay(
                 RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
@@ -453,7 +452,7 @@ private struct BookMetadataSpotlightResultRow: View {
     @State private var progressDraft = ReadingProgressDraft.bookImportDefault
 
     var body: some View {
-        AppCard(cornerRadius: AppRadius.l, usesClearMaterial: true) {
+        AppCard(cornerRadius: AppRadius.l) {
             HStack(spacing: AppSpacing.m) {
                 coverView
 
@@ -724,8 +723,7 @@ struct GlobalSpotlightSearchView: View {
                 }
             }
             .frame(width: 700)
-            .glassEffect(.regular.interactive(), in: .rect(cornerRadius: AppRadius.panel))
-            .background(.regularMaterial, in: .rect(cornerRadius: AppRadius.panel))
+            .background(Color(nsColor: .windowBackgroundColor), in: .rect(cornerRadius: AppRadius.panel))
             .overlay(
                 RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
                     .stroke(.primary.opacity(colorScheme == .dark ? 0.10 : 0.08), lineWidth: 1)
@@ -857,7 +855,7 @@ private struct GlobalSpotlightResultCard: View {
 
     var body: some View {
         Button(action: action) {
-            AppCard(cornerRadius: AppRadius.l, usesClearMaterial: true) {
+            AppCard(cornerRadius: AppRadius.l) {
                 content
             }
             .background(

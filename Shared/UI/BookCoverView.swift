@@ -92,11 +92,14 @@ struct BookCoverView: View {
         
         // 2. 强制剥离主线程处理重度 CPU 运算
         let processedImage = await Task.detached(priority: .userInitiated) { () -> PlatformImage? in
-            #if os(iOS)
             let targetSize = CGSize(width: 300, height: 450)
-            return await ImageCacheManager.shared.downsample(data: data, to: targetSize)
+            guard let cgImage = await ImageCacheManager.shared.downsample(data: data, to: targetSize) else {
+                return nil
+            }
+            #if os(macOS)
+            return NSImage(cgImage: cgImage, size: targetSize)
             #else
-            return NSImage(data: data)
+            return UIImage(cgImage: cgImage)
             #endif
         }.value
         

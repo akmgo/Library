@@ -1,10 +1,13 @@
-#if os(macOS)
+#if os(macOS) || os(iOS)
 import Charts
 import SwiftUI
 
-// MARK: - 📈 无界动能柱状图 (智能空状态版)
+// MARK: - 双周动能（共享）
 
-struct MomentumChart: View {
+/// 内容自适应柱状图，无固定尺寸。
+/// 调用方通过 `.frame()` 控制最终宽高。
+/// 今日柱使用主色 `readingAmber`，其余天为浅色版本。
+struct SharedMomentumChart: View {
     let dataPoints: [MomentumDataPoint]
     let totalMinutes: Int
     @Environment(\.colorScheme) private var colorScheme
@@ -20,7 +23,7 @@ struct MomentumChart: View {
                         .foregroundColor(.primary)
                     Spacer()
                     Image(systemName: "chart.bar.fill")
-                        .foregroundColor(.blue)
+                        .foregroundColor(AppColors.readingAmber)
                 }
 
                 if isEmpty {
@@ -35,7 +38,7 @@ struct MomentumChart: View {
                                 x: .value("Date", item.date, unit: .day),
                                 y: .value("Minutes", item.minutes)
                             )
-                            .foregroundStyle(item.isToday ? Color.blue.gradient : Color.secondary.opacity(0.15).gradient)
+                            .foregroundStyle(item.isToday ? AppColors.readingAmber.gradient : AppColors.readingAmber.opacity(0.25).gradient)
                             .cornerRadius(4)
                         }
                         .chartXAxis {
@@ -50,7 +53,6 @@ struct MomentumChart: View {
                             }
                         }
                         .chartYAxis(.hidden)
-                        .frame(height: 80)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -59,5 +61,23 @@ struct MomentumChart: View {
     }
 }
 
+#if DEBUG
+#Preview("动能 · 有数据") {
+    SharedMomentumChart(
+        dataPoints: (0..<14).map { i in
+            MomentumDataPoint(date: Calendar.current.date(byAdding: .day, value: -13 + i, to: Date()) ?? Date(),
+                              minutes: Double(Int.random(in: 0...45)), isToday: i == 13)
+        },
+        totalMinutes: 320
+    )
+    .frame(height: 200)
+    .padding()
+}
 
+#Preview("动能 · 空状态") {
+    SharedMomentumChart(dataPoints: [], totalMinutes: 0)
+        .frame(height: 200)
+        .padding()
+}
+#endif
 #endif

@@ -2,17 +2,24 @@
 import SwiftUI
 
 struct EmptyStateView: View {
-    let systemImage: String
     let title: String
     var message: String?
-    var iconSize: CGFloat = 42
     var minHeight: CGFloat? = 360
+
+    init(
+        systemImage: String = "",
+        title: String,
+        message: String? = nil,
+        iconSize _: CGFloat = 42,
+        minHeight: CGFloat? = 360
+    ) {
+        self.title = title
+        self.message = message
+        self.minHeight = minHeight
+    }
 
     var body: some View {
         VStack(spacing: AppSpacing.s) {
-            Image(systemName: systemImage)
-                .font(.system(size: iconSize, weight: .regular))
-                .foregroundStyle(.secondary.opacity(0.55))
             Text(title)
                 .font(AppTypography.titleSmall)
                 .foregroundStyle(.secondary)

@@ -10,22 +10,20 @@ enum AppPageHeaderMetrics {
 }
 
 struct AppPageHeader<TitleContent: View, TrailingContent: View, SecondaryContent: View>: View {
-    let materialOpacity: Double
     let showsDivider: Bool
     let contentID: String
     @ViewBuilder let titleContent: () -> TitleContent
     @ViewBuilder let trailingContent: () -> TrailingContent
     @ViewBuilder let secondaryContent: () -> SecondaryContent
+    @Environment(\.colorScheme) private var colorScheme
 
     init(
-        materialOpacity: Double = 0.85,
         showsDivider: Bool = true,
         contentID: String = "",
         @ViewBuilder titleContent: @escaping () -> TitleContent,
         @ViewBuilder trailingContent: @escaping () -> TrailingContent = { EmptyView() },
         @ViewBuilder secondaryContent: @escaping () -> SecondaryContent = { EmptyView() }
     ) {
-        self.materialOpacity = materialOpacity
         self.showsDivider = showsDivider
         self.contentID = contentID
         self.titleContent = titleContent
@@ -60,8 +58,14 @@ struct AppPageHeader<TitleContent: View, TrailingContent: View, SecondaryContent
         .frame(height: AppPageHeaderMetrics.height, alignment: .bottom)
         .transition(.opacity)
         .animation(.appContentFade, value: contentID)
-        .background(Color.clear.background(.ultraThinMaterial).opacity(materialOpacity))
+        .background(headerBackground)
         .ignoresSafeArea(edges: .top)
+    }
+
+    private var headerBackground: Color {
+        colorScheme == .dark
+            ? Color(red: 22 / 255, green: 22 / 255, blue: 25 / 255).opacity(0.97)
+            : Color.white.opacity(0.95)
     }
 }
 

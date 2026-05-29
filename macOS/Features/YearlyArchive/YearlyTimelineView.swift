@@ -14,21 +14,19 @@ struct YearlyTimelineView: View {
     @Binding var availableYears: [Int]
     
     @State private var previousYear: Int = Calendar.current.component(.year, from: Date())
+    @State private var yearlySnapshot: ReadingStatsCalculator.YearlyArchiveSnapshot?
+    @State private var yearlyHeaderStats: [PageStatItemData] = []
 
-    private var yearlySnapshot: ReadingStatsCalculator.YearlyArchiveSnapshot {
-        ReadingStatsCalculator.yearlyArchiveSnapshot(
-            books: books,
-            sessions: sessions,
-            selectedYear: selectedYear
-        )
-    }
-    
+    private var yearlyFP: String { "\(books.count)-\(sessions.count)-\(selectedYear)" }
+
     var body: some View {
         // ✨ 核心重构：移除外层 ZStack 与固定背景，使 ScrollView 成为绝对主角，透出全局统一底层背景
         ScrollView(.vertical, showsIndicators: false) {
             ZStack {
                 LazyVStack(spacing: 0) {
-                    if yearlySnapshot.books.isEmpty {
+                    if let snapshot = yearlySnapshot, !snapshot.books.isEmpty {
+                        wallContentView
+                    } else if yearlySnapshot != nil {
                         EmptyStateView(
                             systemImage: "calendar.badge.exclamationmark",
                             title: "暂无 \(String(selectedYear)) 年轨迹",
@@ -36,8 +34,6 @@ struct YearlyTimelineView: View {
                             minHeight: 400
                         )
                         .padding(.top, 140)
-                    } else {
-                        wallContentView
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -47,18 +43,14 @@ struct YearlyTimelineView: View {
         }
         // ================= ✨ 顶层悬浮高定玻璃 Header (使用 Overlay 挂载) =================
         .overlay(alignment: .top) {
-            AppPageHeader(contentID: "\(selectedYear)-\(yearlySnapshot.books.count)-\(yearlySnapshot.totalDaysRead)") {
+            AppPageHeader(contentID: "\(selectedYear)-\(yearlySnapshot?.books.count ?? 0)-\(yearlySnapshot?.totalDaysRead ?? 0)") {
                 AppHeaderTitle("\(String(selectedYear)) 年度轨迹", subtitle: "以年份回看阅读留下的路径。")
             } trailingContent: { PageStatsCompact(items: yearlyHeaderStats) }
         }
-        .onAppear {
-            availableYears = yearlySnapshot.availableYears
-        }
+        .onAppear { refreshYearlyData() }
+        .onChange(of: yearlyFP) { _, _ in refreshYearlyData() }
         .onChange(of: selectedYear) { oldYear, newYear in
             previousYear = oldYear
-        }
-        .onChange(of: yearlySnapshot.availableYears) { _, newYears in
-            availableYears = newYears
         }
     }
     
@@ -72,7 +64,7 @@ struct YearlyTimelineView: View {
                 .frame(width: 2)
                 
             LazyVStack(spacing: 80) {
-                ForEach(Array(yearlySnapshot.books.enumerated()), id: \.element.id) { index, book in
+                ForEach(Array((yearlySnapshot?.books ?? []).enumerated()), id: \.element.id) { index, book in
                     TimelineRowView(
                         book: book,
                         isLeft: index % 2 == 0,
@@ -88,15 +80,19 @@ struct YearlyTimelineView: View {
         .transition(.opacity)
     }
 
-    private var yearlyHeaderStats: [PageStatItemData] {
-        [
-            PageStatItemData(title: "完结作品", value: "\(yearlySnapshot.books.count)", color: .indigo),
-            PageStatItemData(title: "打卡天数", value: "\(yearlySnapshot.totalDaysRead)", color: AppColors.readingAmber),
-            PageStatItemData(title: "阅读时长", value: "\(yearlySnapshot.totalReadingHours)", color: .teal),
-            PageStatItemData(title: "最高连续", value: "\(yearlySnapshot.longestStreak)", color: .pink),
+    private func refreshYearlyData() {
+        let snapshot = ReadingStatsCalculator.yearlyArchiveSnapshot(
+            books: books, sessions: sessions, selectedYear: selectedYear
+        )
+        yearlySnapshot = snapshot
+        availableYears = snapshot.availableYears
+        yearlyHeaderStats = [
+            PageStatItemData(title: "完结作品", value: "\(snapshot.books.count)", color: .indigo),
+            PageStatItemData(title: "打卡天数", value: "\(snapshot.totalDaysRead)", color: AppColors.readingAmber),
+            PageStatItemData(title: "阅读时长", value: "\(snapshot.totalReadingHours)", color: .teal),
+            PageStatItemData(title: "最高连续", value: "\(snapshot.longestStreak)", color: .pink),
         ]
     }
-    
 }
 
 // MARK: - ✨ 子组件：时间轴行容器

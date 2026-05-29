@@ -43,14 +43,10 @@ struct MobileMomentumChartCard: View {
                     }
                     .padding(.bottom, 16)
                     if dataPoints.isEmpty {
-                        HStack(alignment: .bottom, spacing: 6) {
-                            ForEach(0..<14, id: \.self) { index in
-                                Capsule()
-                                    .fill(Color.secondary.opacity(0.10))
-                                    .frame(height: CGFloat((index % 5) + 1) * 8)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 70, alignment: .bottom)
+                        Text("暂无阅读数据")
+                            .font(AppTypography.body)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, minHeight: 70, alignment: .center)
                     } else {
                         Chart(dataPoints, id: \.date) { item in
                             AreaMark(x: .value("Day", item.date), y: .value("Minutes", item.minutes))

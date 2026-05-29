@@ -14,25 +14,21 @@ struct BookExcerpts: View {
     @State private var itemToEdit: Excerpt? = nil
     
     @State private var currentFilter: BookExcerptFilter = .all
-    
-    private var snapshot: ReadingStatsCalculator.BookExcerptListSnapshot {
-        ReadingStatsCalculator.BookExcerptListSnapshot(
-            excerpts: book.excerpts ?? [],
-            filter: currentFilter
-        )
+
+    @State private var cachedSnapshot: ReadingStatsCalculator.BookExcerptListSnapshot = .init(excerpts: [], filter: .all)
+    @State private var cachedRecordsByID: [String: Excerpt] = [:]
+
+    private var excerptsFingerprint: String {
+        "\(book.excerpts?.count ?? 0)-\(currentFilter)"
     }
 
-    private var recordsByID: [String: Excerpt] {
-        Dictionary(uniqueKeysWithValues: (book.excerpts ?? []).map { ($0.id, $0) })
-    }
-    
     var body: some View {
         VStack(spacing: 24) {
-            if !snapshot.isEmpty {
+            if !cachedSnapshot.isEmpty {
                 AppSlidingSegmentedControl(
                     selection: $currentFilter,
                     options: BookExcerptFilter.allCases.map {
-                        AppSlidingSegmentedOption(value: $0, title: "\($0.displayName) (\(snapshot.count(for: $0)))")
+                        AppSlidingSegmentedOption(value: $0, title: "\($0.displayName) (\(cachedSnapshot.count(for: $0)))")
                     },
                     tint: AppColors.selection,
                     height: 32,
@@ -43,20 +39,20 @@ struct BookExcerpts: View {
                 .frame(maxWidth: .infinity)
             }
             
-            if snapshot.filtered.isEmpty {
+            if cachedSnapshot.filtered.isEmpty {
                 EmptyView()
             } else {
                 BookExcerptGrid(
-                    items: snapshot.filtered,
+                    items: cachedSnapshot.filtered,
                     columns: excerptColumns,
                     isDeleteMode: isDeleteMode,
                     onDelete: { item in
-                        if let record = recordsByID[item.id] {
+                        if let record = cachedRecordsByID[item.id] {
                             onDelete(record)
                         }
                     },
                     onEdit: { item in
-                        itemToEdit = recordsByID[item.id]
+                        itemToEdit = cachedRecordsByID[item.id]
                     }
                 )
                 .equatable()
@@ -73,6 +69,12 @@ struct BookExcerpts: View {
                 itemToEdit: item
             )
         }
+        .onAppear {
+            refreshCachedData()
+        }
+        .onChange(of: excerptsFingerprint) { _, _ in
+            refreshCachedData()
+        }
     }
 
     private var excerptColumns: [GridItem] {
@@ -80,6 +82,12 @@ struct BookExcerpts: View {
             GridItem(.flexible(), spacing: 24, alignment: .top),
             GridItem(.flexible(), spacing: 24, alignment: .top)
         ]
+    }
+
+    private func refreshCachedData() {
+        let excerpts = book.excerpts ?? []
+        cachedSnapshot = ReadingStatsCalculator.BookExcerptListSnapshot(excerpts: excerpts, filter: currentFilter)
+        cachedRecordsByID = Dictionary(uniqueKeysWithValues: excerpts.map { ($0.id, $0) })
     }
 }
 

@@ -10,8 +10,6 @@ struct MyLibraryWidgetsBundle: WidgetBundle {
 
         FocusHeroWidget()
 
-        FocusHeroSmallWidget()
-
         StatsGridWidget()
 
         MomentumChartWidget()

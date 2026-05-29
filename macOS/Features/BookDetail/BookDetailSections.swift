@@ -419,19 +419,11 @@ struct ReadingSessionCard: View {
             }
 
             if snapshot.isEmpty {
-                VStack(spacing: 10) {
-                    Image(systemName: "clock.badge.questionmark")
-                        .font(.system(size: 24, weight: .light))
-                        .foregroundStyle(.secondary.opacity(0.4))
-                    Text("暂无阅读记录")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary.opacity(0.5))
-                    Text("开始阅读或手动录入后，记录将显示在这里")
-                        .font(.system(size: 11, weight: .regular, design: .rounded))
-                        .foregroundStyle(.secondary.opacity(0.35))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
+                Text("暂无阅读记录")
+                    .font(AppTypography.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
             } else {
                 SessionRowsView(rows: snapshot.rows)
                     .equatable()

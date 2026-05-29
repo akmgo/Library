@@ -188,14 +188,11 @@ struct MobileMonthlyRecordView: View {
     }
 
     private var emptyMonthView: some View {
-        VStack(spacing: AppSpacing.m) {
-            Image(systemName: "book.pages")
-                .font(.system(size: 36))
-                .foregroundColor(.secondary.opacity(0.25))
-            Text("本月暂无阅读记录")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(.secondary)
-        }
+        Text("本月暂无阅读记录")
+            .font(AppTypography.body)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 40)
     }
 
     // MARK: - 月份切换

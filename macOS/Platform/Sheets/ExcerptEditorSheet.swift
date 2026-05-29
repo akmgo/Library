@@ -244,7 +244,8 @@ struct ExcerptEditorSheet: View {
             }
         }
         .frame(width: 760, height: 620)
-        .glassEffect(in: .rect(cornerRadius: 16))
+        .background(Color(nsColor: .windowBackgroundColor), in: .rect(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.08), radius: 24, y: 12)
         .background(WindowTransparentEffect())
         .onAppear(perform: loadInitialValues)
         .onChange(of: selectedCategory) { _, _ in

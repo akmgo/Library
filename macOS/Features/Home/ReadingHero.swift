@@ -154,7 +154,7 @@ struct ReadingTimerCard: View {
     @State private var timerProgressDraft: ReadingProgressDraft
     @State private var pendingTimerEndAt: Date?
 
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 1, on: .main, in: .default).autoconnect()
 
     // 和 ReadingHero 的 heroContentHeight 保持一致
     private let timerContentHeight: CGFloat = 238
@@ -630,48 +630,23 @@ struct EmptyReadingHero: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(alignment: .center, spacing: 24) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.secondary.opacity(0.2), style: StrokeStyle(lineWidth: 1.5, dash: [8, 6]))
-                    .frame(width: 170, height: 245)
-                    .background(Color.secondary.opacity(0.02))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                
-                VStack(spacing: 12) {
-                    Image(systemName: "book.closed")
-                        .font(.system(size: 32, weight: .light))
-                        .foregroundColor(.secondary.opacity(0.4))
-                    Text("暂无在读")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundColor(.secondary.opacity(0.5))
+        AppCard {
+            VStack(alignment: .leading, spacing: AppSpacing.m) {
+                HStack {
+                    Text("当前在读")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "book.fill")
+                        .foregroundColor(AppColors.readingAmber)
                 }
+
+                Text("暂无在读")
+                    .font(AppTypography.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-            
-            VStack(alignment: .leading, spacing: 0) {
-                
-                Text("虚位以待")
-                    .font(.system(size: 36, weight: .heavy, design: .serif))
-                    .foregroundColor(.primary.opacity(0.4))
-                    .lineLimit(2)
-                
-                Text("去书库中挑选一本开启新旅程吧")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.secondary.opacity(0.5))
-                    .lineLimit(1)
-                    .padding(.top, 4)
-            }
-            .frame(height: 245)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, AppSpacing.l)
-        .padding(.vertical, 16)
-        .background(AppColors.innerSurface(for: colorScheme), in: RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous))
-        .glassEffect(in: .rect(cornerRadius: AppRadius.panel))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.panel, style: .continuous)
-                .stroke(AppColors.innerStroke(for: colorScheme), lineWidth: 1)
-        )
     }
 }
 
@@ -681,33 +656,20 @@ struct EmptyReadingTimerCard: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.m) {
-            HStack {
-                Text("阅读计时")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary.opacity(0.5))
+                HStack {
+                    Text("阅读计时")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "timer")
+                        .foregroundColor(AppColors.readingAmber)
+                }
 
-                Spacer()
-
-                Image(systemName: "timer")
-                    .foregroundColor(AppColors.readingAmber.opacity(0.45))
+                Text("暂无在读")
+                    .font(AppTypography.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-
-            Spacer()
-
-            VStack(spacing: 12) {
-                Text("00:00")
-                    .font(.system(size: 56, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary.opacity(0.45))
-
-                Text("选择一本在读书籍后开始计时")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary.opacity(0.55))
-            }
-            .frame(maxWidth: .infinity)
-
-            Spacer()
-        }
         }
     }
 }
