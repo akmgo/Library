@@ -54,8 +54,7 @@ struct MacRootView: View {
     @State private var detailShowEditSheet = false
     @State private var detailShowDeleteAlert = false
 
-    @State private var showBookMetadataSpotlight = false
-    @State private var showGlobalSpotlight = false
+    @State private var showAddBookSheet = false
 
     @State private var galleryFilterStatus: BookStatus?
     @State private var gallerySortKey: BookGallerySortKey = .newest
@@ -87,21 +86,8 @@ struct MacRootView: View {
         }
         .ignoresSafeArea(edges: .top)
         .sheet(isPresented: $showAddExcerptModal) { ExcerptEditorSheet(isPresented: $showAddExcerptModal) }
-        .overlay {
-            if showBookMetadataSpotlight {
-                BookMetadataSpotlightSearchView(isPresented: $showBookMetadataSpotlight)
-                    .zIndex(20)
-            }
-
-            if showGlobalSpotlight {
-                GlobalSpotlightSearchView(
-                    isPresented: $showGlobalSpotlight,
-                    selectedModule: $selectedModule,
-                    selectedBook: $selectedBook,
-                    highlightedExcerptID: $highlightedExcerptID
-                )
-                .zIndex(30)
-            }
+        .sheet(isPresented: $showAddBookSheet) {
+            BookEditorSheet(isPresented: $showAddBookSheet)
         }
         .background { shortcutHost }
         .toolbar {
@@ -111,12 +97,7 @@ struct MacRootView: View {
             selectedBook = nil
         }
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
-            openAddBookSpotlight()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .showGlobalSearch)) { _ in
-            withAnimation(.easeOut(duration: 0.16)) {
-                showGlobalSpotlight = true
-            }
+            showAddBookSheet = true
         }
         .onAppear {
             applyTheme(appTheme)
@@ -140,19 +121,10 @@ struct MacRootView: View {
     }
 
     private var shortcutHost: some View {
-        Group {
-            Button("") {
-                withAnimation(.easeOut(duration: 0.16)) {
-                    showGlobalSpotlight = true
-                }
-            }
-            .keyboardShortcut("k", modifiers: .command)
-
-            Button("") {
-                performPrimaryAddAction()
-            }
-            .keyboardShortcut("n", modifiers: .command)
+        Button("") {
+            performPrimaryAddAction()
         }
+        .keyboardShortcut("n", modifiers: .command)
         .opacity(0)
     }
 
@@ -160,15 +132,7 @@ struct MacRootView: View {
         if selectedBook == nil, selectedModule == .excerpts {
             showAddExcerptModal = true
         } else {
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-                showBookMetadataSpotlight = true
-            }
-        }
-    }
-
-    private func openAddBookSpotlight() {
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-            showBookMetadataSpotlight = true
+            showAddBookSheet = true
         }
     }
 
@@ -254,7 +218,7 @@ struct MacRootView: View {
             ToolbarItem {
                 ControlGroup {
                     Button {
-                        openAddBookSpotlight()
+                        showAddBookSheet = true
                     } label: {
                         toolbarIcon("plus")
                     }
@@ -323,7 +287,7 @@ struct MacRootView: View {
             ToolbarItem {
                 ControlGroup {
                     Button {
-                        openAddBookSpotlight()
+                        showAddBookSheet = true
                     } label: {
                         toolbarIcon("plus")
                     }

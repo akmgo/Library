@@ -15,6 +15,7 @@ struct MobileBookEditorSheet: View {
 
     @State private var titleInput: String = ""
     @State private var authorInput: String = ""
+    @State private var totalPages: Double = 0
     @State private var selectedCoverData: Data? = nil
     @State private var selectedPhotoItem: PhotosPickerItem? = nil
     @State private var showDuplicateAlert = false
@@ -44,6 +45,12 @@ struct MobileBookEditorSheet: View {
                         Text("作者").foregroundColor(.secondary).frame(width: 40, alignment: .leading)
                         TextField("可留空", text: $authorInput)
                     }
+
+                    HStack {
+                        Text("页数").foregroundColor(.secondary).frame(width: 40, alignment: .leading)
+                        TextField("0", value: $totalPages, format: .number.precision(.fractionLength(0)))
+                            .keyboardType(.numberPad)
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -69,6 +76,7 @@ struct MobileBookEditorSheet: View {
                 if let book = bookToEdit {
                     titleInput = book.title
                     authorInput = book.author
+                    totalPages = book.totalAmount
                     selectedCoverData = book.coverData
                 }
             }
@@ -132,6 +140,7 @@ struct MobileBookEditorSheet: View {
             let isCoverChanged = book.coverData != selectedCoverData
             book.title = cleanedTitle
             book.author = cleanedAuthor
+            book.totalAmount = max(totalPages, 0)
             book.coverData = selectedCoverData
             if isCoverChanged { ImageCacheManager.shared.removeImage(forKey: "cover_img_\(book.id)") }
             ReadingDataService.shared.normalizeBook(book)
@@ -141,7 +150,7 @@ struct MobileBookEditorSheet: View {
                 showDuplicateAlert = true
                 return
             }
-            let newBook = Book(title: cleanedTitle, author: cleanedAuthor, coverData: selectedCoverData)
+            let newBook = Book(title: cleanedTitle, author: cleanedAuthor, coverData: selectedCoverData, totalAmount: max(totalPages, 0))
             try? ReadingDataService.shared.insertBook(newBook, context: modelContext)
         }
 

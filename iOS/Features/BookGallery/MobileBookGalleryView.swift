@@ -92,7 +92,7 @@ struct MobileBookGalleryView: View {
             .navigationDestination(item: $detailBook) { book in MobileBookDetailView(book: book) }
             .toolbar { galleryToolbar }
             .sheet(isPresented: $showAddBook) {
-                MobileBookSearchSheet(isPresented: $showAddBook)
+                MobileBookEditorSheet()
             }
             .alert("批量删除", isPresented: $showBatchDeleteAlert) {
                 Button("取消", role: .cancel) {}
