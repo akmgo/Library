@@ -61,11 +61,15 @@ struct GoalSettingsView: View {
                 try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒防抖
                 await MainActor.run {
                     config.updatedAt = Date()
-                    try? modelContext.save()
-                    WidgetCenter.shared.reloadAllTimelines()
+                    do {
+                        try modelContext.save()
+                        WidgetCenter.shared.reloadAllTimelines()
+                    } catch {
+                        NSLog("❌ GoalSettingsView 保存失败: \(error.localizedDescription)")
+                    }
                 }
             } catch {
-                // 任务被取消，什么都不做
+                // 任务被取消
             }
         }
     }
