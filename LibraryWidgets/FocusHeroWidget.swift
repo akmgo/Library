@@ -98,7 +98,6 @@ struct FocusHeroProvider: TimelineProvider {
                     )
                 }
             } catch {
-                print("❌ FocusHeroWidget 读取失败: \(error)")
             }
             
             return FocusHeroEntry(date: Date(), bookTitle: "", bookAuthor: "", coverData: nil, bookProgress: 0, todayMinutes: 0, hasBook: false)

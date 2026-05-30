@@ -189,7 +189,6 @@ struct BookGalleryView: View {
                 isBatchDeletePresented = false
             }
         } catch {
-            print("删除书籍失败: \(error.localizedDescription)")
         }
     }
 }

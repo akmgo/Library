@@ -113,9 +113,7 @@ struct BookDetailView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     do {
                         try ReadingDataService.shared.deleteBookAndSave(book, context: modelContext)
-                        print("✅ 书籍及物理文件已彻底销毁")
                     } catch {
-                        print("❌ 删除保存失败: \(error.localizedDescription)")
                     }
                 }
             }

@@ -23,7 +23,6 @@ final class LiveActivityManager {
                 pushType: nil
             )
         } catch {
-            print("LiveActivityManager: Failed to request activity: \(error)")
         }
     }
 

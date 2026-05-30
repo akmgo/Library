@@ -214,7 +214,6 @@ struct BookStatusPicker: View {
             do {
                 try modelContext.save()
             } catch {
-                print("状态保存失败: \(error.localizedDescription)")
             }
         }
 

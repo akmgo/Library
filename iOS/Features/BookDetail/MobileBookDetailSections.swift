@@ -150,7 +150,6 @@ struct MobileReadingStatusCard: View {
                     return
                 }
             } catch {
-                print("想读状态查询失败: \(error)")
             }
         }
 

@@ -438,7 +438,6 @@ struct MobileReadingTimerCard: View {
             elapsedSeconds = 0
             isTimerCompletePresented = false
         } catch {
-            print("❌ 计时阅读记录保存失败: \(error.localizedDescription)")
         }
     }
 
@@ -517,7 +516,6 @@ struct MobileReadingTimerCard: View {
             )
             isManualEntryPresented = false
         } catch {
-            print("❌ 手动录入记录保存失败: \(error.localizedDescription)")
         }
     }
 

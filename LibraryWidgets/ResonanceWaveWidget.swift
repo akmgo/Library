@@ -61,7 +61,6 @@ struct WaveProvider: TimelineProvider {
                 )
             }
         } catch {
-            print("Widget Fetch Error: \(error)")
         }
         
         // 原汁原味的兜底文案

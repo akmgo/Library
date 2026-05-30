@@ -63,7 +63,6 @@ struct GoalSettingsView: View {
                     config.updatedAt = Date()
                     try? modelContext.save()
                     WidgetCenter.shared.reloadAllTimelines()
-                    print("✅ 目标数据已保存，小组件已刷新")
                 }
             } catch {
                 // 任务被取消，什么都不做

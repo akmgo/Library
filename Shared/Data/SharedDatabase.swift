@@ -36,7 +36,6 @@ public class SharedDatabase {
         // 绝对禁止在写 UI 代码时去碰触真实沙盒与 App Group！防止疯狂弹窗！
         // ========================================================
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            print("👁️ [SharedDatabase] 检测到 Xcode 预览环境，强制拉闸，切断磁盘访问！")
             self.sharedDefaults = UserDefaults.standard // 降级到标准，不碰 group
             let previewConfig = ModelConfiguration(isStoredInMemoryOnly: true)
             do {
@@ -72,7 +71,6 @@ public class SharedDatabase {
             }
             targetURL = customDBDirectory.appendingPathComponent(databaseFileName)
         } else {
-            print("⚠️ 无法获取 App Group 路径。将降级使用本地沙盒目录。")
             let docURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
             targetURL = docURL.appendingPathComponent(databaseFileName)
         }
@@ -90,17 +88,13 @@ public class SharedDatabase {
                         
         do {
             self.container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            print("📁 数据库已成功挂载: \(targetURL.path)")
         } catch {
-            print("🚨 带有 CloudKit 的数据库初始化失败: \(error)")
                             
             // ✨ 核心修复 2：增加降级防线。如果 automatic 失败，先尝试抛弃 CloudKit 挂载物理磁盘，不要直接放弃！
             do {
                 let localConfig = ModelConfiguration(schema: schema, url: targetURL, allowsSave: true, cloudKitDatabase: .none)
                 self.container = try ModelContainer(for: schema, configurations: [localConfig])
-                print("📁 已降级为纯本地磁盘模式挂载: \(targetURL.path)")
             } catch {
-                print("🚨 物理磁盘挂载彻底失败: \(error)")
                 // 终极防线：内存数据库兜底
                 let fallbackConfig = ModelConfiguration(isStoredInMemoryOnly: true)
                 do {
@@ -108,7 +102,6 @@ public class SharedDatabase {
                 } catch {
                     fatalError("终极内存数据库兜底初始化也失败了，无法恢复: \(error.localizedDescription)")
                 }
-                print("⚠️ 已启用纯内存模式兜底。")
             }
         }
     }
@@ -151,9 +144,7 @@ func pruneDuplicateConfigs(context: ModelContext) {
                 context.delete(allConfigs[i])
             }
             try context.save()
-            print("🧹 [系统自愈] 成功清理了 \(allConfigs.count - 1) 条由于 iCloud 冲突产生的冗余配置。")
         }
     } catch {
-        print("❌ 配置自愈检查失败: \(error)")
     }
 }

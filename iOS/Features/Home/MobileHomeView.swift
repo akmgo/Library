@@ -133,7 +133,6 @@ private extension MobileHomeView {
             do {
                 try ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
             } catch {
-                print("❌ 想读转在读失败: \(error.localizedDescription)")
                 return
             }
         }

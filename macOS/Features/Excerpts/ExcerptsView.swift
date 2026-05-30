@@ -358,7 +358,6 @@ extension ExcerptsView {
                 refreshData(animate: true)
             }
         } catch {
-            print("删除摘录失败: \(error.localizedDescription)")
         }
     }
 }

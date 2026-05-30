@@ -511,7 +511,6 @@ struct ReadingTimerCard: View {
             elapsedSeconds = 0
             isTimerProgressPopoverPresented = false
         } catch {
-            print("❌ 计时阅读记录保存失败: \(error.localizedDescription)")
         }
     }
 
@@ -534,7 +533,6 @@ struct ReadingTimerCard: View {
             )
             isManualPopoverPresented = false
         } catch {
-            print("❌ 手动录入记录保存失败: \(error.localizedDescription)")
         }
     }
 
