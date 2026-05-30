@@ -19,12 +19,6 @@ enum BookStatus: String, Codable, CaseIterable {
     }
 }
 
-enum ProgressUnit: String, Codable {
-    case page
-    case percent
-    case chapter
-}
-
 enum ReadingInputMode: String, Codable, CaseIterable {
     case timer
     case manual

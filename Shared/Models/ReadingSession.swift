@@ -12,7 +12,6 @@ final class ReadingSession {
     var endedAt: Date = Date()
     var duration: TimeInterval = 0
 
-    var progressUnit: ProgressUnit = ProgressUnit.page
     var startAmount: Double = 0
     var endAmount: Double = 0
 

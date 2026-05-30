@@ -21,7 +21,6 @@ final class Book {
     var finishDate: Date?
     var lastReadAt: Date?
 
-    var progressUnit: ProgressUnit = ProgressUnit.page
     var totalAmount: Double = 0 {
         didSet {
             totalAmount = max(totalAmount, 0)
