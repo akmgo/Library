@@ -27,19 +27,6 @@ struct ReadingProgressInputView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.m) {
-            if !lockedUnit {
-                unitSelector
-            } else {
-                HStack(spacing: AppSpacing.s) {
-                    Image(systemName: draft.unit.systemImage)
-                        .foregroundStyle(AppColors.readingAmber)
-                    Text(draft.unit.longDisplayName)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    Spacer()
-                }
-            }
-
             switch mode {
             case .bookImport:
                 importFields
@@ -50,62 +37,14 @@ struct ReadingProgressInputView: View {
         .onAppear { draft.normalize() }
     }
 
-    private var unitSelector: some View {
-        AppSlidingSegmentedControl(
-            selection: unitBinding,
-            options: ProgressUnit.allCases.map {
-                AppSlidingSegmentedOption(value: $0, title: $0.longDisplayName, systemImage: $0.systemImage)
-            },
-            tint: AppColors.readingAmber,
-            height: 36,
-            cornerRadius: 12
-        )
-    }
-
-    private var unitBinding: Binding<ProgressUnit> {
-        Binding {
-            draft.unit
-        } set: { newValue in
-            draft.setUnit(newValue, currentBookAmount: minimumCurrentAmount)
-        }
-    }
-
     @ViewBuilder
     private var importFields: some View {
-        switch draft.unit {
-        case .percent:
-            progressSummary(title: "总进度", value: "100%")
-        case .page:
-            amountField(title: "总页数", suffix: "页", value: totalBinding)
-        case .chapter:
-            amountField(title: "总章节", suffix: "章", value: totalBinding)
-        }
+        amountField(title: "总页数", suffix: "页", value: totalBinding)
     }
 
     @ViewBuilder
     private var sessionFields: some View {
-        switch draft.unit {
-        case .percent:
-            VStack(alignment: .center, spacing: AppSpacing.s) {
-                HStack {
-                    Text("读到")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text("\(Int(draft.currentAmount.rounded()))%")
-                        .font(.system(size: 24, weight: .heavy, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(AppColors.readingAmber)
-                }
-                Slider(value: currentBinding, in: minimumCurrentAmount...100, step: 1)
-                    .tint(AppColors.readingAmber)
-                    .frame(maxWidth: .infinity)
-            }
-        case .page:
-            amountField(title: "读到页码", suffix: "页 / \(Int(draft.totalAmount))", value: currentBinding)
-        case .chapter:
-            amountField(title: "读到章节", suffix: "章 / \(Int(draft.totalAmount))", value: currentBinding)
-        }
+        amountField(title: "读到页码", suffix: "页 / \(Int(draft.totalAmount))", value: currentBinding)
     }
 
     private var totalBinding: Binding<Double> {
@@ -124,23 +63,6 @@ struct ReadingProgressInputView: View {
             draft.currentAmount = min(max(value.rounded(), minimumCurrentAmount), draft.totalAmount)
             draft.normalize()
         }
-    }
-
-    private func progressSummary(title: String, value: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(value)
-                .font(.system(size: 20, weight: .heavy, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(AppColors.readingAmber)
-        }
-        .padding(.horizontal, AppSpacing.m)
-        .frame(height: 44)
-        .frame(maxWidth: .infinity)
-        .appInnerBlockStyle(cornerRadius: AppRadius.m)
     }
 
     private func amountField(title: String, suffix: String, value: Binding<Double>) -> some View {
@@ -169,21 +91,4 @@ struct ReadingProgressInputView: View {
     }
 }
 
-extension ProgressUnit {
-    var longDisplayName: String {
-        switch self {
-        case .percent: return "百分比"
-        case .page: return "页码"
-        case .chapter: return "章节"
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .percent: return "percent"
-        case .page: return "doc.text"
-        case .chapter: return "list.number"
-        }
-    }
-}
 #endif

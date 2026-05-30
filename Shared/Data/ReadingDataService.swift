@@ -92,7 +92,6 @@ final class ReadingDataService {
         for book: Book,
         startedAt: Date,
         duration: TimeInterval,
-        progressUnit: ProgressUnit,
         startAmount: Double,
         endAmount: Double,
         context: ModelContext,
@@ -112,7 +111,6 @@ final class ReadingDataService {
             startedAt: startedAt,
             endedAt: normalized.endedAt,
             duration: normalized.duration,
-            progressUnit: progressUnit,
             startAmount: safeStart,
             endAmount: max(safeEnd, safeStart),
             book: book
@@ -120,7 +118,6 @@ final class ReadingDataService {
 
         context.insert(session)
         book.lastReadAt = startedAt
-        book.progressUnit = progressUnit
         book.currentAmount = max(book.currentAmount, session.endAmount)
         if book.status == .unread || book.status == .planned {
             try updateStatus(
@@ -156,7 +153,6 @@ final class ReadingDataService {
             startedAt: startedAt,
             endedAt: endedAt,
             duration: duration,
-            progressUnit: book.progressUnit,
             startAmount: safeStart,
             endAmount: max(safeEnd, safeStart),
             book: book

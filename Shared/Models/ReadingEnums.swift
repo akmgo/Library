@@ -19,18 +19,10 @@ enum BookStatus: String, Codable, CaseIterable {
     }
 }
 
-enum ProgressUnit: String, Codable, CaseIterable {
+enum ProgressUnit: String, Codable {
     case page
     case percent
     case chapter
-
-    var displayName: String {
-        switch self {
-        case .page: return "页"
-        case .percent: return "%"
-        case .chapter: return "章"
-        }
-    }
 }
 
 enum ReadingInputMode: String, Codable, CaseIterable {

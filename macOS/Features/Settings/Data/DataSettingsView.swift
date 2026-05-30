@@ -358,7 +358,6 @@ struct BackupBookDTO: Codable {
             tags: tags,
             startDate: startDate,
             finishDate: finishDate,
-            progressUnit: .percent,
             totalAmount: 100,
             currentAmount: progress * 100
         )

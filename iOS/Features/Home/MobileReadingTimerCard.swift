@@ -459,7 +459,7 @@ struct MobileReadingTimerCard: View {
             dailyTargetMinutes: dailyTarget,
             todayTotalSeconds: todayTotalSeconds,
             progressAmount: book.currentAmount,
-            progressUnit: book.progressUnit.longDisplayName,
+            progressUnit: "页",
             totalAmount: book.totalAmount,
             coverData: coverThumbnail(from: book.coverData)
         )
@@ -474,7 +474,7 @@ struct MobileReadingTimerCard: View {
             dailyTargetMinutes: dailyTarget,
             todayTotalSeconds: todayTotalSeconds + elapsedSeconds,
             progressAmount: book.currentAmount,
-            progressUnit: book.progressUnit.longDisplayName,
+            progressUnit: "页",
             totalAmount: book.totalAmount,
             coverData: coverThumbnail(from: book.coverData)
         )
@@ -511,7 +511,6 @@ struct MobileReadingTimerCard: View {
                 for: book,
                 startedAt: startedAt,
                 duration: duration,
-                progressUnit: normalized.unit,
                 startAmount: book.currentAmount,
                 endAmount: normalized.currentAmount,
                 context: modelContext

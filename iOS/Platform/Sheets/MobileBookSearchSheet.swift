@@ -232,9 +232,7 @@ struct MobileBookSearchSheet: View {
                 title: cleanedTitle,
                 author: cleanedAuthor,
                 coverData: coverData,
-                progressUnit: normalized.unit,
-                totalAmount: normalized.totalAmount,
-                currentAmount: 0
+                totalAmount: normalized.totalAmount
             )
 
             try? ReadingDataService.shared.insertBook(book, context: modelContext)
@@ -259,7 +257,7 @@ private struct ImportProgressSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
-    @State private var progressDraft = ReadingProgressDraft.bookImportDefault
+    @State private var totalPages: Double = 0
 
     var body: some View {
         NavigationStack {
@@ -269,8 +267,26 @@ private struct ImportProgressSheet: View {
                     .padding(.top, AppSpacing.xl)
                     .padding(.horizontal, AppSpacing.xl)
 
-                ReadingProgressInputView(draft: $progressDraft, mode: .bookImport)
-                    .padding(AppSpacing.xl)
+                HStack(spacing: AppSpacing.s) {
+                    Text("总页数")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    TextField("0", value: $totalPages, format: .number.precision(.fractionLength(0)))
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 100)
+                    Text("页")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, AppSpacing.m)
+                .frame(height: 52)
+                .frame(maxWidth: .infinity)
+                .appInnerBlockStyle(cornerRadius: AppRadius.m)
+                .padding(AppSpacing.xl)
 
                 HStack {
                     Button("取消") { dismiss() }
@@ -281,13 +297,12 @@ private struct ImportProgressSheet: View {
                     Spacer()
 
                     Button("确认导入") {
-                        onImport(progressDraft)
+                        onImport(ReadingProgressDraft(totalAmount: totalPages))
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(AppColors.readingAmber)
                     .padding(.horizontal, AppSpacing.l).padding(.vertical, AppSpacing.xs)
                     .appCapsuleStyle(tint: AppColors.readingAmber)
-                    .disabled(!progressDraft.isValidForBookImport)
                 }
                 .padding(.horizontal, AppSpacing.xl)
                 .padding(.bottom, AppSpacing.xl)

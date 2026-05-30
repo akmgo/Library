@@ -318,11 +318,11 @@ enum ReadingStatsCalculator {
             from sessions: [ReadingSession],
             booksByID: [String: Book]
         ) -> [ReadingDayBookSummarySnapshot] {
-            var merged: [String: (totalDelta: Double, unit: ProgressUnit, totalDuration: TimeInterval)] = [:]
+            var merged: [String: (totalDelta: Double, totalDuration: TimeInterval)] = [:]
 
             for session in sessions {
                 guard let bookID = session.book?.id, booksByID[bookID] != nil else { continue }
-                var entry = merged[bookID] ?? (0, session.progressUnit, 0)
+                var entry = merged[bookID] ?? (0, 0)
                 entry.totalDelta += session.deltaAmount
                 entry.totalDuration += max(session.duration, 0)
                 merged[bookID] = entry
@@ -333,13 +333,7 @@ enum ReadingStatsCalculator {
                 let minutes = Int(data.totalDuration / 60)
                 var parts: [String] = []
                 if minutes > 0 { parts.append("\(minutes)分钟") }
-                if data.totalDelta > 0 {
-                    switch data.unit {
-                    case .page: parts.append("\(Int(data.totalDelta))页")
-                    case .percent: parts.append("\(Int(data.totalDelta))%")
-                    case .chapter: parts.append("\(Int(data.totalDelta))章")
-                    }
-                }
+                if data.totalDelta > 0 { parts.append("\(Int(data.totalDelta))页") }
 
                 return ReadingDayBookSummarySnapshot(
                     id: bookID,

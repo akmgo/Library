@@ -362,7 +362,7 @@ struct BackupBookDTO: Codable {
             title: title, author: author, coverData: coverData,
             createdAt: createdAt, status: parsedStatus, rating: rating,
             tags: tags, startDate: startDate, finishDate: finishDate,
-            progressUnit: .percent, totalAmount: 100, currentAmount: progress * 100
+            totalAmount: 100, currentAmount: progress * 100
         )
         newBook.excerpts = excerpts.map { $0.toModel(for: newBook) }
         return newBook

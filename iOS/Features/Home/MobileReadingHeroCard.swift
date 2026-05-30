@@ -86,25 +86,8 @@ struct MobileReadingHeroCard: View {
     }
     
     private var progressDetailText: String {
-        guard book.totalAmount > 0 else {
-            switch book.progressUnit {
-            case .page:
-                return "页数未设置"
-            case .chapter:
-                return "章节数未设置"
-            case .percent:
-                return "当前进度"
-            }
-        }
-
-        switch book.progressUnit {
-        case .page:
-            return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 页"
-        case .chapter:
-            return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 章"
-        case .percent:
-            return "当前进度"
-        }
+        guard book.totalAmount > 0 else { return "页数未设置" }
+        return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 页"
     }
 
     // MARK: - 其它在读横向滚动条
@@ -184,9 +167,9 @@ struct MobileEmptyReadingCard: View {
 private struct PreviewHeroCard: View {
     var body: some View {
         PreviewWithBooks(specs: [
-            ("三体", "刘慈欣", .reading, .page, 320, 156),
-            ("活着", "余华", .reading, .page, 192, 80),
-            ("1984", "George Orwell", .reading, .percent, 100, 62),
+            ("三体", "刘慈欣", .reading, 320, 156),
+            ("活着", "余华", .reading, 192, 80),
+            ("1984", "George Orwell", .reading, 100, 62),
         ]) { books in
             MobileReadingHeroCard(
                 book: books[0],

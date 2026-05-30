@@ -115,25 +115,8 @@ struct ReadingHero: View {
     }
     
     private var progressDetailText: String {
-        guard book.totalAmount > 0 else {
-            switch book.progressUnit {
-            case .page:
-                return "页数未设置"
-            case .chapter:
-                return "章节数未设置"
-            case .percent:
-                return "当前进度"
-            }
-        }
-
-        switch book.progressUnit {
-        case .page:
-            return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 页"
-        case .chapter:
-            return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 章"
-        case .percent:
-            return "当前进度"
-        }
+        guard book.totalAmount > 0 else { return "页数未设置" }
+        return "\(Int(book.currentAmount)) / \(Int(book.totalAmount)) 页"
     }
 }
 
@@ -545,7 +528,6 @@ struct ReadingTimerCard: View {
                 for: book,
                 startedAt: startedAt,
                 duration: duration,
-                progressUnit: book.progressUnit,
                 startAmount: book.currentAmount,
                 endAmount: normalized.currentAmount,
                 context: modelContext
@@ -852,7 +834,6 @@ struct ReadingTimerCard_Previews: PreviewProvider {
                     title: "置身事内",
                     author: "兰小欢",
                     status: .reading,
-                    progressUnit: .page,
                     totalAmount: 356,
                     currentAmount: 86
                 ),

@@ -25,7 +25,6 @@ final class ReadingSession {
         startedAt: Date = Date(),
         endedAt: Date? = nil,
         duration: TimeInterval? = nil,
-        progressUnit: ProgressUnit = .page,
         startAmount: Double = 0,
         endAmount: Double = 0,
         createdAt: Date = Date(),
@@ -39,7 +38,6 @@ final class ReadingSession {
         self.duration = max(resolvedEnd.timeIntervalSince(startedAt), resolvedDuration)
         self.date = Calendar.current.startOfDay(for: date ?? startedAt)
         self.inputMode = inputMode
-        self.progressUnit = progressUnit
         self.startAmount = max(startAmount, 0)
         self.endAmount = max(endAmount, 0)
         self.createdAt = createdAt
@@ -63,12 +61,7 @@ final class ReadingSession {
     }
 
     var displayDelta: String {
-        let amount = max(deltaAmount, 0)
-        switch progressUnit {
-        case .page: return "\(Int(amount)) 页"
-        case .percent: return "\(Int(amount))%"
-        case .chapter: return "\(Int(amount)) 章"
-        }
+        "\(Int(max(deltaAmount, 0))) 页"
     }
 }
 #endif

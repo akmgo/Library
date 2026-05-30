@@ -32,7 +32,6 @@ enum PreviewDataSeeder {
             tags: ["科幻", "中国"],
             startDate: calendar.date(byAdding: .day, value: -21, to: today),
             lastReadAt: today,
-            progressUnit: .page,
             totalAmount: 320,
             currentAmount: 156,
             summary: "文化大革命如火如荼进行的同时，军方探寻外星文明的绝秘计划红岸工程取得了突破性进展。"
@@ -47,7 +46,6 @@ enum PreviewDataSeeder {
             tags: ["文学", "中国"],
             startDate: calendar.date(byAdding: .day, value: -14, to: today),
             lastReadAt: calendar.date(byAdding: .hour, value: -3, to: today),
-            progressUnit: .page,
             totalAmount: 192,
             currentAmount: 80,
             summary: "地主少爷富贵嗜赌成性，终于赌光了家业一贫如洗。"
@@ -62,7 +60,6 @@ enum PreviewDataSeeder {
             tags: ["反乌托邦", "政治"],
             startDate: calendar.date(byAdding: .day, value: -7, to: today),
             lastReadAt: calendar.date(byAdding: .day, value: -1, to: today),
-            progressUnit: .percent,
             totalAmount: 100,
             currentAmount: 62,
             summary: "战争即和平，自由即奴役，无知即力量。"
@@ -76,7 +73,6 @@ enum PreviewDataSeeder {
             status: .planned,
             rating: 0,
             tags: ["哲学", "小说"],
-            progressUnit: .page,
             totalAmount: 544,
             currentAmount: 0
         )
@@ -88,7 +84,6 @@ enum PreviewDataSeeder {
             status: .planned,
             rating: 0,
             tags: ["历史", "社科"],
-            progressUnit: .page,
             totalAmount: 440,
             currentAmount: 0
         )
@@ -104,7 +99,6 @@ enum PreviewDataSeeder {
             startDate: calendar.date(byAdding: .day, value: -60, to: today),
             finishDate: calendar.date(byAdding: .day, value: -45, to: today),
             lastReadAt: calendar.date(byAdding: .day, value: -45, to: today),
-            progressUnit: .page,
             totalAmount: 128,
             currentAmount: 128,
             summary: "今天，妈妈死了。也许是昨天，我不知道。"
@@ -120,7 +114,6 @@ enum PreviewDataSeeder {
             startDate: calendar.date(byAdding: .day, value: -90, to: today),
             finishDate: calendar.date(byAdding: .day, value: -30, to: today),
             lastReadAt: calendar.date(byAdding: .day, value: -30, to: today),
-            progressUnit: .page,
             totalAmount: 616,
             currentAmount: 616
         )
@@ -138,7 +131,6 @@ enum PreviewDataSeeder {
                     inputMode: i % 3 == 0 ? .timer : .manual,
                     startedAt: startedAt,
                     duration: minutes * 60,
-                    progressUnit: .page,
                     startAmount: Double(i * 5),
                     endAmount: Double(i * 5) + minutes * 0.5,
                     book: [book1, book2, book3][i % 3]
@@ -237,7 +229,6 @@ struct PreviewWithBook<Content: View>: View {
     let title: String
     let author: String
     let status: BookStatus
-    let progressUnit: ProgressUnit
     let totalAmount: Double
     let currentAmount: Double
     let content: (Book) -> Content
@@ -246,7 +237,6 @@ struct PreviewWithBook<Content: View>: View {
         title: String = "三体",
         author: String = "刘慈欣",
         status: BookStatus = .reading,
-        progressUnit: ProgressUnit = .page,
         totalAmount: Double = 320,
         currentAmount: Double = 156,
         @ViewBuilder content: @escaping (Book) -> Content
@@ -254,7 +244,6 @@ struct PreviewWithBook<Content: View>: View {
         self.title = title
         self.author = author
         self.status = status
-        self.progressUnit = progressUnit
         self.totalAmount = totalAmount
         self.currentAmount = currentAmount
         self.content = content
@@ -271,7 +260,6 @@ struct PreviewWithBook<Content: View>: View {
                             title: title,
                             author: author,
                             status: status,
-                            progressUnit: progressUnit,
                             totalAmount: totalAmount,
                             currentAmount: currentAmount
                         )
@@ -287,11 +275,11 @@ struct PreviewWithBook<Content: View>: View {
 struct PreviewWithBooks<Content: View>: View {
     @Environment(\.modelContext) private var modelContext
     @State private var books: [Book] = []
-    let specs: [(title: String, author: String, status: BookStatus, progressUnit: ProgressUnit, total: Double, current: Double)]
+    let specs: [(title: String, author: String, status: BookStatus, total: Double, current: Double)]
     let content: ([Book]) -> Content
 
     init(
-        specs: [(title: String, author: String, status: BookStatus, progressUnit: ProgressUnit, total: Double, current: Double)],
+        specs: [(title: String, author: String, status: BookStatus, total: Double, current: Double)],
         @ViewBuilder content: @escaping ([Book]) -> Content
     ) {
         self.specs = specs
@@ -310,7 +298,6 @@ struct PreviewWithBooks<Content: View>: View {
                                 title: spec.title,
                                 author: spec.author,
                                 status: spec.status,
-                                progressUnit: spec.progressUnit,
                                 totalAmount: spec.total,
                                 currentAmount: spec.current
                             )
@@ -350,7 +337,6 @@ enum PreviewBookFactory {
         title: String = "三体",
         author: String = "刘慈欣",
         status: BookStatus = .reading,
-        progressUnit: ProgressUnit = .page,
         totalAmount: Double = 320,
         currentAmount: Double = 156
     ) -> Book {
@@ -358,7 +344,6 @@ enum PreviewBookFactory {
             title: title,
             author: author,
             status: status,
-            progressUnit: progressUnit,
             totalAmount: totalAmount,
             currentAmount: currentAmount
         )

@@ -54,7 +54,6 @@ final class Book {
         startDate: Date? = nil,
         finishDate: Date? = nil,
         lastReadAt: Date? = nil,
-        progressUnit: ProgressUnit = .page,
         totalAmount: Double = 0,
         currentAmount: Double = 0,
         summary: String = "",
@@ -71,7 +70,6 @@ final class Book {
         self.startDate = startDate
         self.finishDate = finishDate
         self.lastReadAt = lastReadAt
-        self.progressUnit = progressUnit
         self.totalAmount = max(totalAmount, 0)
         self.currentAmount = max(currentAmount, 0)
         if self.totalAmount > 0 { self.currentAmount = min(self.currentAmount, self.totalAmount) }
@@ -94,14 +92,11 @@ final class Book {
     }
 
     var displayProgress: String {
-        switch progressUnit {
-        case .page:
-            return "\(Int(currentAmount)) / \(Int(totalAmount)) 页"
-        case .percent:
-            return "\(Int(currentAmount))%"
-        case .chapter:
-            return "\(Int(currentAmount)) / \(Int(totalAmount)) 章"
-        }
+        "\(Int(currentAmount)) / \(Int(totalAmount)) 页"
+    }
+
+    var displayPercent: String {
+        "\(Int(progressRatio * 100))%"
     }
 }
 #endif

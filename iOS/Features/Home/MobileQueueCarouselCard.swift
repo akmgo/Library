@@ -54,10 +54,10 @@ struct MobileQueueCarouselCard: View {
 private struct PreviewQueueCard: View {
     var body: some View {
         PreviewWithBooks(specs: [
-            ("苏菲的世界", "Jostein Gaarder", .planned, .page, 544, 0),
-            ("人类简史", "Yuval Noah Harari", .planned, .page, 440, 0),
-            ("枪炮、病菌与钢铁", "Jared Diamond", .planned, .page, 496, 0),
-            ("思考，快与慢", "Daniel Kahneman", .planned, .page, 424, 0),
+            ("苏菲的世界", "Jostein Gaarder", .planned, 544, 0),
+            ("人类简史", "Yuval Noah Harari", .planned, 440, 0),
+            ("枪炮、病菌与钢铁", "Jared Diamond", .planned, 496, 0),
+            ("思考，快与慢", "Daniel Kahneman", .planned, 424, 0),
         ]) { books in
             MobileQueueCarouselCard(displayBooks: books)
                 .padding()

@@ -322,7 +322,7 @@ struct BookMetadataSpotlightSearchView: View {
                 title: cleanedTitle,
                 author: cleanedAuthor,
                 coverData: finalCoverData,
-                progressUnit: progressDraft.unit,
+                
                 totalAmount: progressDraft.totalAmount,
                 currentAmount: 0
             )
