@@ -21,6 +21,10 @@ struct LibraryApp: App {
                 Button("添加图书...") { NotificationCenter.default.post(name: .showAddBookModal, object: nil) }
                     .keyboardShortcut("n", modifiers: .command)
             }
+            CommandGroup(after: .appInfo) {
+                Button("全局搜索") { NotificationCenter.default.post(name: .showGlobalSearch, object: nil) }
+                    .keyboardShortcut("k", modifiers: .command)
+            }
         }
         .modelContainer(SharedDatabase.shared.container)
 

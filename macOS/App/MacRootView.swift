@@ -55,6 +55,7 @@ struct MacRootView: View {
     @State private var detailShowDeleteAlert = false
 
     @State private var showAddBookSheet = false
+    @State private var showGlobalSpotlight = false
 
     @State private var galleryFilterStatus: BookStatus?
     @State private var gallerySortKey: BookGallerySortKey = .newest
@@ -89,6 +90,17 @@ struct MacRootView: View {
         .sheet(isPresented: $showAddBookSheet) {
             BookEditorSheet(isPresented: $showAddBookSheet)
         }
+        .overlay {
+            if showGlobalSpotlight {
+                GlobalSpotlightSearchView(
+                    isPresented: $showGlobalSpotlight,
+                    selectedModule: $selectedModule,
+                    selectedBook: $selectedBook,
+                    highlightedExcerptID: $highlightedExcerptID
+                )
+                .zIndex(30)
+            }
+        }
         .background { shortcutHost }
         .toolbar {
             pageToolbarItems
@@ -98,6 +110,11 @@ struct MacRootView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
             showAddBookSheet = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showGlobalSearch)) { _ in
+            withAnimation(.easeOut(duration: 0.16)) {
+                showGlobalSpotlight = true
+            }
         }
         .onAppear {
             applyTheme(appTheme)
@@ -121,10 +138,19 @@ struct MacRootView: View {
     }
 
     private var shortcutHost: some View {
-        Button("") {
-            performPrimaryAddAction()
+        Group {
+            Button("") {
+                withAnimation(.easeOut(duration: 0.16)) {
+                    showGlobalSpotlight = true
+                }
+            }
+            .keyboardShortcut("k", modifiers: .command)
+
+            Button("") {
+                performPrimaryAddAction()
+            }
+            .keyboardShortcut("n", modifiers: .command)
         }
-        .keyboardShortcut("n", modifiers: .command)
         .opacity(0)
     }
 

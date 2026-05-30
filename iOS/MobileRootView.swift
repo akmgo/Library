@@ -23,6 +23,7 @@ struct MobileRootView: View {
     @State private var selectedTab = 0
     @State private var showingAddBookSheet = false
     @State private var showingSettings = false
+    @State private var showingGlobalSearch = false
     @State private var highlightedExcerptID: String?
 
     var body: some View {
@@ -67,6 +68,16 @@ struct MobileRootView: View {
                 .tabItem { Label("月度", systemImage: "calendar.day.timeline.left") }.tag(4)
             }
             .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
+
+            if showingGlobalSearch {
+                MobileGlobalSearchView(
+                    isPresented: $showingGlobalSearch,
+                    selectedTab: $selectedTab,
+                    highlightedExcerptID: $highlightedExcerptID
+                )
+                    .transition(.opacity.combined(with: .scale(scale: 0.985, anchor: .top)))
+                    .zIndex(100)
+            }
         }
         .onAppear {
             // ✨ 核心修复 2：启动时直接应用本地主题配置
@@ -80,12 +91,27 @@ struct MobileRootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .showAddBookModal)) { _ in
             showingAddBookSheet = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showGlobalSearch)) { _ in
+            guard !showingGlobalSearch else { return }
+            withAnimation(.easeOut(duration: 0.18)) {
+                showingGlobalSearch = true
+            }
+        }
         .sheet(isPresented: $showingAddBookSheet) {
             MobileBookEditorSheet()
         }
         .sheet(isPresented: $showingSettings) {
             MobileSettingsView()
         }
+        .background(
+            Button("") {
+                withAnimation(.easeOut(duration: 0.18)) {
+                    showingGlobalSearch = true
+                }
+            }
+            .keyboardShortcut("k", modifiers: .command)
+            .opacity(0)
+        )
     }
     
     // MARK: - 原生外观覆盖引擎
