@@ -65,7 +65,7 @@ struct HomeView: View {
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                                ReadingTimerCard(book: heroBook, todayTotalSeconds: todayTotalSeconds)
+                                ReadingTimerCard(book: heroBook, todayTotalSeconds: todayTotalSeconds, dailyTargetMinutes: dailyTarget)
                                     .frame(width: 280)
                             }
                         } else {

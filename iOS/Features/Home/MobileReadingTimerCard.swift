@@ -30,7 +30,8 @@ struct MobileReadingTimerCard: View {
         return timerStore.isTiming(bookID: book.id)
     }
 
-    private var dailyTarget: Int { 30 }
+    @Query(sort: \UserConfig.updatedAt, order: .reverse) private var configs: [UserConfig]
+    private var dailyTarget: Int { max(configs.first?.dailyMinutesGoal ?? 30, 1) }
 
     var body: some View {
         AppCard {

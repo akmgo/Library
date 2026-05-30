@@ -123,6 +123,7 @@ struct ReadingHero: View {
 struct ReadingTimerCard: View {
     @Bindable var book: Book
     let todayTotalSeconds: TimeInterval
+    let dailyTargetMinutes: Int
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
@@ -145,9 +146,10 @@ struct ReadingTimerCard: View {
     private let controlSpacing: CGFloat = 10
     private let gaugeHeight: CGFloat = 118
 
-    init(book: Book, todayTotalSeconds: TimeInterval) {
+    init(book: Book, todayTotalSeconds: TimeInterval, dailyTargetMinutes: Int = 30) {
         self.book = book
         self.todayTotalSeconds = todayTotalSeconds
+        self.dailyTargetMinutes = dailyTargetMinutes
         _manualProgressDraft = State(initialValue: ReadingProgressDraft.sessionDefault(for: book))
         _timerProgressDraft = State(initialValue: ReadingProgressDraft.sessionDefault(for: book))
     }
@@ -193,7 +195,7 @@ struct ReadingTimerCard: View {
         VStack(alignment: .center, spacing: 0) {
             ReadingTimerGauge(
                 todayTotalSeconds: todayTotalSeconds,
-                dailyTargetMinutes: 30,
+                dailyTargetMinutes: dailyTargetMinutes,
                 elapsedSeconds: elapsedSeconds,
                 timedTargetSeconds: timerStore.targetDuration,
                 isTiming: isTiming
@@ -835,7 +837,8 @@ struct ReadingTimerCard_Previews: PreviewProvider {
                     totalAmount: 356,
                     currentAmount: 86
                 ),
-                todayTotalSeconds: 18 * 60 + 36
+                todayTotalSeconds: 18 * 60 + 36,
+                dailyTargetMinutes: 30
             )
             .frame(width: 284, height: 300)
             .padding()
