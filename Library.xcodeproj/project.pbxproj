@@ -6,67 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		C5FD82DD2F90CC1D0003A500 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */; };
-		C5FD82DF2F90CC1D0003A500 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */; };
-		C5FD82EA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-/* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		C5FD82E82F90CC1D0003A500 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = C5FD82032F90C3530003A500 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C5FD82D92F90CC1D0003A500;
-			remoteInfo = LibraryWidgetsExtension;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		C5FD82EF2F90CC1D0003A500 /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				C5FD82EA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		C5FD820B2F90C3530003A500 /* Library.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Library.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LibraryWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
-		C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
-		C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibraryWidgetsExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		C54819682F9FAEA0006D5686 /* Exceptions for "Library" folder in "LibraryWidgetsExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Assets.xcassets,
-			);
-			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
-		};
-		C5B450D62FC5BFB7006DD0A9 /* Exceptions for "Shared" folder in "LibraryWidgetsExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Core/ReadingTimerAttributes.swift,
-				Data/ReadingDataPoints.swift,
-				Data/SharedDatabase.swift,
-				DesignSystem/AppColors.swift,
-				Models/Book.swift,
-				Models/Excerpt.swift,
-				Models/ReadingEnums.swift,
-				Models/ReadingSession.swift,
-				Models/UserConfig.swift,
-			);
-			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
-		};
 		C5FD82182F90C3530003A500 /* Exceptions for "Library" folder in "Library" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -74,29 +18,9 @@
 			);
 			target = C5FD820A2F90C3530003A500 /* Library */;
 		};
-		C5FD82EE2F90CC1D0003A500 /* Exceptions for "LibraryWidgets" folder in "LibraryWidgetsExtension" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C5B450A32FC5BFB6006DD0A9 /* Shared */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				C5B450D62FC5BFB7006DD0A9 /* Exceptions for "Shared" folder in "LibraryWidgetsExtension" target */,
-			);
-			path = Shared;
-			sourceTree = "<group>";
-		};
-		C5B452422FC5C091006DD0A9 /* macOS */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = macOS;
-			sourceTree = "<group>";
-		};
 		C5B452872FC5C095006DD0A9 /* iOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = iOS;
@@ -106,17 +30,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				C5FD82182F90C3530003A500 /* Exceptions for "Library" folder in "Library" target */,
-				C54819682F9FAEA0006D5686 /* Exceptions for "Library" folder in "LibraryWidgetsExtension" target */,
 			);
 			path = Library;
-			sourceTree = "<group>";
-		};
-		C5FD82E02F90CC1D0003A500 /* LibraryWidgets */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				C5FD82EE2F90CC1D0003A500 /* Exceptions for "LibraryWidgets" folder in "LibraryWidgetsExtension" target */,
-			);
-			path = LibraryWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -129,28 +44,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C5FD82D72F90CC1D0003A500 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C5FD82DF2F90CC1D0003A500 /* SwiftUI.framework in Frameworks */,
-				C5FD82DD2F90CC1D0003A500 /* WidgetKit.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		C5FD82022F90C3530003A500 = {
 			isa = PBXGroup;
 			children = (
-				C5FD82FD2F90D72A0003A500 /* LibraryWidgetsExtension.entitlements */,
 				C5B452872FC5C095006DD0A9 /* iOS */,
-				C5B452422FC5C091006DD0A9 /* macOS */,
-				C5B450A32FC5BFB6006DD0A9 /* Shared */,
 				C5FD820D2F90C3530003A500 /* Library */,
-				C5FD82E02F90CC1D0003A500 /* LibraryWidgets */,
-				C5FD82DB2F90CC1D0003A500 /* Frameworks */,
 				C5FD820C2F90C3530003A500 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -159,18 +60,8 @@
 			isa = PBXGroup;
 			children = (
 				C5FD820B2F90C3530003A500 /* Library.app */,
-				C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		C5FD82DB2F90CC1D0003A500 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				C5FD82DC2F90CC1D0003A500 /* WidgetKit.framework */,
-				C5FD82DE2F90CC1D0003A500 /* SwiftUI.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -183,16 +74,12 @@
 				C5FD82072F90C3530003A500 /* Sources */,
 				C5FD82082F90C3530003A500 /* Frameworks */,
 				C5FD82092F90C3530003A500 /* Resources */,
-				C5FD82EF2F90CC1D0003A500 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				C5FD82E92F90CC1D0003A500 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				C5B450A32FC5BFB6006DD0A9 /* Shared */,
-				C5B452422FC5C091006DD0A9 /* macOS */,
 				C5B452872FC5C095006DD0A9 /* iOS */,
 				C5FD820D2F90C3530003A500 /* Library */,
 			);
@@ -202,28 +89,6 @@
 			productName = Library;
 			productReference = C5FD820B2F90C3530003A500 /* Library.app */;
 			productType = "com.apple.product-type.application";
-		};
-		C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = C5FD82EB2F90CC1D0003A500 /* Build configuration list for PBXNativeTarget "LibraryWidgetsExtension" */;
-			buildPhases = (
-				C5FD82D62F90CC1D0003A500 /* Sources */,
-				C5FD82D72F90CC1D0003A500 /* Frameworks */,
-				C5FD82D82F90CC1D0003A500 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				C5FD82E02F90CC1D0003A500 /* LibraryWidgets */,
-			);
-			name = LibraryWidgetsExtension;
-			packageProductDependencies = (
-			);
-			productName = LibraryWidgetsExtension;
-			productReference = C5FD82DA2F90CC1D0003A500 /* LibraryWidgetsExtension.appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -236,9 +101,6 @@
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					C5FD820A2F90C3530003A500 = {
-						CreatedOnToolsVersion = 26.4;
-					};
-					C5FD82D92F90CC1D0003A500 = {
 						CreatedOnToolsVersion = 26.4;
 					};
 				};
@@ -260,20 +122,12 @@
 			projectRoot = "";
 			targets = (
 				C5FD820A2F90C3530003A500 /* Library */,
-				C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C5FD82092F90C3530003A500 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C5FD82D82F90CC1D0003A500 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -290,22 +144,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C5FD82D62F90CC1D0003A500 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		C5FD82E92F90CC1D0003A500 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C5FD82D92F90CC1D0003A500 /* LibraryWidgetsExtension */;
-			targetProxy = C5FD82E82F90CC1D0003A500 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		C5FD821A2F90C3530003A500 /* Debug */ = {
@@ -314,30 +153,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				CODE_SIGN_ENTITLEMENTS = Library/Library.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = L8T28YW2UK;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
-				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
-				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
-				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
-				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
-				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
-				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
-				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Library/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "阅读日记";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
-				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -350,15 +174,12 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -376,30 +197,15 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				CODE_SIGN_ENTITLEMENTS = Library/Library.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = L8T28YW2UK;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
-				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
-				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
-				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
-				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
-				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
-				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
-				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Library/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "阅读日记";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.books";
-				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -412,15 +218,12 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -552,98 +355,6 @@
 			};
 			name = Release;
 		};
-		C5FD82EC2F90CC1D0003A500 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = LibraryWidgetsExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = L8T28YW2UK;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = LibraryWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LibraryWidgets;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library.LibraryWidgets;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				XROS_DEPLOYMENT_TARGET = 26.4;
-			};
-			name = Debug;
-		};
-		C5FD82ED2F90CC1D0003A500 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = LibraryWidgetsExtension.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = L8T28YW2UK;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = LibraryWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = LibraryWidgets;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.akram.Library.LibraryWidgets;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				XROS_DEPLOYMENT_TARGET = 26.4;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -661,15 +372,6 @@
 			buildConfigurations = (
 				C5FD821A2F90C3530003A500 /* Debug */,
 				C5FD821B2F90C3530003A500 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		C5FD82EB2F90CC1D0003A500 /* Build configuration list for PBXNativeTarget "LibraryWidgetsExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C5FD82EC2F90CC1D0003A500 /* Debug */,
-				C5FD82ED2F90CC1D0003A500 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
