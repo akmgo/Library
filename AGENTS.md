@@ -23,6 +23,9 @@ Do not implement or restore:
 - reader features
 - EPUB/PDF/TXT parsing or reading
 - timers or active reading sessions
+- goal systems of any kind
+- daily/weekly/yearly reading goals
+- streak targets, achievement rings, or task-like completion logic
 - generic snippets unrelated to books
 - CloudKit sync
 - App Group shared storage
@@ -30,6 +33,8 @@ Do not implement or restore:
 - AI/export/calendar features
 
 The app only records what the user manually enters.
+
+All reading data is factual history, not a goal system. Showing today's minutes or book progress is acceptable as a record; turning those values into targets, achievements, reminders, or completion pressure is not.
 
 ## Current Source Structure
 

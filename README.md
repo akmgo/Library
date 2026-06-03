@@ -11,6 +11,8 @@
 
 它不是阅读器，不做计时器，不做小组件，不做跨端同步，也不收集和书无关的灵感碎片。
 
+它也不做任何目标系统：没有每日阅读目标、年度目标、打卡达标、连续阅读任务或成就压力。所有数据只作为事实记录存在。
+
 ## 当前结构
 
 ```text
@@ -47,5 +49,6 @@ xcodebuild -scheme Library -destination 'generic/platform=iOS' build
 - iOS only
 - SwiftUI + SwiftData
 - 手动记录，不做计时
+- 只记录事实，不设计目标
 - 只和书有关
 - UI 保持安静、高级、克制
