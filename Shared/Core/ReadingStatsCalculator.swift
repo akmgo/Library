@@ -73,21 +73,6 @@ struct ExcerptListItem: Identifiable, Hashable {
 }
 
 enum ReadingStatsCalculator {
-    struct DataHealthSnapshot {
-        let configCount: Int
-        let bookCount: Int
-        let sessionCount: Int
-        let excerptCount: Int
-
-        var statusText: String {
-            configCount == 1 ? "状态正常" : "需要整理"
-        }
-
-        var detailText: String {
-            "配置 \(configCount) · 书籍 \(bookCount) · 记录 \(sessionCount) · 摘录 \(excerptCount)"
-        }
-    }
-
     struct BookGallerySnapshot {
         let books: [Book]
         let totalInventoryCount: Int
@@ -97,20 +82,6 @@ enum ReadingStatsCalculator {
             books: [],
             totalInventoryCount: 0,
             inventoryPoints: []
-        )
-    }
-
-    static func dataHealthSnapshot(
-        configs: [UserConfig],
-        books: [Book],
-        sessions: [ReadingSession],
-        excerpts: [Excerpt]
-    ) -> DataHealthSnapshot {
-        DataHealthSnapshot(
-            configCount: configs.count,
-            bookCount: books.count,
-            sessionCount: sessions.count,
-            excerptCount: excerpts.count
         )
     }
 

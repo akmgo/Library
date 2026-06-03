@@ -57,7 +57,7 @@ struct MobileSettingsView: View {
                             NavigationLink {
                                 MobileDataSettingsView(systemMessage: $systemMessage)
                             } label: {
-                                SettingsRow(icon: "externaldrive.fill", iconColor: .blue, title: "数据与安全", subtitle: "iCloud 同步、本地快照与缓存", iconSize: 30, titleSize: 16, subtitleSize: 12, subtitleLineLimit: 2)
+                                SettingsRow(icon: "externaldrive.fill", iconColor: .blue, title: "数据与安全", subtitle: "iCloud 同步与缓存", iconSize: 30, titleSize: 16, subtitleSize: 12, subtitleLineLimit: 2)
                             }
                             
                             NavigationLink {
