@@ -8,48 +8,81 @@ struct ReadingLogsView: View {
         logs.reduce(0) { $0 + $1.minutes }
     }
 
+    private var readingDays: Int {
+        Set(logs.map { Calendar.current.startOfDay(for: $0.date) }).count
+    }
+
+    private var groupedLogs: [LogDayGroup] {
+        let groups = Dictionary(grouping: logs) { Calendar.current.startOfDay(for: $0.date) }
+        return groups
+            .map { day, items in
+                LogDayGroup(day: day, logs: items.sorted { $0.date > $1.date })
+            }
+            .sorted { $0.day > $1.day }
+    }
+
     var body: some View {
-        PageShell(title: "记录", subtitle: "只记录手动输入的阅读时长") {
+        PageShell {
             AppCard {
-                HStack {
-                    MetricValue(value: "\(totalMinutes)", label: "总分钟")
-                    Spacer()
-                    MetricValue(value: "\(logs.count)", label: "记录")
-                    Spacer()
-                    MetricValue(value: "\(readingDays)", label: "天")
+                HStack(spacing: 18) {
+                    FactPill(value: "\(totalMinutes)", label: "分钟")
+                    FactPill(value: "\(logs.count)", label: "记录")
+                    FactPill(value: "\(readingDays)", label: "天")
                 }
             }
 
             if logs.isEmpty {
                 AppCard {
-                    EmptyHint(title: "还没有阅读记录", message: "阅读之后手动记录时长即可，不做计时器。")
-                    Button(action: onAddLog) {
-                        Label("记录阅读", systemImage: "plus")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
+                    EmptyHint(
+                        title: "还没有阅读记录",
+                        message: "读完一段之后，手动记下这次阅读了多久、读到哪一页。",
+                        systemImage: "calendar"
+                    )
+                    PrimaryActionButton(title: "记录阅读", systemImage: "plus", action: onAddLog)
                 }
             } else {
-                LazyVStack(spacing: 12) {
-                    ForEach(logs) { log in
-                        AppCard(padding: 16) {
-                            ReadingLogRow(log: log)
+                LazyVStack(alignment: .leading, spacing: 18) {
+                    ForEach(groupedLogs) { group in
+                        VStack(alignment: .leading, spacing: 10) {
+                            SectionHeader(title: group.title, subtitle: "\(group.minutes) 分钟")
+                            AppCard(padding: 0) {
+                                VStack(spacing: 0) {
+                                    ForEach(group.logs) { log in
+                                        if let book = log.book {
+                                            NavigationLink {
+                                                BookDetailView(book: book)
+                                            } label: {
+                                                ReadingLogRow(log: log)
+                                            }
+                                            .buttonStyle(.plain)
+                                        } else {
+                                            ReadingLogRow(log: log)
+                                        }
+
+                                        if log.id != group.logs.last?.id {
+                                            Divider()
+                                                .padding(.leading, 76)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+                .transition(.opacity)
             }
         }
+        .navigationTitle("记录")
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onAddLog) {
                     Image(systemName: "plus")
                 }
+                .accessibilityLabel("记录阅读")
             }
         }
-    }
-
-    private var readingDays: Int {
-        Set(logs.map { Calendar.current.startOfDay(for: $0.date) }).count
+        .animation(AppTheme.contentAnimation, value: groupedLogs.map(\.id))
     }
 }
 
@@ -57,48 +90,63 @@ struct ReadingLogRow: View {
     let log: ReadingLog
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: .center, spacing: 14) {
             VStack(spacing: 2) {
                 Text("\(Calendar.current.component(.day, from: log.date))")
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                 Text(log.date.formatted(.dateTime.month(.narrow)))
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
-            .frame(width: 44)
+            .frame(width: 48)
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(log.book?.title ?? "未知书籍")
                     .font(.system(size: 17, weight: .semibold))
                     .lineLimit(1)
-                Text("\(log.minutes) 分钟")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.secondary)
-                if log.pageAfterReading > 0 {
-                    Text("读到第 \(log.pageAfterReading) 页")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.tertiary)
+                HStack(spacing: 8) {
+                    Text("\(log.minutes) 分钟")
+                    if log.pageAfterReading > 0 {
+                        Text("读到第 \(log.pageAfterReading) 页")
+                    }
                 }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
             }
 
             Spacer()
+
+            if log.book != nil {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .contentShape(Rectangle())
     }
 }
 
-private struct MetricValue: View {
-    let value: String
-    let label: String
+private struct LogDayGroup: Identifiable {
+    let day: Date
+    let logs: [ReadingLog]
 
-    var body: some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.system(size: 28, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-            Text(label)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.secondary)
+    var id: Date { day }
+
+    var title: String {
+        if Calendar.current.isDateInToday(day) {
+            return "今天"
         }
+        if Calendar.current.isDateInYesterday(day) {
+            return "昨天"
+        }
+        return day.formatted(.dateTime.month(.wide).day())
+    }
+
+    var minutes: Int {
+        logs.reduce(0) { $0 + $1.minutes }
     }
 }

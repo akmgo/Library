@@ -4,6 +4,7 @@ import SwiftUI
 struct AddReadingLogSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
 
     let books: [Book]
     var preferredBookID: UUID?
@@ -16,21 +17,53 @@ struct AddReadingLogSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("书籍") {
-                    Picker("选择书籍", selection: $selectedBookID) {
-                        Text("未选择").tag(UUID?.none)
-                        ForEach(books) { book in
-                            Text(book.title).tag(Optional(book.id))
+                if books.isEmpty {
+                    Section {
+                        EmptyHint(
+                            title: "还没有书",
+                            message: "先在书架添加一本书，再记录阅读时长。",
+                            systemImage: "books.vertical"
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 28)
+                    }
+                } else {
+                    Section {
+                        Picker("书籍", selection: $selectedBookID) {
+                            ForEach(books) { book in
+                                Text(book.title).tag(Optional(book.id))
+                            }
                         }
+                    } header: {
+                        Text("本次阅读")
+                    }
+
+                    Section {
+                        DatePicker("日期", selection: $date, displayedComponents: [.date])
+
+                        Stepper(value: $minutes, in: 5...600, step: 5) {
+                            LabeledContent("时长") {
+                                Text("\(minutes) 分钟")
+                                    .foregroundStyle(AppTheme.secondaryText(colorScheme))
+                                    .contentTransition(.numericText())
+                            }
+                        }
+
+                        Stepper(value: $pageAfterReading, in: 0...5000) {
+                            LabeledContent("进度") {
+                                Text(pageAfterReading > 0 ? "第 \(pageAfterReading) 页" : "不记录")
+                                    .foregroundStyle(AppTheme.secondaryText(colorScheme))
+                                    .contentTransition(.numericText())
+                            }
+                        }
+                    } footer: {
+                        Text("这里只记录已经发生的阅读，不设置目标。")
                     }
                 }
-
-                Section("本次阅读") {
-                    DatePicker("日期", selection: $date, displayedComponents: [.date])
-                    Stepper("\(minutes) 分钟", value: $minutes, in: 5...600, step: 5)
-                    Stepper(pageAfterReading > 0 ? "读到第 \(pageAfterReading) 页" : "不记录页码", value: $pageAfterReading, in: 0...5000)
-                }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.background(colorScheme))
+            .tint(AppTheme.accent)
             .navigationTitle("记录阅读")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -43,9 +76,13 @@ struct AddReadingLogSheet: View {
                 }
             }
             .onAppear {
-                selectedBookID = preferredBookID ?? books.first?.id
+                if selectedBookID == nil {
+                    selectedBookID = preferredBookID ?? books.first?.id
+                }
                 pageAfterReading = selectedBook?.currentPage ?? 0
             }
+            .animation(AppTheme.controlAnimation, value: minutes)
+            .animation(AppTheme.controlAnimation, value: pageAfterReading)
         }
     }
 
