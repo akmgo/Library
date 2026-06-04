@@ -19,3 +19,22 @@ struct PageShell<Content: View>: View {
         .animation(AppTheme.contentAnimation, value: colorScheme)
     }
 }
+
+#if DEBUG
+#Preview("Page Shell") {
+    PreviewHost { _ in
+        NavigationStack {
+            PageShell {
+                AppCard {
+                    SectionHeader(title: "页面标题", subtitle: "示例")
+                    Text("这里展示页面默认背景、滚动容器、间距和卡片位置。")
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 8)
+                }
+
+                AppEmptyState(title: "空状态", message: "用于观察空状态和页面间距。")
+            }
+        }
+    }
+}
+#endif

@@ -9,7 +9,6 @@ enum AppTab: Hashable {
 
 struct AppRootView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.modelContext) private var modelContext
 
     @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
     @Query(sort: \ReadingLog.date, order: .reverse) private var logs: [ReadingLog]
@@ -17,8 +16,6 @@ struct AppRootView: View {
 
     @State private var selectedTab: AppTab = .library
     @State private var showAddBook = false
-    @State private var showAddLog = false
-    @State private var showAddText = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -29,16 +26,17 @@ struct AppRootView: View {
             .tag(AppTab.library)
 
             NavigationStack {
-                ReadingLogsView(logs: logs, onAddLog: { showAddLog = true })
+                ReadingLogsView(books: books, logs: logs)
             }
             .tabItem { Label("记录", systemImage: "calendar") }
             .tag(AppTab.logs)
 
             NavigationStack {
-                BookTextsView(texts: texts, onAddText: { showAddText = true })
+                BookTextsView(books: books, texts: texts)
             }
             .tabItem { Label("摘记", systemImage: "quote.opening") }
             .tag(AppTab.texts)
+            .tint(AppTheme.accent)
         }
         .tint(AppTheme.accent)
         .background(AppTheme.background(colorScheme))
@@ -47,15 +45,13 @@ struct AppRootView: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showAddLog) {
-            AddReadingLogSheet(books: books)
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showAddText) {
-            AddBookTextSheet(books: books)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-        }
     }
 }
+
+#if DEBUG
+#Preview("App Root") {
+    PreviewHost { _ in
+        AppRootView()
+    }
+}
+#endif

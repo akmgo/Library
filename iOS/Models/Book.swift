@@ -5,16 +5,14 @@ enum BookStatus: String, CaseIterable, Identifiable, Codable {
     case planned
     case reading
     case finished
-    case paused
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .planned: "想读"
+        case .planned: "待读"
         case .reading: "在读"
-        case .finished: "读完"
-        case .paused: "暂停"
+        case .finished: "已读"
         }
     }
 }

@@ -11,6 +11,7 @@ enum AppTheme {
     static let cardRadius: CGFloat = 24
     static let controlRadius: CGFloat = 16
     static let contentSpacing: CGFloat = 18
+    static let bookCoverAspectRatio: CGFloat = 2.0 / 3.0
 
     static let contentAnimation = Animation.smooth(duration: 0.24)
     static let controlAnimation = Animation.snappy(duration: 0.18)
@@ -64,7 +65,7 @@ struct AppCard<Content: View>: View {
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .stroke(AppTheme.stroke(colorScheme), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(colorScheme == .dark ? 0.22 : 0.07), radius: colorScheme == .dark ? 18 : 16, y: 8)
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.18 : 0.055), radius: colorScheme == .dark ? 14 : 12, y: 6)
     }
 }
 
@@ -86,15 +87,90 @@ struct SectionHeader: View {
     }
 }
 
-struct EmptyHint: View {
-    let title: String
-    let message: String
-    var systemImage: String = "books.vertical"
+struct MetricValue: View {
+    let value: Int
+    let label: String
+    var valueSize: CGFloat = 34
+    var labelSize: CGFloat = 13
+    var spacing: CGFloat = 5
 
     var body: some View {
-        ContentUnavailableView(title, systemImage: systemImage, description: Text(message))
+        VStack(alignment: .center, spacing: spacing) {
+            Text("\(value)")
+                .font(.system(size: valueSize, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .contentTransition(.numericText())
+            Text(label)
+                .font(.system(size: labelSize, weight: .semibold))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
+enum AppEmptyStateStyle: Equatable {
+    case page
+    case compact
+
+    var iconSize: CGFloat {
+        switch self {
+        case .page: 30
+        case .compact: 22
+        }
+    }
+
+    var iconContainerSize: CGFloat {
+        switch self {
+        case .page: 58
+        case .compact: 44
+        }
+    }
+
+    var verticalPadding: CGFloat {
+        switch self {
+        case .page: 92
+        case .compact: 26
+        }
+    }
+}
+
+struct AppEmptyState: View {
+    let title: String
+    var message: String?
+    var systemImage: String = "books.vertical"
+    var style: AppEmptyStateStyle = .page
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: style.iconSize, weight: .medium))
+                .foregroundStyle(AppTheme.accent.opacity(colorScheme == .dark ? 0.72 : 0.66))
+                .frame(width: style.iconContainerSize, height: style.iconContainerSize)
+                .background(AppTheme.accent.opacity(colorScheme == .dark ? 0.12 : 0.10), in: Circle())
+                .overlay {
+                    Circle()
+                        .stroke(AppTheme.accent.opacity(colorScheme == .dark ? 0.14 : 0.12), lineWidth: 1)
+                }
+
+            VStack(spacing: 5) {
+                Text(title)
+                    .font(.system(size: style == .page ? 17 : 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.secondaryText(colorScheme))
+
+                if let message {
+                    Text(message)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(AppTheme.tertiaryText(colorScheme))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+            }
+        }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 18)
+        .padding(.vertical, style.verticalPadding)
+        .transition(.opacity.combined(with: .offset(y: 6)))
     }
 }
 
@@ -114,14 +190,22 @@ struct StatusBadge: View {
 struct KindBadge: View {
     let kind: BookTextKind
 
+    // 摘录和笔记同等权重，各用独立暖色
+    private static let excerptColor = AppTheme.accent
+    private static let noteColor = Color(red: 0.30, green: 0.55, blue: 0.48) // 暖鼠尾草绿
+
+    private var accent: Color {
+        kind == .excerpt ? Self.excerptColor : Self.noteColor
+    }
+
     var body: some View {
         Text(kind.title)
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(kind == .excerpt ? AppTheme.accent : .secondary)
+            .foregroundStyle(accent)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
-                (kind == .excerpt ? AppTheme.accent.opacity(0.12) : Color.secondary.opacity(0.11)),
+                accent.opacity(0.12),
                 in: Capsule()
             )
     }
@@ -132,7 +216,7 @@ struct BookCover: View {
 
     var body: some View {
         ZStack {
-            if let coverData = book.coverData, let image = UIImage(data: coverData) {
+            if let image = BookCoverImageCache.image(for: book) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
@@ -165,7 +249,7 @@ struct BookCover: View {
                 .padding(12)
             }
         }
-        .aspectRatio(0.68, contentMode: .fit)
+        .aspectRatio(AppTheme.bookCoverAspectRatio, contentMode: .fit)
         .overlay(alignment: .leading) {
             Rectangle()
                 .fill(.black.opacity(0.16))
@@ -174,6 +258,21 @@ struct BookCover: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .shadow(color: .black.opacity(0.16), radius: 12, x: 0, y: 7)
+    }
+}
+
+private enum BookCoverImageCache {
+    private static let cache = NSCache<NSString, UIImage>()
+
+    static func image(for book: Book) -> UIImage? {
+        guard let coverData = book.coverData else { return nil }
+        let key = "\(book.id.uuidString)-\(coverData.count)-\(coverData.hashValue)" as NSString
+        if let cachedImage = cache.object(forKey: key) {
+            return cachedImage
+        }
+        guard let image = UIImage(data: coverData) else { return nil }
+        cache.setObject(image, forKey: key)
+        return image
     }
 }
 
@@ -194,19 +293,36 @@ struct FactPill: View {
     }
 }
 
-struct PrimaryActionButton: View {
-    let title: String
-    let systemImage: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.system(size: 16, weight: .semibold))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+#if DEBUG
+#Preview("Theme Components") {
+    PreviewHost { data in
+        PageShell {
+            AppCard {
+                VStack(alignment: .leading, spacing: 16) {
+                    SectionHeader(title: "组件预览", subtitle: "主题")
+                    HStack(spacing: 12) {
+                        StatusBadge(status: .planned)
+                        StatusBadge(status: .reading)
+                        KindBadge(kind: .excerpt)
+                        KindBadge(kind: .note)
+                    }
+                    HStack(spacing: 18) {
+                        FactPill(value: "146", label: "页")
+                        FactPill(value: "42", label: "分钟")
+                        FactPill(value: "3", label: "摘记")
+                    }
+                    if let book = data.books.first {
+                        BookCover(book: book)
+                            .frame(width: 132)
+                    }
+                    AppEmptyState(
+                        title: "暂无内容",
+                        message: "空状态只展示说明，不承载操作按钮。",
+                        systemImage: "tray"
+                    )
+                }
+            }
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
     }
 }
+#endif
