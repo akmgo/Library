@@ -29,7 +29,7 @@ struct MobileRootView: View {
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
-                // ================= 1. 主页 =================
+                // ================= 1. 书架 =================
                 NavigationStack {
                     MobileHomeView()
                         .toolbar {
@@ -45,27 +45,23 @@ struct MobileRootView: View {
                             }
                         }
                 }
-                .tabItem { Label("主页", systemImage: "house.fill") }.tag(0)
+                .tabItem { Label("书架", systemImage: "books.vertical.fill") }.tag(0)
 
-                // ================= 2. 画廊 =================
-                MobileBookGalleryView()
-                    .tabItem { Label("画廊", systemImage: "books.vertical.fill") }.tag(1)
-
-                // ================= 3. 摘录 =================
+                // ================= 2. 摘录 =================
                 MobileExcerptsView(highlightedExcerptID: $highlightedExcerptID)
-                    .tabItem { Label("摘录", systemImage: "quote.bubble.fill") }.tag(2)
+                    .tabItem { Label("摘录", systemImage: "quote.bubble.fill") }.tag(1)
 
-                // ================= 4. 年度 =================
+                // ================= 3. 年度 =================
                 NavigationStack {
                     MobileYearlyTimelineView()
                 }
-                .tabItem { Label("年度", systemImage: "calendar") }.tag(3)
+                .tabItem { Label("年度", systemImage: "calendar") }.tag(2)
 
-                // ================= 5. 月度 =================
+                // ================= 4. 记录 =================
                 NavigationStack {
                     MobileMonthlyRecordView()
                 }
-                .tabItem { Label("月度", systemImage: "calendar.day.timeline.left") }.tag(4)
+                .tabItem { Label("记录", systemImage: "calendar.day.timeline.left") }.tag(3)
             }
             .background(AppColors.primaryBackground(for: colorScheme).ignoresSafeArea())
 

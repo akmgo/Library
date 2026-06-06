@@ -186,7 +186,7 @@ struct GlobalSpotlightSearchView: View {
     private func open(_ result: GlobalSpotlightResult) {
         switch result {
         case .book(let book):
-            selectedModule = .gallery
+            selectedModule = .home
             selectedBook = book
         case .excerpt(let excerpt):
             selectedBook = nil

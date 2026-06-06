@@ -7,8 +7,7 @@ import UniformTypeIdentifiers
 // MARK: - ✨ 导航与模块枚举
 
 enum NavigationModule: String, CaseIterable, Identifiable {
-    case home = "阅读主页"
-    case gallery = "全景画廊"
+    case home = "书架"
     case excerpts = "摘录长廊"
     case yearly = "年度轨迹"
     case monthly = "月度记录"
@@ -19,8 +18,7 @@ enum NavigationModule: String, CaseIterable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .home: return "house.fill"
-        case .gallery: return "photo.on.rectangle.angled"
+        case .home: return "books.vertical.fill"
         case .excerpts: return "quote.bubble.fill"
         case .yearly: return "calendar.circle"
         case .monthly: return "chart.bar.doc.horizontal"
@@ -166,7 +164,6 @@ struct MacRootView: View {
         List(selection: $selectedModule) {
             Section(header: Text("探索").font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)) {
                 NavigationLink(value: NavigationModule.home) { Label(NavigationModule.home.rawValue, systemImage: NavigationModule.home.systemImage) }
-                NavigationLink(value: NavigationModule.gallery) { Label(NavigationModule.gallery.rawValue, systemImage: NavigationModule.gallery.systemImage) }
                 NavigationLink(value: NavigationModule.excerpts) { Label(NavigationModule.excerpts.rawValue, systemImage: NavigationModule.excerpts.systemImage) }
             }
 
@@ -206,15 +203,6 @@ struct MacRootView: View {
         switch selectedModule {
         case .home:
             HomeView(selectedBook: $selectedBook)
-        case .gallery:
-            BookGalleryView(
-                selectedBook: $selectedBook,
-                filterStatus: galleryFilterStatus,
-                sortKey: gallerySortKey,
-                gridScale: galleryGridScale,
-                isBatchDeletePresented: $isGalleryBatchDeletePresented,
-                selectedBookIDs: $selectedGalleryBookIDs
-            )
         case .excerpts:
             ExcerptsView(
                 filterCategory: excerptFilterCategory,
@@ -240,75 +228,6 @@ struct MacRootView: View {
     private var pageToolbarItems: some ToolbarContent {
         if selectedBook == nil, selectedModule == .home {
             ToolbarItem { Spacer() }
-
-            ToolbarItem {
-                ControlGroup {
-                    Button {
-                        showAddBookSheet = true
-                    } label: {
-                        toolbarIcon("plus")
-                    }
-                    .help("添加书籍")
-                }
-            }
-        }
-
-        if selectedBook == nil, selectedModule == .gallery {
-            ToolbarItem { Spacer() }
-
-            ToolbarItem {
-                ControlGroup {
-                    Menu {
-                        Button("全部") { galleryFilterStatus = nil }
-                        Divider()
-                        ForEach(BookStatus.allCases, id: \.self) { status in
-                            Button(status.displayName) { galleryFilterStatus = status }
-                        }
-                    } label: {
-                        toolbarIcon("line.3.horizontal.decrease.circle")
-                    }
-                    .menuIndicator(.hidden)
-                    .help("分类")
-
-                    Menu {
-                        Button("最新加入") { gallerySortKey = .newest }
-                        Button("最早加入") { gallerySortKey = .oldest }
-                        Button("标题") { gallerySortKey = .title }
-                        Button("进度") { gallerySortKey = .progress }
-                        Button("最近阅读") { gallerySortKey = .lastRead }
-                    } label: {
-                        toolbarIcon("arrow.up.arrow.down")
-                    }
-                    .menuIndicator(.hidden)
-                    .help("排序")
-                }
-            }
-
-            ToolbarItem {
-                Menu {
-                    ForEach(GalleryGridScale.allCases, id: \.self) { scale in
-                        Button(scale.displayName) { galleryGridScale = scale }
-                    }
-                } label: {
-                    toolbarIcon("rectangle.grid.2x2")
-                }
-                .menuIndicator(.hidden)
-                .help("封面大小")
-            }
-
-            ToolbarItem {
-                Button {
-                    withAnimation(.appContentFade) {
-                        isGalleryBatchDeletePresented.toggle()
-                        if !isGalleryBatchDeletePresented {
-                            selectedGalleryBookIDs.removeAll()
-                        }
-                    }
-                } label: {
-                    toolbarIcon(isGalleryBatchDeletePresented ? "checkmark.circle.fill" : "checkmark.circle")
-                }
-                .help("批量删除")
-            }
 
             ToolbarItem {
                 ControlGroup {

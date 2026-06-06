@@ -2,190 +2,300 @@
 import SwiftData
 import SwiftUI
 
-// MARK: - 📱 Mobile 核心调度中心 (数据驱动版)
+// MARK: - 📚 Mobile 书架
+
+private enum MobileLibraryFilter: String, CaseIterable, Identifiable {
+    case all
+    case planned
+    case finished
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all: return "全部"
+        case .planned: return "想读"
+        case .finished: return "已读"
+        }
+    }
+
+    var status: BookStatus? {
+        switch self {
+        case .all: return nil
+        case .planned: return .planned
+        case .finished: return .finished
+        }
+    }
+}
 
 struct MobileHomeView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.modelContext) private var modelContext
-
-    // MARK: - 📥 全局配置
-    @Query(sort: \UserConfig.updatedAt, order: .reverse) var configs: [UserConfig]
     @Query(sort: \Book.createdAt, order: .reverse) private var books: [Book]
     @Query(sort: \ReadingSession.date, order: .reverse) private var sessions: [ReadingSession]
-    @Query(sort: \Excerpt.createdAt, order: .reverse) private var excerpts: [Excerpt]
-    
-    // MARK: - 🎮 UI 交互状态
-    @State private var activeBookDetail: Book? = nil
-    @State private var focusedReadingBookID: String?
-    @State private var dashboard: ReadingStatsCalculator.DashboardSnapshot = .empty
-    @State private var cachedOrderedReadingBooks: [Book] = []
-    @State private var cachedTodaySeconds: TimeInterval = 0
 
-    private var homeFP: String {
-        let latestSession = sessions.last?.startedAt.timeIntervalSince1970 ?? 0
-        return "\(books.count)-\(sessions.count)-\(excerpts.count)-\(latestSession)"
+    @State private var activeBookDetail: Book?
+    @State private var loggingBook: Book?
+    @State private var filter: MobileLibraryFilter = .all
+
+    private var sessionMap: [String: [ReadingSession]] {
+        Dictionary(grouping: sessions, by: { $0.book?.id ?? "" })
+    }
+
+    private var sortedBooks: [Book] {
+        books.sorted { lhs, rhs in
+            priorityDate(for: lhs) > priorityDate(for: rhs)
+        }
+    }
+
+    private var readingBooks: [Book] {
+        sortedBooks.filter { $0.status == .reading }
+    }
+
+    private var visibleBooks: [Book] {
+        sortedBooks.filter { book in
+            filter.status.map { book.status == $0 } ?? true
+        }
     }
 
     var body: some View {
         ZStack {
             AppColors.primaryBackground(for: colorScheme).ignoresSafeArea()
-            
-            // ================= 📚 核心滑动大盘 =================
+
             ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: AppSpacing.xl) {
-                    
-                    // 📊 2. 数据大盘
-                    MobilePageStatsHeader(items: homeStats)
-
-                    LazyVStack(spacing: AppSpacing.xl) {
-
-                        // 🌟 1. 视觉锚点 (在读焦点)
-                        if let heroBook = focusedReadingBook {
-                            MobileReadingHeroCard(
-                                book: heroBook,
-                                secondaryBooks: secondaryReadingBooks,
-                                onTapDetail: {
-                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                    activeBookDetail = heroBook
-                                },
-                                onSelectSecondaryBook: { candidate in
-                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                        focusedReadingBookID = candidate.id
+                LazyVStack(alignment: .leading, spacing: 24) {
+                    if books.isEmpty {
+                        EmptyStateView(
+                            systemImage: "books.vertical",
+                            title: "书架为空",
+                            message: "添加一本书后，阅读记录和摘记会归到这里。",
+                            iconSize: 46
+                        )
+                        .padding(.top, 120)
+                    } else {
+                        if filter == .all, !readingBooks.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                MobileLibrarySectionTitle(title: "在读", count: readingBooks.count)
+                                LazyVStack(spacing: 12) {
+                                    ForEach(readingBooks) { book in
+                                        MobileReadingShelfCard(book: book) {
+                                            loggingBook = book
+                                        }
+                                        .onTapGesture { activeBookDetail = book }
                                     }
                                 }
-                            )
-                        } else {
-                            MobileEmptyReadingCard()
+                            }
                         }
 
-                        // ⏱️ 3. 阅读计时
-                        MobileReadingTimerCard(
-                            book: focusedReadingBook,
-                            todayTotalSeconds: todayTotalSeconds
-                        )
+                        VStack(alignment: .leading, spacing: 14) {
+                            MobileLibraryFilterBar(selection: $filter)
+                            MobileLibrarySectionTitle(title: filter == .all ? "全部书籍" : filter.title, count: visibleBooks.count)
 
-                        // 🌊 4. 双周动能
-                        SharedMomentumChart(dataPoints: dashboard.momentumPoints, totalMinutes: dashboard.momentumTotal)
-
-                        // 💭 5. 思想共鸣
-                        SharedResonanceCard(excerpts: dashboard.resonancePoints)
-
-                        // 📚 6. 想读画廊
-                        SharedQueueBookshelf(displayBooks: dashboard.queueBooks) { tappedBook in
-                            startReadingFromQueue(tappedBook)
+                            if visibleBooks.isEmpty {
+                                EmptyStateView(
+                                    systemImage: "books.vertical",
+                                    title: "\(filter.title)书架为空",
+                                    message: "这里会展示对应状态的书。",
+                                    iconSize: 38
+                                )
+                                .padding(.top, 32)
+                            } else {
+                                LazyVGrid(
+                                    columns: [
+                                        GridItem(.flexible(), spacing: 22),
+                                        GridItem(.flexible(), spacing: 22)
+                                    ],
+                                    spacing: 28
+                                ) {
+                                    ForEach(visibleBooks) { book in
+                                        Button {
+                                            activeBookDetail = book
+                                        } label: {
+                                            MobileShelfCover(book: book)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityLabel(book.title)
+                                    }
+                                }
+                            }
                         }
-
-                        // 🧠 7. 深度复盘
-                        SharedKnowledgeSpectrum(dataPoints: dashboard.spectrumPoints)
                     }
-                    .padding(.horizontal, AppSpacing.l)
                 }
+                .padding(.horizontal, AppSpacing.l)
+                .padding(.top, 22)
                 .padding(.bottom, AppSpacing.emptyState)
-                .background(alignment: .top) {
-                    pullToSearchDetector
-                }
             }
-            .coordinateSpace(name: "homeScroll")
         }
-        .onAppear { refreshHomeData() }
-        .onChange(of: homeFP) { _, _ in refreshHomeData() }
         .navigationDestination(item: $activeBookDetail) { book in
             MobileBookDetailView(book: book)
         }
+        .sheet(item: $loggingBook) { book in
+            MobileQuickReadingLogSheet(book: book)
+        }
+        .animation(.easeInOut(duration: 0.18), value: filter)
     }
 
-    private var pullToSearchDetector: some View {
-        GeometryReader { geo in
-            Color.clear.onChange(of: geo.frame(in: .named("homeScroll")).minY) { _, y in
-                if y > 75 {
-                    UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
-                    NotificationCenter.default.post(name: .showGlobalSearch, object: nil)
+    private func priorityDate(for book: Book) -> Date {
+        sessionMap[book.id]?.map(\.startedAt).max()
+            ?? book.lastReadAt
+            ?? book.startDate
+            ?? book.createdAt
+    }
+}
+
+private struct MobileLibraryFilterBar: View {
+    @Binding var selection: MobileLibraryFilter
+
+    var body: some View {
+        Picker("书籍状态", selection: $selection) {
+            ForEach(MobileLibraryFilter.allCases) { filter in
+                Text(filter.title).tag(filter)
+            }
+        }
+        .pickerStyle(.segmented)
+    }
+}
+
+private struct MobileLibrarySectionTitle: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.system(size: 21, weight: .semibold))
+            Spacer()
+            Text("\(count) 本")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct MobileReadingShelfCard: View {
+    let book: Book
+    let onAddLog: () -> Void
+
+    private let coverWidth: CGFloat = 66
+    private var coverHeight: CGFloat { coverWidth / (2.0 / 3.0) }
+
+    var body: some View {
+        AppCard {
+            HStack(alignment: .top, spacing: 13) {
+                BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+                    .frame(width: coverWidth, height: coverHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
+                    .shadow(color: .black.opacity(0.10), radius: 8, y: 4)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(book.title)
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .lineLimit(2)
+                            Text(book.author.isEmpty ? "未填写作者" : book.author)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 8)
+                        Button(action: onAddLog) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 25, weight: .semibold))
+                                .foregroundStyle(AppColors.readingAmber)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("添加阅读记录")
+                    }
+
+                    Spacer(minLength: 10)
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(book.displayProgress)
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                        ProgressBarView(progress: book.progressRatio, height: 6)
+                    }
+                }
+                .frame(height: coverHeight, alignment: .top)
+            }
+        }
+    }
+}
+
+private struct MobileShelfCover: View {
+    let book: Book
+
+    var body: some View {
+        BookCoverView(coverID: book.id, coverData: book.coverData, fallbackTitle: book.title)
+            .aspectRatio(2 / 3, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
+            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
+            .contentShape(RoundedRectangle(cornerRadius: AppRadius.bookCover, style: .continuous))
+    }
+}
+
+private struct MobileQuickReadingLogSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+
+    let book: Book
+
+    @State private var minutes: Int = 30
+    @State private var endAmountText: String = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("书籍") {
+                    Text(book.title)
+                    if !book.author.isEmpty {
+                        Text(book.author).foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("阅读记录") {
+                    Stepper(value: $minutes, in: 5...600, step: 5) {
+                        Text("\(minutes) 分钟")
+                    }
+
+                    TextField("当前页码", text: $endAmountText)
+                        .keyboardType(.numberPad)
                 }
             }
-        }
-        .allowsHitTesting(false)
-    }
-}
-
-private extension MobileHomeView {
-    // MARK: - 在读焦点管理
-
-    private var orderedReadingBooks: [Book] { cachedOrderedReadingBooks }
-
-    private var focusedReadingBook: Book? {
-        if let focusedReadingBookID,
-           let focused = orderedReadingBooks.first(where: { $0.id == focusedReadingBookID }) {
-            return focused
-        }
-        return orderedReadingBooks.first
-    }
-
-    private var secondaryReadingBooks: [Book] {
-        guard let focusedReadingBook else { return [] }
-        return Array(orderedReadingBooks.filter { $0.id != focusedReadingBook.id }.prefix(3))
-    }
-
-    private var todayTotalSeconds: TimeInterval { cachedTodaySeconds }
-
-    private func startReadingFromQueue(_ book: Book) {
-        if book.status == .planned {
-            do {
-                try ReadingDataService.shared.markBookStartedFromQueue(book, context: modelContext)
-            } catch {
-                return
+            .navigationTitle("添加阅读记录")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") { save() }
+                }
+            }
+            .onAppear {
+                endAmountText = book.currentAmount > 0 ? "\(Int(book.currentAmount))" : ""
             }
         }
-        focusedReadingBookID = book.id
-        activeBookDetail = book
     }
-}
 
+    private func save() {
+        let endedAt = Date()
+        let duration = TimeInterval(minutes * 60)
+        let startedAt = endedAt.addingTimeInterval(-duration)
+        let endAmount = Double(endAmountText) ?? book.currentAmount
 
-// MARK: - 🎨 辅助计算属性
-
-extension MobileHomeView {
-    @MainActor
-    private func refreshHomeData() {
-        dashboard = ReadingStatsCalculator.dashboardSnapshot(
-            books: books, sessions: sessions, excerpts: excerpts
+        try? ReadingDataService.shared.insertManualReadingSession(
+            for: book,
+            startedAt: startedAt,
+            duration: duration,
+            startAmount: book.currentAmount,
+            endAmount: endAmount,
+            context: modelContext
         )
-        let sessionMap = Dictionary(grouping: sessions, by: { $0.book?.id ?? "" })
-        cachedOrderedReadingBooks = books
-            .filter { $0.status == .reading }
-            .sorted { lhs, rhs in
-                let lDate = sessionMap[lhs.id]?.map(\.startedAt).max()
-                    ?? lhs.lastReadAt ?? lhs.startDate ?? lhs.createdAt
-                let rDate = sessionMap[rhs.id]?.map(\.startedAt).max()
-                    ?? rhs.lastReadAt ?? rhs.startDate ?? rhs.createdAt
-                return lDate > rDate
-            }
-        let calendar = Calendar.current
-        let today = Date()
-        cachedTodaySeconds = sessions
-            .filter { calendar.isDate($0.date, inSameDayAs: today) }
-            .reduce(0) { $0 + max($1.duration, 0) }
-    }
-
-    private var dailyGoal: Int { configs.first?.dailyMinutesGoal ?? 30 }
-    private var yearTarget: Int { configs.first?.yearlyBooksGoal ?? 50 }
-    private var libraryTarget: Int { configs.first?.libraryBooksGoal ?? 100 }
-
-    private var homeStats: [PageStatItemData] {
-        [
-            PageStatItemData(title: "本周打卡", value: "\(dashboard.weekCount)/7", color: .pink),
-            PageStatItemData(title: "本月历程", value: "\(dashboard.monthlyDays)/30", color: AppColors.readingAmber),
-            PageStatItemData(title: "年度阅卷", value: "\(dashboard.yearlyCount)/\(yearTarget)", color: .teal),
-            PageStatItemData(title: "馆藏进度", value: "\(dashboard.totalFinished)/\(libraryTarget)", color: .indigo),
-        ]
-    }
-    
-    private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        if hour < 9 { return "早安，纪元" }
-        else if hour < 14 { return "午后，纪元" }
-        else if hour < 19 { return "傍晚，纪元" }
-        else { return "入夜，纪元" }
+        dismiss()
     }
 }
 
@@ -283,7 +393,7 @@ struct MobileGlobalSearchView: View {
                                         Button(action: {
                                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                             isSearchFocused = false
-                                            selectedTab = 2
+                                            selectedTab = 1
                                             highlightedExcerptID = excerpt.id
                                             closeSearch()
                                         }) {
